@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="Weethub Radar">
+  <title>Weethub Radar</title>
+  <!-- Anel: a carteira de clientes. -->
+  <circle cx="24" cy="24" r="17" fill="none" stroke="#000" stroke-width="10"/>
+  <!-- Setor amarelo: a frente que ficou parada, acesa pelo radar. -->
+  <path fill="#fcbd20" d="M24 2A22 22 0 0 1 46 24H36A12 12 0 0 0 24 12Z"/>
+  <!-- Ponteiro e pivô: o varrimento do radar apontando para o setor. -->
+  <path d="M24 24L31.5 16.5" fill="none" stroke="#000" stroke-width="2.6" stroke-linecap="round"/>
+  <circle cx="24" cy="24" r="3.4" fill="#000"/>
+</svg>

@@ -1,0 +1,238 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Weethub Radar: tokens (fonte da verdade visual: DESIGN.md).
+ * Identidade medida no site weethub.com: preto, off-white quente e UM acento
+ * amarelo. Camada 1 = primitivas (hex da marca); camada 2 = papéis semânticos do
+ * shadcn; camada 3 = estados do Radar (em dia / atenção / atrasada / crítica).
+ * Só modo claro (uso em escritório, tela diurna): sem variante escura.
+ */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-urbanist), ui-sans-serif, system-ui, sans-serif;
+  /* Urbanist em todo o UI. Fraunces só em h1, no "Parado há" do cartão crítico e no wordmark. */
+  --font-heading: var(--font-urbanist), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+
+  /* Urbanist tem x-height baixo: um degrau acima da escala padrão. */
+  --text-xs: 0.8125rem;
+  --text-xs--line-height: 1.25rem;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.45rem;
+
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  /* Estados do Radar: sempre usados com glifo + texto, nunca só cor. */
+  --color-state-ok: var(--state-ok);
+  --color-state-ok-soft: var(--state-ok-soft);
+  --color-state-ok-line: var(--state-ok-line);
+  --color-state-warn: var(--state-warn);
+  --color-state-warn-soft: var(--state-warn-soft);
+  --color-state-warn-line: var(--state-warn-line);
+  --color-state-late: var(--state-late);
+  --color-state-late-soft: var(--state-late-soft);
+  --color-state-late-line: var(--state-late-line);
+  --color-state-crit: var(--state-crit);
+  --color-state-crit-soft: var(--state-crit-soft);
+  --color-state-crit-line: var(--state-crit-line);
+
+  /* Cartões e controles: no máximo 6px. Pílula é só `rounded-full`. */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: var(--radius);
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius);
+  --radius-3xl: var(--radius);
+  --radius-4xl: var(--radius);
+}
+
+:root {
+  --radius: 6px;
+
+  /* Neutros quentes (sem matiz azul-violeta). Tinta #0a0a0a, canvas #fffff7. */
+  --background: #fffff7;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --secondary: #f4f3ea;
+  --secondary-foreground: #0a0a0a;
+  --muted: #f4f3ea;
+  /* #5b5b53: 6,8:1 sobre #fffff7 e 6,9:1 sobre #fff (AA). */
+  --muted-foreground: #5b5b53;
+  --border: #e7e7e7;
+  /* Borda de campo: 3,8:1 sobre #fff e 3,4:1 sobre #f4f3ea (critério 1.4.11). */
+  --input: #85847a;
+
+  /* Primário = preto com texto off-white, como os botões do site. */
+  --primary: #0a0a0a;
+  --primary-foreground: #fffff7;
+  /* "accent" do shadcn é só hover/seleção em superfície quieta. */
+  --accent: #f4f3ea;
+  --accent-foreground: #0a0a0a;
+  /* Foco: anel preto de 2px com offset (o amarelo não tem contraste sobre claro). */
+  --ring: #0a0a0a;
+  --destructive: #a8221a;
+
+  /* Acento da marca. Só como fundo, linha ou numeral grande sobre preto;
+     nunca como texto sobre fundo claro (1,7:1). */
+  --brand: #fcbd20;
+  --brand-foreground: #0a0a0a;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #3d3d37;
+  --sidebar-primary: #0a0a0a;
+  --sidebar-primary-foreground: #fffff7;
+  --sidebar-accent: #f4f3ea;
+  --sidebar-accent-foreground: #0a0a0a;
+  --sidebar-border: #e7e7e7;
+  --sidebar-ring: #0a0a0a;
+
+  /* Estados (texto / fundo suave / linha). Texto >= 5,2:1 no fundo suave.
+     "Atenção" é âmbar terroso, de propósito longe do amarelo da marca. */
+  --state-ok: #1d6a3b;
+  --state-ok-soft: #e8f2e6;
+  --state-ok-line: #bcd9b8;
+  --state-warn: #7a4a06;
+  --state-warn-soft: #f5e8cc;
+  --state-warn-line: #e0c58b;
+  --state-late: #a3410d;
+  --state-late-soft: #fbe6d6;
+  --state-late-line: #efbf9d;
+  --state-crit: #a8221a;
+  --state-crit-soft: #fbe4e1;
+  --state-crit-line: #efb4ae;
+
+  --selection: #fcbd20;
+  --scrollbar: #d4d3c8;
+
+  color-scheme: light;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    -webkit-text-size-adjust: 100%;
+    /* Topbar fixa não pode cobrir o elemento focado. */
+    scroll-padding-top: 4.5rem;
+  }
+  button,
+  a,
+  [role="tab"],
+  [role="combobox"],
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+  [role="dialog"] {
+    overscroll-behavior: contain;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-heading);
+    text-wrap: balance;
+  }
+  /* Fraunces só no h1 de página (e no wordmark e no "Parado há" do cartão crítico). */
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+  h1 em {
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  /* Superfícies do navegador também carregam o design. */
+  ::selection {
+    background: var(--selection);
+    color: var(--foreground);
+  }
+  input,
+  textarea {
+    caret-color: var(--foreground);
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  a {
+    text-underline-offset: 3px;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar) transparent;
+  }
+}
+
+@layer utilities {
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Rótulo auxiliar: Urbanist 600, 13px, caixa baixa. Caixa alta + tracking
+     fica só nos botões (e no texto "WEETHUB" do lockup da marca). */
+  .eyebrow {
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+}
+
+/* Toasts sem ícone: o texto já diz o que aconteceu. */
+[data-sonner-toast] [data-icon] {
+  display: none;
+}
+
+/* Movimento reduzido: sem pulso de skeleton nem entrada com zoom/slide; as
+   transições de cor (hover, foco, estado) continuam, porque comunicam estado. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse,
+  .animate-spin {
+    animation: none;
+  }
+  [data-open],
+  [data-closed] {
+    animation-duration: 1ms !important;
+  }
+}

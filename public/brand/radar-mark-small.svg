@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="Weethub Radar">
+  <title>Weethub Radar</title>
+  <!-- Versão para tamanhos abaixo de 24px: ponteiro mais grosso (3,6) e sem pivô. -->
+  <circle cx="24" cy="24" r="17" fill="none" stroke="#000" stroke-width="10"/>
+  <path fill="#fcbd20" d="M24 2A22 22 0 0 1 46 24H36A12 12 0 0 0 24 12Z"/>
+  <path d="M24 24L31.5 16.5" fill="none" stroke="#000" stroke-width="3.6" stroke-linecap="round"/>
+</svg>

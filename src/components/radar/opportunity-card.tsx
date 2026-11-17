@@ -80,7 +80,7 @@ export function OportunidadeCheia({
   return (
     <li data-flip-id={o.id}>
       <article
-        className="rounded-md border bg-card p-5"
+        className="rounded-lg border bg-card p-5 shadow-card transition-shadow hover:shadow-card-hover"
         aria-labelledby={`opp-${o.id}`}
       >
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
@@ -90,7 +90,7 @@ export function OportunidadeCheia({
               <h3 id={`opp-${o.id}`} className="text-lg leading-tight font-bold">
                 <Link
                   href={`/clientes/${cliente.id}?frente=${frente.id}`}
-                  className="hover:underline"
+                  className="hover:text-link"
                 >
                   {cliente.nome}
                 </Link>
@@ -105,10 +105,10 @@ export function OportunidadeCheia({
           </div>
 
           <div className="flex shrink-0 flex-col gap-1 border-t pt-4 sm:min-w-40 sm:items-end sm:border-t-0 sm:pt-0">
-            <span className="text-sm font-semibold text-muted-foreground">
+            <span className="text-xs font-bold tracking-wide text-muted-foreground uppercase">
               Parado há
             </span>
-            <span className="tnum font-display text-3xl leading-none font-medium">
+            <span className="tnum text-[1.75rem] leading-none font-extrabold text-state-crit">
               {o.diasParado === null ? "Nunca" : formatarDias(o.diasParado)}
             </span>
             <span className="tnum text-sm text-muted-foreground">
@@ -151,7 +151,7 @@ export function OportunidadeLinha({
         <h3 id={`opp-${o.id}`} className="text-base font-bold">
           <Link
             href={`/clientes/${cliente.id}?frente=${frente.id}`}
-            className="hover:underline"
+            className="hover:text-link"
           >
             {cliente.nome}
           </Link>

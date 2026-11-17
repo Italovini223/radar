@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { Menu as MenuIcone } from "lucide-react"
 
 import { RadarLogo } from "@/components/brand/radar-logo"
 import { AvisoDemo, NavLista } from "@/components/layout/nav-lista"
@@ -22,9 +23,10 @@ export function MobileNav() {
       <SheetTrigger asChild>
         <Button
           variant="ghost"
-          className="-ml-3 h-11 min-w-11 px-3 text-[0.8125rem] font-semibold tracking-normal normal-case lg:hidden"
+          className="-ml-2 h-10 min-w-10 px-2.5 lg:hidden"
+          aria-label="Menu"
         >
-          Menu
+          <MenuIcone className="size-5" aria-hidden />
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-72 gap-0 p-5 pt-6">

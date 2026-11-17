@@ -23,7 +23,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Topbar />
           <main
             id="conteudo"
-            className="mx-auto w-full max-w-[1296px] flex-1 px-4 pt-8 pb-14 sm:px-8 lg:px-11"
+            className="mx-auto w-full max-w-[1320px] flex-1 px-4 pt-7 pb-14 sm:px-8 lg:px-10"
           >
             {children}
           </main>

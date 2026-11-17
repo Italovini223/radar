@@ -1,23 +1,14 @@
 import type { Metadata, Viewport } from "next"
-import { Fraunces, Urbanist } from "next/font/google"
+import { Nunito_Sans } from "next/font/google"
 
 import { AppShell } from "@/components/layout/app-shell"
 
 import "./globals.css"
 
-// Tipografia do site weethub.com: Urbanist no UI, Fraunces (serifa) só em
-// h1, números de métrica e wordmark.
-const urbanist = Urbanist({
-  variable: "--font-urbanist",
+// Uma família sans arredondada no UI inteiro, como no painel de referência.
+const nunito = Nunito_Sans({
+  variable: "--font-nunito",
   subsets: ["latin"],
-  display: "swap",
-})
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  style: ["normal", "italic"],
-  axes: ["opsz"],
   display: "swap",
 })
 
@@ -31,7 +22,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#fffff7",
+  themeColor: "#f3f4f6",
 }
 
 export default function RootLayout({
@@ -40,11 +31,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR" className={`${urbanist.variable} ${fraunces.variable}`}>
+    <html lang="pt-BR" className={nunito.variable}>
       <body suppressHydrationWarning>
         <a
           href="#conteudo"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-full focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-primary-foreground"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-primary-foreground"
         >
           Pular para o conteúdo
         </a>

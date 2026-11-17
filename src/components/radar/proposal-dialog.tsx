@@ -254,7 +254,7 @@ function ProposalBody({
                 ref={aoAparecer}
                 role="status"
                 data-confirmacao="atribuida"
-                className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-state-ok-line bg-state-ok-soft px-4 py-3 text-sm text-state-ok"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-state-ok-line bg-state-ok-soft px-4 py-3 text-sm text-state-ok"
               >
                 <span className="font-semibold">
                   Atribuída ao setor {atribuidaA}. Segue no Radar com a marca de

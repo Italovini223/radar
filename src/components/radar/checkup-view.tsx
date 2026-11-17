@@ -124,7 +124,7 @@ function Formulario({
           Já vem preenchido com o que está registrado. Altere só o que estiver
           diferente; campo vazio não muda nada.
         </FieldDescription>
-        <div className="overflow-hidden rounded-md border bg-card">
+        <div className="overflow-hidden rounded-lg border bg-card shadow-card">
           <ul>
             {frentes.map((f) => {
               const valor = datas[f.id] ?? ""
@@ -219,7 +219,7 @@ function Formulario({
         <div
           ref={resumo}
           role="status"
-          className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-md border border-state-ok-line bg-state-ok-soft px-4 py-3 text-sm text-state-ok"
+          className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-lg border border-state-ok-line bg-state-ok-soft px-4 py-3 text-sm text-state-ok"
         >
           <span className="font-bold">Check-up salvo.</span>
           <Link href="/radar" className="font-semibold underline">

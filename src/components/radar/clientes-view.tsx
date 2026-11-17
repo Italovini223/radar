@@ -116,7 +116,7 @@ function Conteudo() {
         <ul
           ref={listaRef}
           data-entra
-          className="divide-y rounded-md border bg-card"
+          className="divide-y overflow-hidden rounded-lg border bg-card shadow-card"
         >
           {visiveis.map(({ cliente, resumo, critica, oportunidades: n, ultima }) => (
             <li
@@ -127,7 +127,7 @@ function Conteudo() {
               <div className="min-w-0">
                 <Link
                   href={`/clientes/${cliente.id}`}
-                  className="font-bold hover:underline"
+                  className="font-bold hover:text-link"
                 >
                   {cliente.nome}
                 </Link>

@@ -122,7 +122,7 @@ export function GradeTable({
   )
 
   return (
-    <div ref={raiz} className="overflow-hidden rounded-md border bg-card">
+    <div ref={raiz} className="overflow-hidden rounded-lg border bg-card shadow-card">
       <Table className="min-w-[56rem] border-separate border-spacing-0">
         <caption className="sr-only">
           Grade de clientes por frente, do cliente em pior estado para o
@@ -133,7 +133,7 @@ export function GradeTable({
           <TableRow className="hover:bg-transparent">
             <TableHead
               scope="col"
-              className="sticky left-0 z-[1] h-14 w-40 border-b bg-card px-3 text-sm font-bold text-foreground"
+              className="sticky left-0 z-[1] h-14 w-40 border-b bg-gray-50 px-3 text-sm font-bold normal-case tracking-normal text-foreground"
             >
               Cliente
             </TableHead>
@@ -141,7 +141,7 @@ export function GradeTable({
               <TableHead
                 key={f.id}
                 scope="col"
-                className="h-14 border-b px-1.5 text-sm font-bold text-foreground"
+                className="h-14 border-b px-1.5 text-sm font-bold normal-case tracking-normal text-foreground"
               >
                 <span className="block">{f.nome}</span>
                 <span className="tnum block text-xs font-normal text-muted-foreground">
@@ -151,7 +151,7 @@ export function GradeTable({
             ))}
             <TableHead
               scope="col"
-              className="h-14 w-24 border-b px-3 text-right text-sm font-bold text-foreground"
+              className="h-14 w-24 border-b px-3 text-right text-sm font-bold normal-case tracking-normal text-foreground"
             >
               Problemas
             </TableHead>
@@ -166,11 +166,11 @@ export function GradeTable({
             >
               <TableHead
                 scope="row"
-                className="sticky left-0 z-[1] border-b bg-card px-3 py-1.5 text-left align-middle"
+                className="sticky left-0 z-[1] border-b bg-card px-3 py-1.5 text-left align-middle normal-case tracking-normal text-foreground"
               >
                 <Link
                   href={`/clientes/${c.id}`}
-                  className="text-sm font-bold hover:underline"
+                  className="text-sm font-bold hover:text-link"
                 >
                   {c.nome}
                 </Link>
@@ -191,11 +191,11 @@ export function GradeTable({
             </TableRow>
           ))}
         </TableBody>
-        <TableFooter className="bg-transparent">
+        <TableFooter className="bg-gray-50">
           <TableRow className="hover:bg-transparent">
             <TableHead
               scope="row"
-              className="sticky left-0 z-[1] bg-card px-3 py-3 text-left text-sm font-bold"
+              className="sticky left-0 z-[1] bg-gray-50 px-3 py-3 text-left text-sm font-bold normal-case tracking-normal text-foreground"
             >
               Problemas
             </TableHead>

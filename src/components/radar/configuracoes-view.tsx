@@ -120,7 +120,7 @@ function Conteudo() {
 
       <section data-entra aria-labelledby="titulo-prazos" className="mb-10">
         <div className="mb-3 flex flex-wrap items-center gap-2">
-          <h2 id="titulo-prazos" className="text-xl font-semibold">
+          <h2 id="titulo-prazos" className="text-xl font-bold">
             Prazos por frente
           </h2>
           <span className="text-sm text-muted-foreground">
@@ -132,7 +132,7 @@ function Conteudo() {
           frente. As faixas ao lado mostram quando cada estado começa. Ao
           mudar um prazo, a Grade e o Radar recalculam na hora.
         </p>
-        <div className="overflow-hidden rounded-md border bg-card">
+        <div className="overflow-hidden rounded-lg border bg-card shadow-card">
           <Table className="min-w-[44rem]">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
@@ -167,7 +167,7 @@ function Conteudo() {
       </section>
 
       <section data-entra aria-labelledby="titulo-dados">
-        <h2 id="titulo-dados" className="mb-2 text-xl font-semibold">
+        <h2 id="titulo-dados" className="mb-2 text-xl font-bold">
           Dados de demonstração
         </h2>
         <p className="mb-4 max-w-2xl text-sm text-muted-foreground">

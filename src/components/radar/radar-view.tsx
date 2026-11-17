@@ -278,22 +278,22 @@ function Conteudo() {
       <section aria-label="Oportunidades" className="mt-8">
         <div
           data-entra
-          className="mb-5 flex flex-wrap items-center gap-x-6 gap-y-3 border-b pb-3"
+          className="mb-5 flex flex-col gap-4"
         >
           <Tabs value={aba} onValueChange={(v) => setAba(v as Aba)}>
             <TabsList
               variant="line"
               aria-label="Tipo de oportunidade"
-              className="w-full flex-wrap justify-start gap-x-5 gap-y-1 group-data-horizontal/tabs:h-auto"
+              className="w-full flex-wrap justify-start gap-x-6 gap-y-1 border-b group-data-horizontal/tabs:h-auto"
             >
               {ABAS.map((a) => (
                 <TabsTrigger
                   key={a.valor}
                   value={a.valor}
-                  className="flex-none py-2"
+                  className="group/aba flex-none px-0 py-2.5"
                 >
                   {a.rotulo}
-                  <span className="tnum font-normal text-muted-foreground">
+                  <span className="tnum rounded-full bg-gray-200/80 px-1.5 text-xs font-bold text-muted-foreground group-data-active/aba:bg-primary/10 group-data-active/aba:text-link">
                     {contagens[a.valor]}
                   </span>
                 </TabsTrigger>
@@ -301,7 +301,8 @@ function Conteudo() {
             </TabsList>
           </Tabs>
 
-          <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto">
+          <div className="flex w-full flex-wrap items-center gap-2">
+            <span className="mr-1 text-sm text-muted-foreground">Filtrar por</span>
             <Input
               type="search"
               value={busca}
@@ -349,7 +350,7 @@ function Conteudo() {
 
         <div ref={lista} data-entra className="relative">
         {oportunidades.length === 0 ? (
-          <Empty className="border py-12">
+          <Empty className="rounded-lg border bg-card py-12 shadow-card">
             <EmptyHeader>
               <EmptyTitle>Carteira em dia</EmptyTitle>
               <EmptyDescription>
@@ -392,7 +393,7 @@ function Conteudo() {
               </ul>
             ) : null}
             {demais.length > 0 ? (
-              <ul className="divide-y rounded-md border bg-card">
+              <ul className="divide-y overflow-hidden rounded-lg border bg-card shadow-card">
                 {demais.map((o) => {
                   const cliente = clientePorId.get(o.clientId)
                   const frente = frentePorId.get(o.frenteId)

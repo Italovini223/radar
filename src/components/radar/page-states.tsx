@@ -16,7 +16,7 @@ import { useRadar } from "@/lib/hooks"
 import { useRadarStore } from "@/lib/store"
 
 /**
- * Cabeçalho de página. O h1 vai em Fraunces em romano. O itálico (`italic`)
+ * Cabeçalho de página: h1 em Nunito Sans 700. `italic` é só um complemento
  * existe só no h1 do /radar: nas demais telas, nome de cliente e títulos de
  * página ficam em romano. `description` só quando traz dado.
  */
@@ -34,16 +34,16 @@ export function PageHeading({
   return (
     <div
       data-entra
-      className="mb-8 flex flex-wrap items-end justify-between gap-4"
+      className="mb-6 flex flex-wrap items-end justify-between gap-4"
     >
       <div className="min-w-0">
-        <h1 className="text-[2.25rem] leading-[1.1] sm:text-[2.75rem]">
+        <h1 className="text-2xl leading-tight sm:text-[1.75rem]">
           {title}
           {title && italic ? " " : null}
-          {italic ? <em>{italic}</em> : null}
+          {italic ?? null}
         </h1>
         {description ? (
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
             {description}
           </p>
         ) : null}
@@ -102,7 +102,7 @@ export function SemResultados({
   onLimpar?: () => void
 }) {
   return (
-    <Empty className="border py-10">
+    <Empty className="rounded-lg border bg-card py-10 shadow-card">
       <EmptyHeader>
         <EmptyTitle>{titulo}</EmptyTitle>
         <EmptyDescription>{descricao}</EmptyDescription>

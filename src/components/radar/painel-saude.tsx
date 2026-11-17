@@ -29,10 +29,10 @@ const SEGMENTOS: {
   cor: string
   texto: string
 }[] = [
-  { estado: "em_dia", rotulo: "Em dia", cor: "bg-state-ok", texto: "text-state-ok" },
-  { estado: "atencao", rotulo: "Atenção", cor: "bg-state-warn", texto: "text-state-warn" },
-  { estado: "atrasada", rotulo: "Atrasada", cor: "bg-state-late", texto: "text-state-late" },
-  { estado: "critica", rotulo: "Crítica", cor: "bg-state-crit", texto: "text-state-crit" },
+  { estado: "em_dia", rotulo: "Em dia", cor: "bg-state-ok-bar", texto: "text-state-ok" },
+  { estado: "atencao", rotulo: "Atenção", cor: "bg-state-warn-bar", texto: "text-state-warn" },
+  { estado: "atrasada", rotulo: "Atrasada", cor: "bg-state-late-bar", texto: "text-state-late" },
+  { estado: "critica", rotulo: "Crítica", cor: "bg-state-crit-bar", texto: "text-state-crit" },
 ]
 
 /** Últimas proporções mostradas: ao voltar para a tela, a barra parte delas. */
@@ -88,7 +88,7 @@ function Kpi({
         valor={numero}
         chave={`kpi:${dataKpi}`}
         dataNumero={dataKpi}
-        className="tnum mt-1 block text-[1.75rem] leading-tight font-bold text-foreground sm:text-3xl"
+        className="tnum mt-1.5 block text-[1.75rem] leading-tight font-extrabold text-foreground sm:text-3xl"
       />
       <span className="tnum mt-0.5 block text-sm font-normal text-muted-foreground">
         {apoio}
@@ -102,8 +102,8 @@ function Kpi({
     </>
   )
   const classes = cn(
-    "relative block w-full px-4 py-3 text-left outline-none transition-colors hover:bg-secondary/70 focus-visible:z-[1] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
-    selecionado && "bg-secondary"
+    "relative block w-full px-5 py-4 text-left outline-none transition-colors hover:bg-gray-50 focus-visible:z-[1] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+    selecionado && "bg-accent"
   )
   return href ? (
     <Link href={href} className={classes} data-kpi={dataKpi}>
@@ -228,11 +228,11 @@ export function PainelSaude({
       ref={raiz}
       data-entra
       aria-labelledby="titulo-saude"
-      className="rounded-md border bg-card"
+      className="rounded-lg border bg-card shadow-card"
     >
-      <div className="px-4 pt-4 pb-4 sm:px-5">
+      <div className="px-4 pt-5 pb-5 sm:px-5">
         <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <h2 id="titulo-saude" className="text-base font-semibold">
+          <h2 id="titulo-saude" className="text-lg font-bold">
             Saúde da carteira
           </h2>
           <p className="tnum text-sm text-muted-foreground">
@@ -246,7 +246,7 @@ export function PainelSaude({
           role="img"
           aria-label={resumo}
           data-barra-saude
-          className="flex h-3 w-full gap-0.5"
+          className="flex h-2.5 w-full gap-1"
         >
           {contagens
             .filter((s) => s.n > 0)
@@ -255,7 +255,7 @@ export function PainelSaude({
                 key={s.estado}
                 data-segmento={s.estado}
                 data-n={s.n}
-                className={cn("block h-full rounded-[3px]", s.cor)}
+                className={cn("block h-full rounded-full", s.cor)}
                 style={{ flexGrow: s.n, flexBasis: 0 }}
               />
             ))}

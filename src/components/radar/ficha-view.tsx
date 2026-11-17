@@ -144,7 +144,7 @@ function Conteudo({ id }: { id: string }) {
 
       <div className="grid gap-8 min-[1400px]:grid-cols-[minmax(0,1fr)_24rem]">
         <section aria-labelledby="titulo-frentes" className="min-w-0">
-          <h2 id="titulo-frentes" className="mb-3 text-xl font-semibold">
+          <h2 id="titulo-frentes" className="mb-3 text-xl font-bold">
             Frentes
           </h2>
           {/* Abaixo de md: um cartão por frente, com o Estado visível. */}
@@ -158,7 +158,7 @@ function Conteudo({ id }: { id: string }) {
                   data-entra
                   data-destaque={destaque === l.frenteId || undefined}
                   className={cn(
-                    "rounded-md border bg-card p-4",
+                    "rounded-lg border bg-card shadow-card p-4",
                     destaque === l.frenteId && "border-foreground bg-secondary"
                   )}
                 >
@@ -197,7 +197,7 @@ function Conteudo({ id }: { id: string }) {
 
           <div
             data-entra
-            className="hidden overflow-hidden rounded-md border bg-card md:block"
+            className="hidden overflow-hidden rounded-lg border bg-card shadow-card md:block"
           >
             <Table>
               <TableHeader>
@@ -278,7 +278,7 @@ function Conteudo({ id }: { id: string }) {
         </section>
 
         <section aria-labelledby="titulo-timeline" className="min-w-0">
-          <h2 id="titulo-timeline" className="mb-3 text-xl font-semibold">
+          <h2 id="titulo-timeline" className="mb-3 text-xl font-bold">
             Linha do tempo
           </h2>
           {timeline.length === 0 ? (
@@ -293,7 +293,7 @@ function Conteudo({ id }: { id: string }) {
           ) : (
             <ol
               ref={timelineRef}
-              className="flex flex-col rounded-md border bg-card"
+              className="flex flex-col rounded-lg border bg-card shadow-card"
             >
               {timeline.map((a) => {
                 const f = frentePorId.get(a.frenteId)

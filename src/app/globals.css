@@ -5,9 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Weethub Radar: tokens (fonte da verdade visual: DESIGN.md).
- * Identidade medida no site weethub.com: preto, off-white quente e UM acento
- * amarelo. Camada 1 = primitivas (hex da marca); camada 2 = papéis semânticos do
+ * Weethub Radar: tokens (fonte da verdade visual: DESIGN.md). Painel SaaS: fundo cinza, cartões brancos, azul de ação.
+ * Camada 1 = primitivas; camada 2 = papéis semânticos do
  * shadcn; camada 3 = estados do Radar (em dia / atenção / atrasada / crítica).
  * Só modo claro (uso em escritório, tela diurna): sem variante escura.
  */
@@ -15,12 +14,12 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-urbanist), ui-sans-serif, system-ui, sans-serif;
-  /* Urbanist em todo o UI. Fraunces só em h1, no "Parado há" do cartão crítico e no wordmark. */
-  --font-heading: var(--font-urbanist), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  /* Nunito Sans em todo o UI (uma família só, como no painel de referência). */
+  --font-heading: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  /* Uma família só, como na referência: "display" é a mesma sans, em peso alto. */
+  --font-display: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
 
-  /* Urbanist tem x-height baixo: um degrau acima da escala padrão. */
   --text-xs: 0.8125rem;
   --text-xs--line-height: 1.25rem;
   --text-sm: 0.9375rem;
@@ -47,6 +46,8 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-link: var(--link);
   --color-primary: var(--primary);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
@@ -57,86 +58,104 @@
   --color-state-ok: var(--state-ok);
   --color-state-ok-soft: var(--state-ok-soft);
   --color-state-ok-line: var(--state-ok-line);
+  --color-state-ok-bar: var(--state-ok-bar);
   --color-state-warn: var(--state-warn);
   --color-state-warn-soft: var(--state-warn-soft);
   --color-state-warn-line: var(--state-warn-line);
+  --color-state-warn-bar: var(--state-warn-bar);
   --color-state-late: var(--state-late);
   --color-state-late-soft: var(--state-late-soft);
   --color-state-late-line: var(--state-late-line);
+  --color-state-late-bar: var(--state-late-bar);
   --color-state-crit: var(--state-crit);
   --color-state-crit-soft: var(--state-crit-soft);
   --color-state-crit-line: var(--state-crit-line);
+  --color-state-crit-bar: var(--state-crit-bar);
 
-  /* Cartões e controles: no máximo 6px. Pílula é só `rounded-full`. */
-  --radius-sm: 3px;
-  --radius-md: 4px;
+  /* Controles 6px, cartões 8px, painéis 12px. Pílula só em chips/avatares. */
+  --radius-sm: 4px;
+  --radius-md: 6px;
   --radius-lg: var(--radius);
-  --radius-xl: var(--radius);
-  --radius-2xl: var(--radius);
-  --radius-3xl: var(--radius);
-  --radius-4xl: var(--radius);
+  --radius-xl: 12px;
+  --radius-2xl: 12px;
+  --radius-3xl: 12px;
+  --radius-4xl: 12px;
+
+  --shadow-card: var(--shadow-card);
+  --shadow-card-hover: var(--shadow-card-hover);
+  --shadow-pop: var(--shadow-pop);
 }
 
 :root {
-  --radius: 6px;
+  --radius: 8px;
 
-  /* Neutros quentes (sem matiz azul-violeta). Tinta #0a0a0a, canvas #fffff7. */
-  --background: #fffff7;
-  --foreground: #0a0a0a;
+  /* Neutros frios do painel de referência: fundo cinza-claro, cartões brancos. */
+  --background: #f3f4f6;
+  --foreground: #1f2937;
   --card: #ffffff;
-  --card-foreground: #0a0a0a;
+  --card-foreground: #1f2937;
   --popover: #ffffff;
-  --popover-foreground: #0a0a0a;
-  --secondary: #f4f3ea;
-  --secondary-foreground: #0a0a0a;
-  --muted: #f4f3ea;
-  /* #5b5b53: 6,8:1 sobre #fffff7 e 6,9:1 sobre #fff (AA). */
-  --muted-foreground: #5b5b53;
-  --border: #e7e7e7;
-  /* Borda de campo: 3,8:1 sobre #fff e 3,4:1 sobre #f4f3ea (critério 1.4.11). */
-  --input: #85847a;
+  --popover-foreground: #1f2937;
+  --secondary: #eef4fe;
+  --secondary-foreground: #1d5fd1;
+  --muted: #f3f4f6;
+  /* #5f6672: 5,9:1 sobre #fff e 5,3:1 sobre #f3f4f6 (AA). */
+  --muted-foreground: #5f6672;
+  --border: #e5e7eb;
+  /* Borda de campo: 3,1:1 sobre #fff (critério 1.4.11). */
+  --input: #8c939f;
 
-  /* Primário = preto com texto off-white, como os botões do site. */
-  --primary: #0a0a0a;
-  --primary-foreground: #fffff7;
-  /* "accent" do shadcn é só hover/seleção em superfície quieta. */
-  --accent: #f4f3ea;
-  --accent-foreground: #0a0a0a;
-  /* Foco: anel preto de 2px com offset (o amarelo não tem contraste sobre claro). */
-  --ring: #0a0a0a;
-  --destructive: #a8221a;
+  /* Primário = azul de ação (botões, item ativo, links, foco). */
+  --primary: #1f6feb;
+  --primary-hover: #1a5fd0;
+  --primary-foreground: #ffffff;
+  /* Tinta de destaque azul para texto sobre branco (5,6:1). */
+  --link: #1d5fd1;
+  /* "accent" = hover/seleção azul bem claro. */
+  --accent: #eef4fe;
+  --accent-foreground: #1d5fd1;
+  --ring: #1f6feb;
+  --destructive: #d32f2f;
 
-  /* Acento da marca. Só como fundo, linha ou numeral grande sobre preto;
-     nunca como texto sobre fundo claro (1,7:1). */
+  /* Amarelo Weethub: bloco da marca, ponto de "Nova" e seleção de texto.
+     Nunca como texto sobre fundo claro. */
   --brand: #fcbd20;
-  --brand-foreground: #0a0a0a;
+  --brand-foreground: #1f2937;
 
   --sidebar: #ffffff;
-  --sidebar-foreground: #3d3d37;
-  --sidebar-primary: #0a0a0a;
-  --sidebar-primary-foreground: #fffff7;
-  --sidebar-accent: #f4f3ea;
-  --sidebar-accent-foreground: #0a0a0a;
-  --sidebar-border: #e7e7e7;
-  --sidebar-ring: #0a0a0a;
+  --sidebar-foreground: #4b5563;
+  --sidebar-primary: #1f6feb;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eef4fe;
+  --sidebar-accent-foreground: #1d5fd1;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: #1f6feb;
 
-  /* Estados (texto / fundo suave / linha). Texto >= 5,2:1 no fundo suave.
-     "Atenção" é âmbar terroso, de propósito longe do amarelo da marca. */
-  --state-ok: #1d6a3b;
-  --state-ok-soft: #e8f2e6;
-  --state-ok-line: #bcd9b8;
-  --state-warn: #7a4a06;
-  --state-warn-soft: #f5e8cc;
-  --state-warn-line: #e0c58b;
-  --state-late: #a3410d;
-  --state-late-soft: #fbe6d6;
-  --state-late-line: #efbf9d;
-  --state-crit: #a8221a;
-  --state-crit-soft: #fbe4e1;
-  --state-crit-line: #efb4ae;
+  /* Elevação: sombra curta e neutra, como os cartões da referência. */
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.05), 0 1px 3px rgb(16 24 40 / 0.06);
+  --shadow-card-hover: 0 2px 4px rgb(16 24 40 / 0.06), 0 4px 12px rgb(16 24 40 / 0.08);
+  --shadow-pop: 0 8px 24px rgb(16 24 40 / 0.12);
 
-  --selection: #fcbd20;
-  --scrollbar: #d4d3c8;
+  /* Estados (texto / fundo suave / linha). Texto >= 4,5:1 no fundo suave. */
+  --state-ok: #18794e;
+  --state-ok-soft: #e7f6ee;
+  --state-ok-line: #b5e2c9;
+  --state-ok-bar: #2fb36b;
+  --state-warn: #92510a;
+  --state-warn-soft: #fff4d6;
+  --state-warn-line: #f6d77e;
+  --state-warn-bar: #f2a31b;
+  --state-late: #b34100;
+  --state-late-soft: #ffeddf;
+  --state-late-line: #fcc39b;
+  --state-late-bar: #f57c22;
+  --state-crit: #c62828;
+  --state-crit-soft: #fdecec;
+  --state-crit-line: #f5b5b5;
+  --state-crit-bar: #e53935;
+
+  --selection: #fde49a;
+  --scrollbar: #c9cdd4;
 
   color-scheme: light;
 }
@@ -174,15 +193,13 @@
     font-family: var(--font-heading);
     text-wrap: balance;
   }
-  /* Fraunces só no h1 de página (e no wordmark e no "Parado há" do cartão crítico). */
   h1 {
-    font-family: var(--font-display);
-    font-weight: 500;
-    letter-spacing: -0.02em;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    letter-spacing: -0.01em;
   }
   h1 em {
-    font-style: italic;
-    font-weight: 400;
+    font-style: normal;
   }
 
   /* Superfícies do navegador também carregam o design. */
@@ -216,6 +233,13 @@
   .eyebrow {
     font-size: 0.8125rem;
     font-weight: 600;
+  }
+  /* Cartão padrão do painel: branco, raio 8px, sombra curta, sem borda forte. */
+  .superficie {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
   }
 }
 

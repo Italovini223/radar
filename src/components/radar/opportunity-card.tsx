@@ -6,6 +6,11 @@ import { EstadoBadge } from "@/components/radar/estado"
 import { Button } from "@/components/ui/button"
 import { impactoDaOportunidade } from "@/lib/ai/proposal"
 import { formatarDias } from "@/lib/domain/opportunities"
+import {
+  bloqueioCurto,
+  rotuloRelogio,
+  semRetornoDoCliente,
+} from "@/lib/domain/rotulos"
 import { useRadarStore } from "@/lib/store"
 import type {
   Atribuicao,
@@ -21,6 +26,7 @@ interface Props {
   atribuicao?: Atribuicao
   tituloAcao?: string
   onVerProposta: (o: Opportunity) => void
+  onRegistrarAcao: (o: Opportunity) => void
 }
 
 /** Ponto amarelo de 6px: oportunidade nova (venceu o prazo há até 14 dias). */
@@ -70,6 +76,7 @@ export function OportunidadeCheia({
   atribuicao,
   tituloAcao,
   onVerProposta,
+  onRegistrarAcao,
 }: Props) {
   const impacto = impactoDaOportunidade({
     oportunidade: o,
@@ -107,7 +114,7 @@ export function OportunidadeCheia({
 
           <div className="flex shrink-0 flex-col gap-1 border-t pt-4 sm:min-w-40 sm:items-end sm:border-t-0 sm:pt-0">
             <span className="text-xs font-bold tracking-wide text-muted-foreground uppercase">
-              Parado há
+              {rotuloRelogio(o)}
             </span>
             <span className="tnum text-[1.75rem] leading-none font-extrabold text-state-crit">
               {o.diasParado === null ? "Nunca" : formatarDias(o.diasParado)}
@@ -115,13 +122,26 @@ export function OportunidadeCheia({
             <span className="tnum text-sm text-muted-foreground">
               prazo: {o.prazoDias} dias
             </span>
-            <Button
-              className="mt-3 w-fit"
-              onClick={() => onVerProposta(o)}
-              aria-label={`Ver proposta para ${cliente.nome}, ${frente.nome}`}
-            >
-              Ver proposta
-            </Button>
+            {semRetornoDoCliente(o) && o.diasParaBloqueio !== null ? (
+              <span className="tnum text-sm font-semibold text-state-crit">
+                {bloqueioCurto(o.diasParaBloqueio)}
+              </span>
+            ) : null}
+            <div className="mt-3 flex flex-wrap gap-2 sm:justify-end">
+              <Button
+                onClick={() => onVerProposta(o)}
+                aria-label={`Ver proposta para ${cliente.nome}, ${frente.nome}`}
+              >
+                Ver proposta
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => onRegistrarAcao(o)}
+                aria-label={`Registrar ação para ${cliente.nome}, ${frente.nome}`}
+              >
+                Registrar ação
+              </Button>
+            </div>
           </div>
         </div>
       </article>
@@ -139,6 +159,7 @@ export function OportunidadeLinha({
   frente,
   atribuicao,
   onVerProposta,
+  onRegistrarAcao,
 }: Props) {
   const aprovacao = o.tipo === "aprovacao"
   const limiteAprovacao = useRadarStore((s) => s.configuracao.limiteAprovacaoDias)
@@ -171,22 +192,43 @@ export function OportunidadeLinha({
         <Metadados o={o} cliente={cliente} atribuicao={atribuicao} />
       </div>
       <p className="tnum text-sm">
+        {semRetornoDoCliente(o) ? (
+          <span className="block text-xs text-muted-foreground">
+            sem retorno do cliente
+          </span>
+        ) : null}
         <span className="font-bold">
           {o.diasParado === null ? "Nunca" : formatarDias(o.diasParado)}
         </span>
         <span className="block text-muted-foreground">
           {aprovacao ? `limite: ${limiteAprovacao} dias` : `prazo: ${o.prazoDias} dias`}
         </span>
+        {semRetornoDoCliente(o) && o.diasParaBloqueio !== null ? (
+          <span className="block font-semibold text-state-crit">
+            {bloqueioCurto(o.diasParaBloqueio)}
+          </span>
+        ) : null}
       </p>
-      <Button
-        size="sm"
-        variant="outline"
-        className="w-fit"
-        onClick={() => onVerProposta(o)}
-        aria-label={`Ver proposta para ${cliente.nome}, ${frente.nome}`}
-      >
-        Ver proposta
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          className="w-fit"
+          onClick={() => onVerProposta(o)}
+          aria-label={`Ver proposta para ${cliente.nome}, ${frente.nome}`}
+        >
+          Ver proposta
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="w-fit"
+          onClick={() => onRegistrarAcao(o)}
+          aria-label={`Registrar ação para ${cliente.nome}, ${frente.nome}`}
+        >
+          Registrar ação
+        </Button>
+      </div>
     </li>
   )
 }

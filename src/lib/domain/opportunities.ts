@@ -165,21 +165,15 @@ export function rankOportunidade(o: Opportunity): number {
 }
 
 /**
- * Próxima oportunidade sugerida de um cliente: a de maior severidade
- * (crítica > atrasada > aprovação travada); empate = mais dias parado
- * ("nunca" é o pior caso). `null` se o cliente não tem alertas.
+ * Escolhe, entre as oportunidades dadas, a de maior severidade (crítica >
+ * atrasada > aprovação travada); empate = mais dias parado ("nunca" é o pior
+ * caso). `null` se a lista está vazia.
  */
-export function proximaOportunidade(
-  clientId: string,
-  clients: readonly Client[],
-  frentes: readonly Frente[],
-  acoes: readonly Acao[],
-  now: Date,
-  ctx: ContextoRegras = {}
+export function escolherProxima(
+  lista: readonly Opportunity[]
 ): Opportunity | null {
   const diasOuMax = (o: Opportunity) =>
     o.diasParado === null ? Number.POSITIVE_INFINITY : o.diasParado
-  const lista = alertasDoCliente(clientId, clients, frentes, acoes, now, ctx)
   let melhor: Opportunity | null = null
   for (const o of lista) {
     if (
@@ -192,6 +186,23 @@ export function proximaOportunidade(
     }
   }
   return melhor
+}
+
+/**
+ * Próxima oportunidade sugerida de um cliente (ver `escolherProxima`).
+ * `null` se o cliente não tem alertas.
+ */
+export function proximaOportunidade(
+  clientId: string,
+  clients: readonly Client[],
+  frentes: readonly Frente[],
+  acoes: readonly Acao[],
+  now: Date,
+  ctx: ContextoRegras = {}
+): Opportunity | null {
+  return escolherProxima(
+    alertasDoCliente(clientId, clients, frentes, acoes, now, ctx)
+  )
 }
 
 export interface Metricas {

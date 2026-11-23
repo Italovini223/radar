@@ -8,7 +8,8 @@ import { ptBR } from "date-fns/locale"
 import { toast } from "sonner"
 
 import { AcaoDialog, ROTULO_STATUS } from "@/components/radar/acao-dialog"
-import { EstadoBadge } from "@/components/radar/estado"
+import { ConfirmacaoPosAcao } from "@/components/radar/confirmacao-pos-acao"
+import { EstadoBadge, SituacaoBadge } from "@/components/radar/estado"
 import {
   ComDados,
   PageHeading,
@@ -31,6 +32,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { formatarDias } from "@/lib/domain/opportunities"
+import { textoBlocoBloqueio } from "@/lib/domain/rotulos"
+import { situacaoDaGrade } from "@/lib/domain/rules"
 import type { StatusAcao } from "@/lib/domain/types"
 import { useRadar } from "@/lib/hooks"
 import { useEntrada } from "@/lib/motion/use-entrada"
@@ -49,8 +52,16 @@ function data(iso: string) {
 }
 
 function Conteudo({ id }: { id: string }) {
-  const { clients, frentes, acoes, grade, oportunidades, checkups, hoje } =
-    useRadar()
+  const {
+    clients,
+    frentes,
+    acoes,
+    grade,
+    oportunidades,
+    checkups,
+    hoje,
+    configuracao,
+  } = useRadar()
   const atualizarStatus = useRadarStore((s) => s.atualizarStatusAcao)
   const destaque = useSearchParams().get("frente") ?? undefined
   const [dialogo, setDialogo] = useState(false)
@@ -95,7 +106,7 @@ function Conteudo({ id }: { id: string }) {
         <EmptyHeader>
           <EmptyTitle>Cliente não encontrado</EmptyTitle>
           <EmptyDescription>
-            Esse cliente não existe nos dados deste navegador.
+            Esse cliente não existe nos dados do Radar.
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
@@ -108,6 +119,13 @@ function Conteudo({ id }: { id: string }) {
   }
 
   const emDia = linhas.filter((l) => l.estado === "em_dia").length
+  const situacao = situacaoDaGrade(linhas)
+  const naoContratadas = frentes.filter(
+    (f) => !linhas.some((l) => l.frenteId === f.id)
+  )
+  // Loja em criação: relógio de retorno do cliente e contagem até o bloqueio.
+  const linhaLoja = linhas.find((l) => l.relogio === "retorno_cliente")
+  const lojaEmCriacao = cliente.tipo === "loja_em_criacao"
   const nOpps = oportunidades.filter((o) => o.clientId === id).length
 
   function mudarStatus(acaoId: string, status: StatusAcao, msg: string) {
@@ -121,6 +139,7 @@ function Conteudo({ id }: { id: string }) {
         title={cliente.nome}
         description={
           <>
+            <SituacaoBadge situacao={situacao} className="mr-2 align-middle" />
             {cliente.nicho} · {cliente.responsavel} ·{" "}
             <span className="tnum">
               {emDia} de {linhas.length} frentes em dia, {nOpps}{" "}
@@ -141,6 +160,48 @@ function Conteudo({ id }: { id: string }) {
           </>
         }
       />
+
+      <ConfirmacaoPosAcao clienteId={cliente.id} className="mb-6" />
+
+      {lojaEmCriacao ? (
+        <section
+          aria-labelledby="titulo-loja"
+          data-entra
+          data-testid="bloco-loja-em-criacao"
+          className={cn(
+            "mb-6 rounded-lg border bg-card p-4 shadow-card sm:p-5",
+            linhaLoja &&
+              linhaLoja.diasParaBloqueio !== null &&
+              linhaLoja.diasParaBloqueio <= 0 &&
+              "border-state-crit-line bg-state-crit-soft"
+          )}
+        >
+          <h2 id="titulo-loja" className="text-xs font-bold tracking-wide text-muted-foreground uppercase">
+            Loja em criação
+          </h2>
+          {linhaLoja && linhaLoja.dias !== null && linhaLoja.diasParaBloqueio !== null ? (
+            <>
+              <p className="tnum mt-1 text-lg font-bold">
+                {textoBlocoBloqueio(
+                  linhaLoja.dias,
+                  linhaLoja.diasParaBloqueio,
+                  configuracao.bloqueioContratualDias
+                )}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                O relógio conta desde a entrega mais antiga que aguarda o
+                retorno do cliente
+                {linhaLoja.aguardandoDesde ? ` (${data(linhaLoja.aguardandoDesde)})` : ""}.
+                Follow-ups concluídos não reiniciam a contagem.
+              </p>
+            </>
+          ) : (
+            <p className="mt-1 text-base">
+              Nenhuma entrega aguardando o retorno do cliente.
+            </p>
+          )}
+        </section>
+      ) : null}
 
       <div className="grid gap-8 min-[1400px]:grid-cols-[minmax(0,1fr)_24rem]">
         <section aria-labelledby="titulo-frentes" className="min-w-0">
@@ -182,7 +243,9 @@ function Conteudo({ id }: { id: string }) {
                       <dd>{l.ultimaAcao ? data(l.ultimaAcao) : "Nunca"}</dd>
                     </div>
                     <div>
-                      <dt className="text-muted-foreground">Parado há</dt>
+                      <dt className="text-muted-foreground">
+                        {l.relogio === "retorno_cliente" ? "Sem retorno há" : "Parado há"}
+                      </dt>
                       <dd>{l.dias === null ? "Nunca" : formatarDias(l.dias)}</dd>
                     </div>
                     <div>
@@ -242,6 +305,11 @@ function Conteudo({ id }: { id: string }) {
                       </TableCell>
                       <TableCell className="tnum">
                         {l.dias === null ? "Nunca" : formatarDias(l.dias)}
+                        {l.relogio === "retorno_cliente" ? (
+                          <span className="block text-xs text-muted-foreground">
+                            sem retorno do cliente
+                          </span>
+                        ) : null}
                       </TableCell>
                       <TableCell className="tnum text-muted-foreground">
                         {l.prazoDias} dias
@@ -262,6 +330,12 @@ function Conteudo({ id }: { id: string }) {
               </TableBody>
             </Table>
           </div>
+          {naoContratadas.length > 0 ? (
+            <p className="mt-3 text-sm text-muted-foreground">
+              Não contratadas (não entram nos alertas):{" "}
+              {naoContratadas.map((f) => f.nome).join(", ")}.
+            </p>
+          ) : null}
           <p className="mt-3 text-xs text-muted-foreground">
             {ultimoCheckup ? (
               <>
@@ -317,6 +391,7 @@ function Conteudo({ id }: { id: string }) {
                         </span>
                       ) : null}
                       {a.origem === "checkup" ? <span>via check-up</span> : null}
+                      {a.responsavel ? <span>{a.responsavel}</span> : null}
                     </div>
                     <p className="text-sm">{a.titulo}</p>
                     {a.status === "aguardando_aprovacao" ? (

@@ -32,6 +32,8 @@ export interface RadarState extends RadarSnapshot {
   /** Falso até a primeira carga terminar (as telas mostram skeleton). */
   ready: boolean
   erro: string | null
+  /** true = o banco respondeu, mas está sem dados (primeira vez): oferece carregar a demonstração. */
+  vazio: boolean
   /** "Hoje" do app (ms), derivado da configuração (data de referência ou data real). */
   agora: number
   atualizarAgora: () => void
@@ -106,9 +108,6 @@ export function mensagemDeGravacao(e: unknown): string {
   return "Erro no servidor."
 }
 
-const MSG_BANCO_VAZIO =
-  "O banco de dados ainda está vazio. Use “Resetar dados de demonstração” para carregar os dados de exemplo."
-
 /**
  * Store OTIMISTA: aplica a mudança na hora, grava no servidor (em fila, na
  * mesma ordem) e, se falhar, desfaz só aquela mudança e avisa com toast.
@@ -157,6 +156,7 @@ export function criarRadarStore(repo: RadarRepository) {
       ...vazio,
       ready: false,
       erro: null,
+      vazio: false,
       agora: 0,
 
       atualizarAgora: () => set((s) => ({ agora: agoraDe(s.configuracao) })),
@@ -172,12 +172,18 @@ export function criarRadarStore(repo: RadarRepository) {
               ...snap,
               contratos: snap.contratos ?? [],
               ready: true,
-              erro: vazioNoBanco ? MSG_BANCO_VAZIO : null,
+              erro: null,
+              vazio: vazioNoBanco,
               agora: agoraDe(snap.configuracao),
             })
           } catch (e) {
             // Sem fallback silencioso para localStorage: mostra o erro.
-            set({ ready: true, agora: Date.now(), erro: mensagemDeCarga(e) })
+            set({
+              ready: true,
+              vazio: false,
+              agora: Date.now(),
+              erro: mensagemDeCarga(e),
+            })
           } finally {
             carregando = null
           }
@@ -193,6 +199,7 @@ export function criarRadarStore(repo: RadarRepository) {
             contratos: snap.contratos ?? [],
             ready: true,
             erro: null,
+            vazio: false,
             agora: agoraDe(snap.configuracao),
           })
           return true

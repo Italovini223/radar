@@ -1,9 +1,17 @@
 "use client"
 
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   Empty,
   EmptyContent,
@@ -71,6 +79,62 @@ export function PageSkeleton({ rows = 4 }: { rows?: number }) {
   )
 }
 
+/**
+ * Primeira vez com o banco ainda sem dados: em vez de erro, oferece carregar
+ * a demonstração (com confirmação de que o conteúdo é substituído).
+ */
+export function BancoVazio() {
+  const resetarDemo = useRadarStore((s) => s.resetarDemo)
+  const [confirma, setConfirma] = useState(false)
+  const [carregando, setCarregando] = useState(false)
+  return (
+    <>
+      <Empty className="rounded-lg border bg-card py-12 shadow-card">
+        <EmptyHeader>
+          <EmptyTitle>O banco de dados ainda está vazio</EmptyTitle>
+          <EmptyDescription>
+            Carregue os dados de demonstração (10 clientes fictícios, 8 frentes
+            e as ações do gabarito) para começar a usar o Radar.
+          </EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button onClick={() => setConfirma(true)}>
+            Carregar dados de demonstração
+          </Button>
+        </EmptyContent>
+      </Empty>
+      <Dialog open={confirma} onOpenChange={setConfirma}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Carregar dados de demonstração?</DialogTitle>
+            <DialogDescription>
+              Isso substitui todo o conteúdo do banco (clientes, frentes, ações,
+              check-ups e atribuições) pelos dados fictícios do gabarito, para
+              todas as pessoas que usam o Radar.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirma(false)}>
+              Cancelar
+            </Button>
+            <Button
+              disabled={carregando}
+              onClick={async () => {
+                setCarregando(true)
+                const ok = await resetarDemo()
+                setCarregando(false)
+                if (ok) setConfirma(false)
+              }}
+            >
+              {carregando ? "Carregando…" : "Carregar e substituir"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
+
 export function ErroDados({ mensagem }: { mensagem: string }) {
   const iniciar = useRadarStore((s) => s.iniciar)
   const resetarDemo = useRadarStore((s) => s.resetarDemo)
@@ -129,8 +193,9 @@ export function ComDados({
   children: ReactNode
   rows?: number
 }) {
-  const { ready, erro } = useRadar()
+  const { ready, erro, vazio } = useRadar()
   if (erro) return <ErroDados mensagem={erro} />
   if (!ready) return <PageSkeleton rows={rows} />
+  if (vazio) return <BancoVazio />
   return <>{children}</>
 }

@@ -41,7 +41,8 @@ import { useRadar } from "@/lib/hooks"
 import { gsap, useGSAP } from "@/lib/motion/gsap"
 import { movimento } from "@/lib/motion/movimento"
 import { useEntrada } from "@/lib/motion/use-entrada"
-import { useRadarStore } from "@/lib/store"
+import { ConfirmacaoPosAcao } from "@/components/radar/confirmacao-pos-acao"
+import { salvarCheckupComResumo } from "@/lib/confirmacao"
 
 function Formulario({
   cliente,
@@ -54,7 +55,6 @@ function Formulario({
   grade: StatusFrente[]
   hoje: Date
 }) {
-  const salvar = useRadarStore((s) => s.salvarCheckup)
   const id = useId()
   const hojeISO = toISODate(hoje)
   const atuais = useMemo(
@@ -102,7 +102,7 @@ function Formulario({
       if (primeira) document.getElementById(`${id}-${primeira.id}`)?.focus()
       return
     }
-    const mudou = salvar({
+    const mudou = salvarCheckupComResumo({
       clientId: cliente.id,
       entradas: frentes.map((f) => ({ frenteId: f.id, data: datas[f.id] ?? "" })),
       resultadoAds: ads || undefined,
@@ -282,6 +282,7 @@ function Conteudo() {
           </Select>
         </Field>
       </div>
+      <ConfirmacaoPosAcao clienteId={cliente.id} className="mb-6 max-w-4xl" />
       <div data-entra className="max-w-4xl">
         <Formulario
           key={cliente.id}

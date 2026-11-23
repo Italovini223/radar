@@ -16,6 +16,7 @@ import { useRadarStore } from "./store"
 export function useRadar() {
   const ready = useRadarStore((s) => s.ready)
   const erro = useRadarStore((s) => s.erro)
+  const vazio = useRadarStore((s) => s.vazio)
   const agora = useRadarStore((s) => s.agora)
   const clients = useRadarStore((s) => s.clients)
   const frentes = useRadarStore((s) => s.frentes)
@@ -42,6 +43,7 @@ export function useRadar() {
   return {
     ready: ready && agora > 0,
     erro,
+    vazio,
     hoje,
     clients,
     frentes,

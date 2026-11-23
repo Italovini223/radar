@@ -10,13 +10,20 @@ import {
   PageHeading,
   SemResultados,
 } from "@/components/radar/page-states"
+import { SituacaoBadge } from "@/components/radar/estado"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ESTADO_ORDEM } from "@/lib/domain/rules"
-import type { StatusFrente } from "@/lib/domain/types"
+import { ESTADO_ORDEM, situacaoDaGrade } from "@/lib/domain/rules"
+import type { SituacaoCliente, StatusFrente } from "@/lib/domain/types"
 import { useRadar } from "@/lib/hooks"
 import { useEntrada } from "@/lib/motion/use-entrada"
 import { useFlipLista } from "@/lib/motion/use-flip-lista"
+
+const ORDEM_SITUACAO: Record<SituacaoCliente, number> = {
+  critico: 2,
+  atencao: 1,
+  ok: 0,
+}
 
 /** "1 crítica · 1 atenção": só o que existe, do pior para o menor. */
 function resumoDasFrentes(doCliente: StatusFrente[]): string {
@@ -29,7 +36,11 @@ function resumoDasFrentes(doCliente: StatusFrente[]): string {
   if (criticas) partes.push(`${criticas} ${criticas === 1 ? "crítica" : "críticas"}`)
   if (atrasadas)
     partes.push(`${atrasadas} ${atrasadas === 1 ? "atrasada" : "atrasadas"}`)
-  if (atencao) partes.push(`${atencao} atenção`)
+  const travadas = doCliente.filter((g) => g.travada).length
+  if (travadas) {
+    partes.push(`${travadas} ${travadas === 1 ? "aprovação travada" : "aprovações travadas"}`)
+  }
+  if (atencao) partes.push(`${atencao} perto do prazo`)
   return partes.length ? partes.join(" · ") : "Tudo em dia"
 }
 
@@ -51,6 +62,7 @@ function Conteudo() {
             )
           return {
             cliente: c,
+            situacao: situacaoDaGrade(doCliente),
             resumo: resumoDasFrentes(doCliente),
             critica: doCliente.some((g) => g.estado === "critica"),
             pior: Math.max(0, ...doCliente.map((g) => ESTADO_ORDEM[g.estado])),
@@ -62,9 +74,10 @@ function Conteudo() {
             ultima,
           }
         })
-        // Pior estado primeiro, como na Grade.
+        // Pior situação primeiro (Crítico, Atenção, Ok), depois pior estado.
         .sort(
           (a, b) =>
+            ORDEM_SITUACAO[b.situacao] - ORDEM_SITUACAO[a.situacao] ||
             b.pior - a.pior ||
             b.problemas - a.problemas ||
             a.cliente.nome.localeCompare(b.cliente.nome, "pt-BR")
@@ -118,19 +131,22 @@ function Conteudo() {
           data-entra
           className="divide-y overflow-hidden rounded-lg border bg-card shadow-card"
         >
-          {visiveis.map(({ cliente, resumo, critica, oportunidades: n, ultima }) => (
+          {visiveis.map(({ cliente, situacao, resumo, critica, oportunidades: n, ultima }) => (
             <li
               key={cliente.id}
               data-flip-id={cliente.id}
               className="grid gap-x-6 gap-y-1 px-4 py-3.5 sm:grid-cols-[minmax(0,1.2fr)_minmax(0,1.3fr)_8rem_10rem_auto] sm:items-center"
             >
               <div className="min-w-0">
-                <Link
-                  href={`/clientes/${cliente.id}`}
-                  className="font-bold hover:text-link"
-                >
-                  {cliente.nome}
-                </Link>
+                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                  <Link
+                    href={`/clientes/${cliente.id}`}
+                    className="font-bold hover:text-link"
+                  >
+                    {cliente.nome}
+                  </Link>
+                  <SituacaoBadge situacao={situacao} />
+                </div>
                 <span className="block text-sm text-muted-foreground">
                   {cliente.responsavel}
                 </span>

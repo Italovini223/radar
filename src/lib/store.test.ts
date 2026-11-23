@@ -96,11 +96,15 @@ describe("hidratação (GET /api/radar)", () => {
     expect(quebrado.getState().erro).toMatch(/Não foi possível carregar/)
   })
 
-  it("banco vazio: erro orientando a carregar a demonstração", async () => {
+  it("banco vazio: não é erro; marca 'vazio' para oferecer carregar a demonstração", async () => {
     const vazio: RadarSnapshot = { ...buildSeed(), clients: [], frentes: [], acoes: [], contratos: [] }
     const store = criarRadarStore(repoFalso({ carregar: async () => vazio }))
     await store.getState().iniciar()
-    expect(store.getState().erro).toMatch(/vazio/)
+    expect(store.getState()).toMatchObject({ ready: true, erro: null, vazio: true })
+    // Carregar a demonstração preenche e desliga o estado vazio.
+    expect(await store.getState().resetarDemo()).toBe(true)
+    expect(store.getState().vazio).toBe(false)
+    expect(store.getState().clients).toHaveLength(10)
   })
 
   it("tentar de novo depois do erro carrega normalmente", async () => {

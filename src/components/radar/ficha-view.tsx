@@ -355,7 +355,7 @@ function Conteudo({ id }: { id: string }) {
         aberto={dialogo}
         onOpenChange={setDialogo}
         cliente={cliente}
-        frentes={frentes}
+        frentes={frentes.filter((f) => linhas.some((l) => l.frenteId === f.id))}
         frenteInicial={destaque}
         hoje={hoje}
       />

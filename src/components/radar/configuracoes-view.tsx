@@ -198,9 +198,10 @@ function Conteudo() {
             <Button
               variant="destructive"
               onClick={() => {
-                resetarDemo()
                 setConfirma(false)
-                toast.success("Dados de demonstração restaurados.")
+                void resetarDemo().then((ok) => {
+                  if (ok) toast.success("Dados de demonstração restaurados.")
+                })
               }}
             >
               Resetar agora

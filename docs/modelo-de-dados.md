@@ -1,76 +1,73 @@
-# Modelo de dados
+# Modelo de dados (Sprint 2)
 
-Formato inspirado no Kalif: **cliente + frente + data** (+ status). Definições em `src/lib/domain/types.ts`. Tudo que é "oportunidade" é **derivado**, nunca guardado.
+Formato inspirado no Kalif: **cliente + frente + data** (+ status). Tipos em `src/lib/domain/types.ts`. Tudo que é "oportunidade" é **derivado**, nunca guardado. Os dados ficam no **Supabase**, acessados **só pelo servidor** (route handlers do Next, chave de serviço); o navegador só fala com `/api/radar`.
 
-## Entidades
+## Tabelas (schema `public`; RLS ligado, sem políticas)
 
-### Client
+Todos os ids são `text`. As datas são `date` (`yyyy-MM-dd`).
 
-| Campo | Tipo | Observação |
-|---|---|---|
-| `id` | string | slug estável (`flor-de-sal`) |
-| `nome` | string | anonimizado/fictício |
-| `segmento` | string | texto livre |
-| `responsavel` | string | squad (não pessoa) |
-| `ativo` | boolean | inativos saem da grade e do Radar |
+| Tabela | Colunas |
+|---|---|
+| `clientes` | `id`, `nome`, `nicho`, `tipo` (`operacao` \| `loja_em_criacao`), `responsavel` (squad), `ativo` |
+| `frentes` | `id`, `nome`, `setor`, `prazo_dias`, `critico_apos_dias`, `ordem` |
+| `cliente_frentes` | `cliente_id`, `frente_id` (chave composta): frentes **contratadas** |
+| `acoes` | `id`, `cliente_id`, `frente_id`, `titulo`, `status` (`concluida` \| `em_andamento` \| `aguardando_aprovacao`), `responsavel`, `criada_em`, `concluida_em`, `data`, `aguardando_desde`, `origem` (`seed` \| `manual` \| `checkup` \| `planilha`) |
+| `checkups` | `id`, `cliente_id`, `data`, `resultado_ads` (`estavel` \| `caindo` \| `subindo`, anotação manual que não entra nas regras) |
+| `atribuicoes` | `oportunidade_id` (chave), `setor`, `data`, `texto` |
+| `configuracoes` | `id` = 1, `limite_aprovacao_dias` (5), `bloqueio_contratual_dias` (90), `data_referencia` (2026-11-13), `usar_hoje_real` (false) |
 
-### Frente
+Check do banco: `aguardando_aprovacao` exige `aguardando_desde`. O mapeamento linhas <-> domínio está em `src/lib/server/mapeamento.ts`.
 
-| Campo | Tipo | Observação |
-|---|---|---|
-| `id` | string | `google-ads`, `meta-ads`, `crm`, `cro`, `layout`, `conteudo`, `materiais`, `redacao` |
-| `nome` | string | |
-| `setor` | `Setor` | Mídia paga, CRM & Automação, CRO & UX, Conteúdo, Materiais, Redação |
-| `prazoDias` | number | máximo desejado entre ações concluídas (editável em Configurações) |
+## Entidades do domínio
 
-### Acao
+- **Client**: `id`, `nome`, `nicho`, `tipo`, `responsavel`, `ativo` (inativos saem da grade e do Radar).
+- **Frente**: `id` (`google-ads`, `meta-ads`, `crm`, `conteudo`, `materiais`, `redacao`, `desenvolvimento`, `cro`), `nome`, `setor`, `prazoDias`, `criticoAposDias`.
+- **Contrato**: `{ clientId, frenteId }`. Ausente no snapshot = todas as frentes contratadas.
+- **Acao**: `titulo`, `data`, `status`, `aguardandoDesde?`, `origem?`, `responsavel?`, `criadaEm?`, `concluidaEm?`. Só `concluida` zera o contador da frente.
+- **Configuracao**: `limiteAprovacaoDias`, `bloqueioContratualDias`, `dataReferencia`, `usarHojeReal`. `agoraDaConfiguracao(config, hojeReal)` calcula o "hoje" do app.
+- **Derivados** (não persistidos): `StatusFrente` (`montarGrade`: `estado`, `dias`, `nunca`, `travada`, `relogio`, `diasParaBloqueio`), `Opportunity` (`derivarOportunidades`: id `parada:<cliente>:<frente>` ou `aprovacao:<cliente>:<frente>`, `severidade`, `motivo`, `diasParado`, `diasParaBloqueio`), `SituacaoCliente` (`situacaoDoCliente`), `proximaOportunidade`, `resumoPosAcao`.
 
-| Campo | Tipo | Observação |
-|---|---|---|
-| `id` | string | |
-| `clientId`, `frenteId` | string | chaves |
-| `titulo` | string | |
-| `data` | `yyyy-MM-dd` | |
-| `status` | `concluida` \| `em_andamento` \| `aguardando_aprovacao` | só `concluida` zera o contador |
-| `aguardandoDesde?` | `yyyy-MM-dd` | usado pela regra de aprovação travada |
-| `origem?` | `seed` \| `manual` \| `checkup` | |
+## Regras
 
-### Checkup
+Em `src/lib/domain/rules.ts` (funções puras; "hoje" é sempre parâmetro):
 
-`{ id, clientId, data, resultadoAds?: 'estavel' | 'caindo' | 'subindo' }`. O resultado de Ads é anotação manual e **não** entra nas regras.
+| Regra | Valor |
+|---|---|
+| Atenção | dias >= 75% do prazo e <= prazo: aviso, **não** alerta |
+| Atrasada | dias > prazo |
+| Crítica | dias >= `criticoAposDias`, ou nunca teve ação |
+| Aprovação travada | aguardando há **mais** de `limiteAprovacaoDias` dias |
+| Loja em criação (cliente `loja_em_criacao` x frente `desenvolvimento`) | relógio = dias desde a ação aguardando **mais antiga**; atrasada > 30, crítica >= 60; `diasParaBloqueio = bloqueioContratualDias - dias` (<= 0 = bloqueado); a regra de aprovação travada não se aplica |
+| Situação do cliente | Crítico: alguma frente crítica. Atenção: alguma atrasada ou aprovação travada. Ok: nenhuma |
+| Próxima oportunidade | crítica > atrasada > aprovação travada; empate pelo maior número de dias parado |
+| "Nova" | venceu o prazo há até 14 dias |
 
-### Atribuicao
+Prazos da fixture (prazo / vira crítico após): Google Ads 30/60, Meta Ads 15/30, CRM/Automações 60/120, Social/Conteúdo 14/28, Produção de materiais 30/60, Redação 30/60, Desenvolvimento · loja em criação 30/60, CRO/Melhorias do site 180/360.
 
-`{ oportunidadeId, setor, data, texto }`: grava "Atribuir ao setor" do diálogo de proposta. Uma por oportunidade.
+## API (`src/app/api/radar/...`)
 
-### Derivados (não persistidos)
+Resposta de sucesso `{ ok: true, dados }`; erro `{ ok: false, erro: { codigo, mensagem, campos? } }`. Nunca cacheada. Entrada validada com zod (`src/lib/server/schemas.ts`).
 
-- `StatusFrente` (`montarGrade` em `rules.ts`): por par cliente x frente, `estado`, `dias`, `nunca`, `travada`.
-- `Opportunity` (`derivarOportunidades` em `opportunities.ts`): `id` determinístico (`parada:<cliente>:<frente>` ou `aprovacao:<cliente>:<frente>`), `severidade`, `motivo`, `diasParado`, `setorResponsavel`, `nova`.
+| Método e rota | O que faz |
+|---|---|
+| `GET /api/radar` | snapshot completo |
+| `POST /api/radar/acoes` | registra ação (404 cliente/frente inexistente, 422 frente não contratada, 409 id repetido) |
+| `PATCH /api/radar/acoes/[id]` | muda o status |
+| `POST /api/radar/checkups` | salva check-up e corrige o histórico (data mais antiga remove as concluídas posteriores) |
+| `PUT /api/radar/frentes/[id]` | `prazoDias` e/ou `criticoAposDias` (crítico > prazo) |
+| `POST /api/radar/atribuicoes` | atribui (ou reatribui) uma oportunidade a um setor |
+| `PUT /api/radar/configuracao` | limites e data de referência |
+| `POST /api/radar/importar` | substitui o conteúdo por um dataset (`clients`, `frentes`, `contratos?`, `acoes`, `checkups`, `atribuicoes`, `configuracao?`) |
+| `POST /api/radar/resetar` | reimporta a fixture de demonstração |
 
-## Regras (resumo)
+Códigos: 400 `ENTRADA_INVALIDA` / `JSON_INVALIDO`, 404 `NAO_ENCONTRADO`, 409 `CONFLITO`, 413 `CORPO_GRANDE_DEMAIS`, 422 `REGRA_INVALIDA`, 503 `BANCO_NAO_CONFIGURADO`, 500 `ERRO_INTERNO` (genérico; o detalhe só vai para o log do servidor).
 
-Ver `docs/escopo-v1.md` e `src/lib/domain/rules.ts`. Limiares: 75% / 100% / 150% do prazo, aprovação travada > 7 dias, "nova" = venceu há até 14 dias. "Hoje" é sempre parâmetro (`now`).
+O supabase-js não tem transação: `importarDataset` valida antes, guarda cópia do conteúdo, regrava e restaura a cópia se falhar; o check-up insere, remove e então registra o check-up.
 
-## Persistência hoje
+## Cliente (navegador)
 
-`src/lib/data/repository.ts` define a interface assíncrona:
+`src/lib/store.ts` (zustand) é **otimista**: aplica a mudança na hora, grava em fila pela interface `RadarRepository` (`src/lib/data/repository.ts`, implementada por `api-repository.ts` com fetch) e, se falhar, desfaz só aquela mudança e mostra um toast. Não há persistência local: a fonte de verdade é o servidor. Banco sem dados mostra "Carregar dados de demonstração"; banco não configurado (503) mostra "Banco de dados não configurado".
 
-```ts
-interface RadarRepository {
-  load(): Promise<RadarSnapshot | null>
-  save(snapshot: RadarSnapshot): Promise<void>
-  clear(): Promise<void>
-}
-```
+## Fora do escopo desta sprint
 
-Implementação atual: `localStorageRepository` (chave `weethub-radar:v1`). O zustand (`src/lib/store.ts`) usa o repositório como storage do `persist`, sem gravar antes da hidratação. O seed (`src/lib/data/seed.ts`) é gerado relativo à data de hoje.
-
-## Plano de migração para o Supabase (Sprint 2)
-
-1. **Tabelas** (esquema sugerido, uma por entidade): `clients(id text pk, nome, segmento, responsavel, ativo)`, `frentes(id text pk, nome, setor, prazo_dias int)`, `acoes(id uuid pk, client_id fk, frente_id fk, titulo, data date, status text check, aguardando_desde date null, origem text)`, `checkups(id uuid pk, client_id fk, data date, resultado_ads text null)`, `atribuicoes(oportunidade_id text pk, setor, data date, texto)`.
-2. **Repositório**: criar `supabaseRepository` implementando `RadarRepository` (ou, melhor, trocar `load/save` por operações por entidade: `listAcoes`, `addAcao` etc., já que várias pessoas editarão ao mesmo tempo). As telas e o `rules.ts` não mudam, pois consomem só o store.
-3. **Login e RLS**: autenticação Supabase e políticas por workspace; hoje não há login.
-4. **Fonte Kalif**: um job de importação mapeia o Kalif para `acoes` (cliente + frente + data + status); o Check-up passa a ser exceção, não regra.
-5. **Seed**: a tabela de gargalos plantados continua válida só para testes; em produção o seed é removido.
-6. **Segredos**: chaves do Supabase só em variáveis de ambiente (`.env.local`, ignorado pelo git), nunca no código.
+Login e perfis (Sprint 3), RLS por usuário, importação automática do Kalif, e o dataset real da planilha (a fixture sintética `gabarito-fixture.ts` o substitui por enquanto).

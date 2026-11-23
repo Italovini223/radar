@@ -202,9 +202,10 @@ const AGUARDANDO: Aguardando[] = [
   },
 ]
 
+// Na ordem de CONCLUIDAS.desenvolvimento: o mais recente (12 d) é o 2º follow-up.
 const TITULOS_RAIZ_FOLLOWUP = [
-  "Follow-up ao cliente: layout sem resposta (2º)",
   "Follow-up ao cliente: layout sem resposta (1º)",
+  "Follow-up ao cliente: layout sem resposta (2º)",
 ]
 
 /** Frentes contratadas: derivadas das chaves de `CONCLUIDAS`. */

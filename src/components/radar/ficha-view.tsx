@@ -40,6 +40,7 @@ import { useEntrada } from "@/lib/motion/use-entrada"
 import { useFlipLista } from "@/lib/motion/use-flip-lista"
 import { useRadarStore } from "@/lib/store"
 import { cn } from "@/lib/utils"
+import { nomeCurtoFrente } from "@/lib/domain/frentes"
 
 const ROTULO_ADS = {
   estavel: "estável",
@@ -140,7 +141,8 @@ function Conteudo({ id }: { id: string }) {
         description={
           <>
             <SituacaoBadge situacao={situacao} className="mr-2 align-middle" />
-            {cliente.nicho} · {cliente.responsavel} ·{" "}
+            {[cliente.nicho, cliente.responsavel].filter(Boolean).join(" · ")}
+            {cliente.nicho || cliente.responsavel ? " · " : null}
             <span className="tnum">
               {emDia} de {linhas.length} frentes em dia, {nOpps}{" "}
               {nOpps === 1 ? "oportunidade" : "oportunidades"}
@@ -225,7 +227,7 @@ function Conteudo({ id }: { id: string }) {
                 >
                   <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
                     <div>
-                      <p className="font-bold">{f.nome}</p>
+                      <p className="font-bold">{nomeCurtoFrente(f)}</p>
                       <p className="text-sm text-muted-foreground">{f.setor}</p>
                     </div>
                     <div className="flex flex-col items-end gap-1">
@@ -295,7 +297,7 @@ function Conteudo({ id }: { id: string }) {
                       )}
                     >
                       <TableCell className="px-4 py-2.5">
-                        <span className="font-semibold">{f.nome}</span>
+                        <span className="font-semibold">{nomeCurtoFrente(f)}</span>
                         <span className="block text-sm text-muted-foreground">
                           {f.setor}
                         </span>
@@ -333,7 +335,7 @@ function Conteudo({ id }: { id: string }) {
           {naoContratadas.length > 0 ? (
             <p className="mt-3 text-sm text-muted-foreground">
               Não contratadas (não entram nos alertas):{" "}
-              {naoContratadas.map((f) => f.nome).join(", ")}.
+              {naoContratadas.map((f) => nomeCurtoFrente(f)).join(", ")}.
             </p>
           ) : null}
           <p className="mt-3 text-xs text-muted-foreground">
@@ -383,7 +385,7 @@ function Conteudo({ id }: { id: string }) {
                         {data(a.data)}
                       </time>
                       <span className="font-bold text-foreground">
-                        {f?.nome ?? a.frenteId}
+                        {f ? nomeCurtoFrente(f) : a.frenteId}
                       </span>
                       {a.status !== "concluida" ? (
                         <span className="font-semibold text-state-warn">

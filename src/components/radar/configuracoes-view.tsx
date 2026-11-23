@@ -37,6 +37,7 @@ import type { Frente } from "@/lib/domain/types"
 import { useRadar } from "@/lib/hooks"
 import { useEntrada } from "@/lib/motion/use-entrada"
 import { useRadarStore } from "@/lib/store"
+import { nomeCurtoFrente } from "@/lib/domain/frentes"
 
 const MIN = 1
 const MAX = 730
@@ -69,7 +70,7 @@ function LinhaPrazo({ frente }: { frente: Frente }) {
       void setPrazo(frente.id, prazoNum, criticoNum).then((ok) => {
         if (ok) {
           toast.success(
-            `${frente.nome}: prazo ${prazoNum} dias, crítica a partir de ${criticoNum}.`,
+            `${nomeCurtoFrente(frente)}: prazo ${prazoNum} dias, crítica a partir de ${criticoNum}.`,
             { description: "Grade e Radar foram reclassificados." }
           )
         }
@@ -117,12 +118,12 @@ function LinhaPrazo({ frente }: { frente: Frente }) {
     <TableRow>
       <TableCell className="px-4 py-3">
         <label htmlFor={`prazo-${frente.id}`} className="font-semibold">
-          {frente.nome}
+          {nomeCurtoFrente(frente)}
         </label>
         <span className="block text-xs text-muted-foreground">{frente.setor}</span>
       </TableCell>
       <TableCell>
-        {campo(`prazo-${frente.id}`, prazo, setPrazoTexto, prazoInvalido, MAX, `Prazo de ${frente.nome}`)}
+        {campo(`prazo-${frente.id}`, prazo, setPrazoTexto, prazoInvalido, MAX, `Prazo de ${nomeCurtoFrente(frente)}`)}
         {prazoInvalido || criticoInvalido ? (
           <span id={erroId} className="mt-1 block text-xs font-medium text-destructive">
             {prazoInvalido
@@ -132,7 +133,7 @@ function LinhaPrazo({ frente }: { frente: Frente }) {
         ) : null}
       </TableCell>
       <TableCell>
-        {campo(`critico-${frente.id}`, critico, setCriticoTexto, criticoInvalido, MAX * 2, `Vira crítico após, ${frente.nome}`)}
+        {campo(`critico-${frente.id}`, critico, setCriticoTexto, criticoInvalido, MAX * 2, `Vira crítico após, ${nomeCurtoFrente(frente)}`)}
       </TableCell>
       <TableCell className="tnum text-muted-foreground">
         {Math.ceil(p * 0.75)} a {p} dias (só aviso)

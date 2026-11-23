@@ -11,6 +11,7 @@ import { useRadar } from "@/lib/hooks"
 import { aoAparecer } from "@/lib/motion/aparece"
 import { reduzMovimento } from "@/lib/motion/movimento"
 import { cn } from "@/lib/utils"
+import { nomeCurtoFrente } from "@/lib/domain/frentes"
 
 /**
  * Confirmação inline persistente da tarefa principal: o que mudou depois de
@@ -56,7 +57,10 @@ export function ConfirmacaoPosAcao({
 
   const textos = textosPosAcao(resumo, {
     cliente: cliente.nome,
-    frente: (id) => frentePorId.get(id)?.nome ?? id,
+    frente: (id) => {
+      const f = frentePorId.get(id)
+      return f ? nomeCurtoFrente(f) : id
+    },
   })
   const proxima = resumo.proxima
   const frenteProxima = proxima ? frentePorId.get(proxima.frenteId) : undefined

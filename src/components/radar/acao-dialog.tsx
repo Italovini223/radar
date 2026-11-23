@@ -32,6 +32,7 @@ import { tituloSugerido } from "@/lib/domain/rotulos"
 import { toISODate } from "@/lib/domain/rules"
 import type { Client, Frente, StatusAcao } from "@/lib/domain/types"
 import { useRadarStore } from "@/lib/store"
+import { nomeCurtoFrente } from "@/lib/domain/frentes"
 
 export const ROTULO_STATUS: Record<StatusAcao, string> = {
   concluida: "Concluída",
@@ -156,7 +157,7 @@ function AcaoForm({
                   <SelectGroup>
                     {frentes.map((f) => (
                       <SelectItem key={f.id} value={f.id}>
-                        {f.nome}
+                        {nomeCurtoFrente(f)}
                       </SelectItem>
                     ))}
                   </SelectGroup>

@@ -18,6 +18,7 @@ import { gsap, useGSAP } from "@/lib/motion/gsap"
 import { movimento } from "@/lib/motion/movimento"
 import { useFlipLista } from "@/lib/motion/use-flip-lista"
 import type { Client, Frente, StatusFrente } from "@/lib/domain/types"
+import { nomeCurtoFrente } from "@/lib/domain/frentes"
 
 /** Último estado visto de cada célula: quem mudou desde a última vez pisca. */
 const estadosVistos = new Map<string, string>()
@@ -143,7 +144,7 @@ export function GradeTable({
                 scope="col"
                 className="h-14 border-b px-1.5 text-sm font-bold normal-case tracking-normal text-foreground"
               >
-                <span className="block">{f.nome}</span>
+                <span className="block" title={f.nome}>{nomeCurtoFrente(f)}</span>
                 <span className="tnum block text-xs font-normal text-muted-foreground">
                   prazo {f.prazoDias} dias
                 </span>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { buildSeed } from "./data/seed"
+import { montarGabarito as buildSeed } from "./data/gabarito-fixture"
 import {
   alertasDoCliente,
   proximaOportunidade,

@@ -34,7 +34,7 @@ pnpm build                   # build de produção
 Para trabalhar sem a chave do Supabase:
 
 ```bash
-RADAR_DB=memoria pnpm dev         # banco em memória já semeado com os 10 clientes do gabarito
+RADAR_DB=memoria pnpm dev         # banco em memória já semeado com a planilha real (10 clientes, 172 tarefas)
 RADAR_DB=memoria-vazia pnpm dev   # começa vazio (para ver o estado "Carregar dados de demonstração")
 ```
 
@@ -43,7 +43,7 @@ O estado vive no processo do servidor: recarregar a página mantém os dados; re
 ### Como carregar (ou recarregar) a demonstração
 
 - Banco vazio: a tela mostra o botão **Carregar dados de demonstração** (pede confirmação, porque substitui o conteúdo do banco).
-- Banco com dados: **Configurações > Resetar dados de demonstração** (chama `POST /api/radar/resetar`, que reimporta a fixture do gabarito, inclusive a configuração).
+- Banco com dados: **Configurações > Resetar dados de demonstração** (chama `POST /api/radar/resetar`, que reimporta o dataset da planilha, inclusive a configuração).
 - Via API: `POST /api/radar/importar` com um dataset JSON (ver `docs/modelo-de-dados.md`).
 
 ## Telas
@@ -76,7 +76,8 @@ src/
   lib/ai/proposal.ts         gerador SIMULADO de rascunho (interface para trocar por Claude)
   lib/data/repository.ts     interface RadarRepository (operações granulares)
   lib/data/api-repository.ts implementação por fetch aos route handlers
-  lib/data/gabarito-fixture.ts  fixture sintética do gabarito (será substituída pelo dataset real da planilha)
+  lib/data/planilha-dataset.ts  dataset REAL da demonstração (planilha: 10 clientes, 8 frentes, 172 tarefas) + GABARITO_PLANILHA
+  lib/data/gabarito-fixture.ts  fixture sintética pequena, só para testes unitários
   lib/store.ts               zustand otimista (aplica, grava, reverte em falha)
   lib/motion/                animações GSAP (tokens, reduced-motion, entrada, contagem, listas)
   lib/*.test.ts              testes (regras, gabarito, store); server/*.test.ts (API, banco)
@@ -87,7 +88,7 @@ PRODUCT.md  DESIGN.md        contexto de produto e tokens visuais
 
 ## Dados de demonstração e regras do gabarito
 
-A demonstração usa uma **fixture sintética** (`src/lib/data/gabarito-fixture.ts`, 10 clientes e 8 frentes) com "hoje" = **13/11/2026** (data de referência da configuração). Ela será substituída pelo dataset real exportado da planilha. O motor segue as regras da planilha:
+A demonstração é a **planilha real** do time, 100% fictícia (`src/lib/data/planilha-dataset.ts`: 10 clientes, 8 frentes e 172 tarefas, transcritas da planilha; as frentes contratadas vêm das tarefas), com "hoje" = **13/11/2026** (data de referência da configuração). A planilha só traz responsável por tarefa: o responsável por cliente fica vazio e não é exibido. O motor segue as regras da planilha:
 
 - **Atrasada**: dias sem ação > prazo da frente. **Crítica**: dias >= "vira crítico após" (coluna própria). **Atenção** (>= 75% do prazo): só aviso, não gera alerta.
 - **Aprovação travada**: ação aguardando aprovação há **mais de 5 dias** (configurável).
@@ -95,9 +96,9 @@ A demonstração usa uma **fixture sintética** (`src/lib/data/gabarito-fixture.
 - **Loja em criação** (frente Desenvolvimento): o relógio é "dias sem retorno do cliente" (30 / 60), com bloqueio contratual em 90 dias (mostra quantos faltam).
 - **Situação do cliente**: Crítico (alguma frente crítica), Atenção (alguma atrasada ou aprovação travada), Ok (nenhuma; avisos permitidos).
 
-Situações esperadas em 13/11/2026: Aurora Moda, Ninho Casa & Decor e Raiz Orgânicos = Crítico; Patas Pet Store, Vitta Suplementos e Bella Pele Cosméticos = Atenção; TechMania, Doce Lar Utilidades, Mundo Kids Brinquedos e Lumi Acessórios = Ok. O teste automático está em `src/lib/gabarito.test.ts`; o roteiro manual em `docs/testes/TESTE-001-gabarito.md`.
+Situações esperadas em 13/11/2026: Aurora Moda, Ninho Casa & Decor e Raiz Orgânicos = Crítico; Patas Pet Store, Vitta Suplementos e Bella Pele Cosméticos = Atenção; TechMania, Doce Lar Utilidades, Mundo Kids Brinquedos e Lumi Acessórios = Ok. Com a planilha real, o Radar lista **10 oportunidades** (Aurora Moda 4, Ninho 2, Patas 1, Vitta 1, Bella 1, Raiz 1). Os testes automáticos estão em `src/lib/data/planilha.test.ts` (dataset real), `src/lib/server/planilha-servidor.test.ts` (o que o servidor grava) e `src/lib/gabarito.test.ts` (fixture sintética); o roteiro manual em `docs/testes/TESTE-001-gabarito.md`.
 
-**Tarefa principal:** registrar uma ação para um cliente (ficha, cartão do Radar ou check-up) e ver o Radar atualizar os alertas e sugerir a próxima oportunidade. Ex.: Aurora Moda > Google Ads > "Otimização de Google Ads feita hoje": o alerta some e a próxima sugerida é CRM / Automações.
+**Tarefa principal:** registrar uma ação para um cliente (ficha, cartão do Radar ou check-up) e ver o Radar atualizar os alertas e sugerir a próxima oportunidade. Ex.: Aurora Moda > Google Ads > "Otimização de Google Ads feita hoje": o alerta some e a próxima sugerida é CRO / Melhorias do site (crítica, ~19 meses).
 
 ## Desvios do plano (Sprint 1, histórico)
 
@@ -107,7 +108,7 @@ Situações esperadas em 13/11/2026: Aurora Moda, Ninho Casa & Decor e Raiz Org�
 - **pnpm via corepack.** O pnpm não estava instalado na máquina; foi ativado com `corepack enable`. `packageManager` no `package.json` fixa a versão.
 - **shadcn mais recente** (CLI 4.x): `cn` vem do pacote `cn`, estilo `radix-nova`. Ajustes nos arquivos gerados: textos "Close" e "Toggle Sidebar" traduzidos; `transition-all` trocado por lista de propriedades; a sidebar fixa só aparece a partir de 1024 px; abaixo disso a barra superior traz o botão "Menu", que abre a mesma lista.
 - **Flor de Sal com 40 dias, não 47.** 47/30 = 157% cairia em crítica pela regra dos 150%, contradizendo o "atrasada" do plano. Mantivemos a regra e ajustamos o dado (ver `docs/escopo-v1.md`).
-- **Aurora Pet** é o nome do 5º cliente (fictício) de controle; responsáveis são squads, não pessoas.
+- (Sprint 1) "Aurora Pet" era o 5º cliente de controle do seed antigo; hoje a demonstração é a planilha da Sprint 2.
 - **Mockup:** removidos "Receita potencial" e "R$ potencial" (dado financeiro inventado, fora do escopo), tendências ("12% vs. mês passado"), horários de detecção falsos, botões "···" e itens de menu sem função. O 4º cartão virou "Aguardando aprovação".
 - **Impeccable:** o launcher `scripts/impeccable` **não foi executado** (alerta de segurança). Foram lidos apenas os arquivos de `reference/`. O agente "finish reviewer" da skill não foi usado; a revisão de qualidade foi feita com `web-design-guidelines` e uma passada manual pelos critérios de `audit.md`.
 - **Troca de identidade (roxo para preto/amarelo).** Decisão do responsável técnico: paleta e fontes do site weethub.com, política de "menos ícones" (só X de fechar, chevrons do select e glifos de estado), cartões de raio máx. 6 px e botões em pílula. O board da marca (`docs/brand/board.html`) é HTML/SVG feito à mão: a skill `brandkit` pede um gerador de imagens que não temos.

@@ -1,11 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { buildSeed } from "@/lib/data/seed"
+import { montarGabarito as buildSeed } from "@/lib/data/gabarito-fixture"
 import type { Banco } from "@/lib/server/banco"
 import { BancoNaoConfiguradoError, ErroBanco } from "@/lib/server/errors"
 import { BancoFake } from "@/test/banco-fake"
 
 // Os route handlers chamam getBanco(); aqui ele devolve o fake (ou um erro).
+// Os handlers de /resetar usam buildSeed() (a planilha real); aqui ele devolve
+// a fixture sintética pequena. O dataset real é testado em planilha-servidor.test.ts.
+vi.mock("@/lib/data/seed", async () => {
+  const { montarGabarito } = await import("@/lib/data/gabarito-fixture")
+  return { buildSeed: montarGabarito }
+})
+
 const estado = vi.hoisted(() => ({
   fornecer: (): unknown => {
     throw new Error("não configurado no teste")

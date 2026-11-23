@@ -416,7 +416,14 @@ export async function importarDataset(
   return carregarSnapshot(banco)
 }
 
-/** Reimporta a fixture de demonstração (substitui tudo, inclusive a configuração). */
-export async function resetar(banco: Banco): Promise<RadarSnapshot> {
-  return importarDataset(banco, buildSeed())
+/**
+ * Reimporta o dataset de demonstração (padrão: a planilha real, via
+ * `buildSeed()`); substitui tudo, inclusive a configuração. O dataset é
+ * injetável para testes.
+ */
+export async function resetar(
+  banco: Banco,
+  dataset: RadarSnapshot = buildSeed()
+): Promise<RadarSnapshot> {
+  return importarDataset(banco, dataset)
 }

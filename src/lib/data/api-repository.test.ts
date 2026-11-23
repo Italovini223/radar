@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 
-import { buildSeed } from "./seed"
+import { montarGabarito as buildSeed } from "./gabarito-fixture"
 import { criarApiRepository } from "./api-repository"
 import { ErroApi } from "./repository"
 

@@ -8,7 +8,7 @@ const repo = vi.hoisted(() => ({
   registrar: undefined as undefined | (() => Promise<void>),
 }))
 vi.mock("@/lib/data/api-repository", async () => {
-  const { buildSeed } = await import("@/lib/data/seed")
+  const { montarGabarito: buildSeed } = await import("@/lib/data/gabarito-fixture")
   return {
     apiRepository: {
       carregar: async () => buildSeed(),

@@ -1,7 +1,7 @@
 import { addDays } from "date-fns"
 import { beforeEach, describe, expect, it } from "vitest"
 
-import { buildSeed } from "@/lib/data/seed"
+import { montarGabarito as buildSeed } from "@/lib/data/gabarito-fixture"
 import { proximaOportunidade } from "@/lib/domain/opportunities"
 import {
   agoraDaConfiguracao,
@@ -204,7 +204,7 @@ describe("carregarSnapshot / resetar", () => {
 
   it("resetar grava a fixture e o motor reproduz o gabarito sobre o que foi lido do banco", async () => {
     const banco = new BancoFake()
-    const snap = await resetar(banco)
+    const snap = await resetar(banco, buildSeed())
     const seed = buildSeed()
     expect(snap.clients).toHaveLength(10)
     expect(snap.frentes.map((f) => f.id)).toEqual(seed.frentes.map((f) => f.id))
@@ -236,7 +236,7 @@ describe("carregarSnapshot / resetar", () => {
 
   it("resetar duas vezes dá o mesmo resultado (substitui, não acumula)", async () => {
     const banco = new BancoFake()
-    const a = await resetar(banco)
+    const a = await resetar(banco, buildSeed())
     await atribuir(banco, {
       oportunidadeId: "parada:aurora-moda:crm",
       setor: "CRM & Automação",
@@ -244,7 +244,7 @@ describe("carregarSnapshot / resetar", () => {
       texto: "x",
     })
     await atualizarConfiguracao(banco, { limiteAprovacaoDias: 9 })
-    const b = await resetar(banco)
+    const b = await resetar(banco, buildSeed())
     expect(b).toEqual(a)
     expect(b.atribuicoes).toEqual([])
     expect(b.configuracao.limiteAprovacaoDias).toBe(5)
@@ -255,7 +255,7 @@ describe("registrarAcao", () => {
   let banco: BancoFake
   beforeEach(async () => {
     banco = new BancoFake()
-    await resetar(banco)
+    await resetar(banco, buildSeed())
   })
 
   it("grava a ação e resolve o alerta (fluxo da tarefa principal)", async () => {
@@ -356,7 +356,7 @@ describe("atualizarStatusAcao", () => {
   let banco: BancoFake
   beforeEach(async () => {
     banco = new BancoFake()
-    await resetar(banco)
+    await resetar(banco, buildSeed())
   })
 
   it("aguardando -> concluída limpa aguardandoDesde e preenche concluidaEm", async () => {
@@ -390,7 +390,7 @@ describe("salvarCheckup", () => {
   let banco: BancoFake
   beforeEach(async () => {
     banco = new BancoFake()
-    await resetar(banco)
+    await resetar(banco, buildSeed())
   })
   const doCliente = (clientId: string, frenteId: string) =>
     banco.tabelas.acoes.filter(
@@ -473,7 +473,7 @@ describe("atualizarFrente / atribuir / atualizarConfiguracao", () => {
   let banco: BancoFake
   beforeEach(async () => {
     banco = new BancoFake()
-    await resetar(banco)
+    await resetar(banco, buildSeed())
   })
 
   it("atualiza prazo e limite crítico", async () => {
@@ -550,7 +550,7 @@ describe("importarDataset", () => {
 
   it("substitui o conteúdo anterior, grava a configuração e marca origem 'planilha'", async () => {
     const banco = new BancoFake()
-    await resetar(banco)
+    await resetar(banco, buildSeed())
     const snap = await importarDataset(banco, pequeno())
     expect(snap.clients.map((c) => c.id)).toEqual(["c1"])
     expect(snap.frentes.map((f) => f.id)).toEqual(["f1"])
@@ -562,7 +562,7 @@ describe("importarDataset", () => {
 
   it("dataset inconsistente é recusado ANTES de tocar no banco", async () => {
     const banco = new BancoFake()
-    await resetar(banco)
+    await resetar(banco, buildSeed())
     const antes = await carregarSnapshot(banco)
     const chamadasAntes = banco.chamadas.length
     const ruim = pequeno()
@@ -574,7 +574,7 @@ describe("importarDataset", () => {
 
   it("falha no meio da gravação restaura o conteúdo anterior e relança o erro", async () => {
     const banco = new BancoFake()
-    await resetar(banco)
+    await resetar(banco, buildSeed())
     const antes = await carregarSnapshot(banco)
     banco.falharEm("inserir", "acoes") // limpou tudo, regravou pais, falha nas ações
     await expect(importarDataset(banco, pequeno())).rejects.toThrow(/falha injetada/)

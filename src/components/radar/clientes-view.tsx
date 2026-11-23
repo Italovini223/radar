@@ -89,7 +89,7 @@ function Conteudo() {
   const visiveis = linhas.filter(
     (l) =>
       !termo ||
-      `${l.cliente.nome} ${l.cliente.responsavel}`.toLowerCase().includes(termo)
+      `${l.cliente.nome} ${l.cliente.nicho} ${l.cliente.responsavel}`.toLowerCase().includes(termo)
   )
 
   const raiz = useRef<HTMLDivElement>(null)
@@ -114,7 +114,7 @@ function Conteudo() {
         onChange={(e) => setBusca(e.target.value)}
         name="busca-clientes"
         autoComplete="off"
-        placeholder="Buscar cliente ou squad…"
+        placeholder="Buscar cliente ou nicho…"
         aria-label="Buscar clientes"
         className="mb-5 w-full sm:w-80"
       />
@@ -148,7 +148,7 @@ function Conteudo() {
                   <SituacaoBadge situacao={situacao} />
                 </div>
                 <span className="block text-sm text-muted-foreground">
-                  {cliente.responsavel}
+                  {[cliente.nicho, cliente.responsavel].filter(Boolean).join(" · ")}
                 </span>
               </div>
               <p

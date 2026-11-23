@@ -8,7 +8,7 @@ Todos os ids são `text`. As datas são `date` (`yyyy-MM-dd`).
 
 | Tabela | Colunas |
 |---|---|
-| `clientes` | `id`, `nome`, `nicho`, `tipo` (`operacao` \| `loja_em_criacao`), `responsavel` (squad), `ativo` |
+| `clientes` | `id`, `nome`, `nicho`, `tipo` (`operacao` \| `loja_em_criacao`), `responsavel` (vazio no dataset da planilha, que só traz responsável por tarefa; a tela esconde o campo quando vazio), `ativo` |
 | `frentes` | `id`, `nome`, `setor`, `prazo_dias`, `critico_apos_dias`, `ordem` |
 | `cliente_frentes` | `cliente_id`, `frente_id` (chave composta): frentes **contratadas** |
 | `acoes` | `id`, `cliente_id`, `frente_id`, `titulo`, `status` (`concluida` \| `em_andamento` \| `aguardando_aprovacao`), `responsavel`, `criada_em`, `concluida_em`, `data`, `aguardando_desde`, `origem` (`seed` \| `manual` \| `checkup` \| `planilha`) |
@@ -42,7 +42,7 @@ Em `src/lib/domain/rules.ts` (funções puras; "hoje" é sempre parâmetro):
 | Próxima oportunidade | crítica > atrasada > aprovação travada; empate pelo maior número de dias parado |
 | "Nova" | venceu o prazo há até 14 dias |
 
-Prazos da fixture (prazo / vira crítico após): Google Ads 30/60, Meta Ads 15/30, CRM/Automações 60/120, Social/Conteúdo 14/28, Produção de materiais 30/60, Redação 30/60, Desenvolvimento · loja em criação 30/60, CRO/Melhorias do site 180/360.
+Prazos da planilha (prazo / vira crítico após): Google Ads 30/60, Meta Ads 15/30, CRM/Automações 60/120, Social/Conteúdo 14/28, Produção de materiais 30/60, Redação 30/60, Desenvolvimento · loja em criação 30/60, CRO/Melhorias do site 180/360.
 
 ## API (`src/app/api/radar/...`)
 
@@ -58,7 +58,7 @@ Resposta de sucesso `{ ok: true, dados }`; erro `{ ok: false, erro: { codigo, me
 | `POST /api/radar/atribuicoes` | atribui (ou reatribui) uma oportunidade a um setor |
 | `PUT /api/radar/configuracao` | limites e data de referência |
 | `POST /api/radar/importar` | substitui o conteúdo por um dataset (`clients`, `frentes`, `contratos?`, `acoes`, `checkups`, `atribuicoes`, `configuracao?`) |
-| `POST /api/radar/resetar` | reimporta a fixture de demonstração |
+| `POST /api/radar/resetar` | reimporta o dataset de demonstração (a planilha: 10 clientes, 8 frentes, 172 ações) |
 
 Códigos: 400 `ENTRADA_INVALIDA` / `JSON_INVALIDO`, 404 `NAO_ENCONTRADO`, 409 `CONFLITO`, 413 `CORPO_GRANDE_DEMAIS`, 422 `REGRA_INVALIDA`, 503 `BANCO_NAO_CONFIGURADO`, 500 `ERRO_INTERNO` (genérico; o detalhe só vai para o log do servidor).
 
@@ -70,4 +70,4 @@ O supabase-js não tem transação: `importarDataset` valida antes, guarda cópi
 
 ## Fora do escopo desta sprint
 
-Login e perfis (Sprint 3), RLS por usuário, importação automática do Kalif, e o dataset real da planilha (a fixture sintética `gabarito-fixture.ts` o substitui por enquanto).
+Login e perfis (Sprint 3), RLS por usuário e importação automática do Kalif. O dataset da planilha foi transcrito à mão para `src/lib/data/planilha-dataset.ts`; se a planilha for exportada em CSV, conferir o arquivo contra o CSV. `gabarito-fixture.ts` é só fixture de testes.

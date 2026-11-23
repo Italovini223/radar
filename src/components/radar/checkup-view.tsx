@@ -43,6 +43,7 @@ import { movimento } from "@/lib/motion/movimento"
 import { useEntrada } from "@/lib/motion/use-entrada"
 import { ConfirmacaoPosAcao } from "@/components/radar/confirmacao-pos-acao"
 import { salvarCheckupComResumo } from "@/lib/confirmacao"
+import { nomeCurtoFrente } from "@/lib/domain/frentes"
 
 function Formulario({
   cliente,
@@ -139,7 +140,7 @@ function Formulario({
                 >
                   <div>
                     <label htmlFor={`${id}-${f.id}`} className="font-semibold">
-                      {f.nome}
+                      {nomeCurtoFrente(f)}
                     </label>
                     <p className="tnum text-xs text-muted-foreground">
                       {f.setor} · prazo {f.prazoDias} dias

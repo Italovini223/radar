@@ -18,6 +18,7 @@ import type {
   Frente,
   Opportunity,
 } from "@/lib/domain/types"
+import { nomeCurtoFrente } from "@/lib/domain/frentes"
 
 interface Props {
   oportunidade: Opportunity
@@ -54,7 +55,7 @@ function Metadados({
 }) {
   return (
     <p className="text-sm text-muted-foreground">
-      {o.setorResponsavel} · {cliente.responsavel}
+      {[o.setorResponsavel, cliente.responsavel].filter(Boolean).join(" · ")}
       {atribuicao ? (
         <span className="font-semibold text-state-ok">
           {" "}
@@ -81,7 +82,7 @@ export function OportunidadeCheia({
   const impacto = impactoDaOportunidade({
     oportunidade: o,
     clienteNome: cliente.nome,
-    frenteNome: frente.nome,
+    frenteNome: nomeCurtoFrente(frente),
     setor: frente.setor,
     tituloAcao,
   })

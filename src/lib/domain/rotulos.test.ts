@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest"
 
+import { nomeCurtoFrente } from "./frentes"
+import { formatarDias } from "./opportunities"
 import {
   ROTULO_SITUACAO,
   bloqueioCurto,
@@ -79,5 +81,24 @@ describe("título sugerido ao registrar ação", () => {
   })
   it("frente desconhecida cai num título genérico com o nome", () => {
     expect(tituloSugerido({ id: "x", nome: "Nova frente" })).toBe("Ação em Nova frente feita hoje")
+  })
+})
+
+describe("nome curto de frente", () => {
+  it("Desenvolvimento ganha rótulo curto (o dado não muda); as demais mantêm o nome", () => {
+    const nome = "Desenvolvimento · loja em criação (cliente sem retorno)"
+    expect(nomeCurtoFrente({ id: "desenvolvimento", nome })).toBe("Desenvolvimento")
+    expect(nomeCurtoFrente({ id: "google-ads", nome: "Google Ads" })).toBe("Google Ads")
+  })
+})
+
+describe("formatarDias (acima de um ano)", () => {
+  it("mostra anos e meses; sem meses, só anos", () => {
+    expect(formatarDias(365)).toBe("1 ano")
+    expect(formatarDias(730)).toBe("2 anos")
+    expect(formatarDias(389)).toBe("1 ano")
+    expect(formatarDias(365 + 60)).toBe("1 ano e 2 meses")
+    expect(formatarDias(365 + 30)).toBe("1 ano e 1 mês")
+    expect(formatarDias(47)).toBe("47 dias")
   })
 })

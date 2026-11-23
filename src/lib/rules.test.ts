@@ -25,7 +25,7 @@ import {
   ultimaAcaoConcluida,
 } from "./domain/rules"
 import type { Acao, Frente } from "./domain/types"
-import { buildSeed } from "./data/seed"
+import { montarGabarito as buildSeed } from "./data/gabarito-fixture"
 
 /** "Hoje" do gabarito: 13/11/2026 (meio-dia local, para evitar bordas de fuso). */
 const NOW = new Date(2026, 10, 13, 12, 0, 0)

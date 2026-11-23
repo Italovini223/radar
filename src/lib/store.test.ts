@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 const toasts = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }))
 vi.mock("sonner", () => ({ toast: toasts }))
 
-import { buildSeed } from "@/lib/data/seed"
+import { montarGabarito as buildSeed } from "@/lib/data/gabarito-fixture"
 import { ErroApi, type RadarRepository } from "@/lib/data/repository"
 import type { Opportunity, RadarSnapshot } from "@/lib/domain/types"
 

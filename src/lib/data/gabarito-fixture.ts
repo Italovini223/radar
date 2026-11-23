@@ -13,16 +13,14 @@ import {
 } from "../domain/types"
 
 /**
- * FIXTURE SINTÉTICA mínima e determinística do gabarito da Sprint 2.
+ * FIXTURE SINTÉTICA pequena, só para TESTES UNITÁRIOS (nenhuma tela ou rota a
+ * usa). O dataset de demonstração real é a planilha (`planilha-dataset.ts`,
+ * 10 clientes, 8 frentes, 172 tarefas), carregada por `buildSeed()`.
  *
- * Reproduz, com dados 100% fictícios, os fatos do gabarito da planilha
- * (10 clientes, 8 frentes) para "hoje" = 2026-11-13. NÃO é o dataset real:
- * ela será SUBSTITUÍDA pelo dataset exportado da planilha (CSVs das abas
- * "Clientes e gargalos", "Prazos por frente" e "Tarefas") quando estes forem
- * exportados. Até lá, `buildSeed` usa esta fixture.
- *
- * Lacuna conhecida: o gabarito cita CRO "muito antigo" no Aurora Moda, mas o
- * valor exato só está no CSV. Por isso o Aurora NÃO contrata CRO aqui.
+ * Aqui os fatos principais do gabarito são reproduzidos com poucas ações e
+ * ids estáveis (`seed-...`), "hoje" = 2026-11-13, para testes rápidos e
+ * independentes do dataset real. Diferenças conhecidas em relação à
+ * planilha: sem CRO na Aurora e squads preenchidos por cliente.
  *
  * Situações esperadas (testadas em gabarito.test.ts):
  *   Aurora, Ninho, Raiz = crítico; Patas, Vitta, Bella = atenção;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { buildSeed } from "@/lib/data/seed"
+import { montarGabarito as buildSeed } from "@/lib/data/gabarito-fixture"
 
 import {
   atribuicaoSchema,

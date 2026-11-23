@@ -16,11 +16,14 @@ import type {
   Opportunity,
   StatusFrente,
 } from "./types"
+import { nomeCurtoFrente } from "./frentes"
 
 export function formatarDias(dias: number): string {
   if (dias >= 365) {
     const anos = Math.floor(dias / 365)
-    return `${anos} ${anos === 1 ? "ano" : "anos"}`
+    const meses = Math.floor((dias - anos * 365) / 30)
+    const base = `${anos} ${anos === 1 ? "ano" : "anos"}`
+    return meses > 0 ? `${base} e ${meses} ${meses === 1 ? "mês" : "meses"}` : base
   }
   return `${dias} ${dias === 1 ? "dia" : "dias"}`
 }
@@ -36,14 +39,14 @@ export function textoBloqueio(diasParaBloqueio: number): string {
 }
 
 function motivoParada(frente: Frente, s: StatusFrente): string {
-  if (s.nunca) return `${frente.nome} sem nenhuma ação registrada`
+  if (s.nunca) return `${nomeCurtoFrente(frente)} sem nenhuma ação registrada`
   if (s.relogio === "retorno_cliente") {
-    const base = `${frente.nome} sem retorno do cliente há ${formatarDias(s.dias ?? 0)} (prazo: ${frente.prazoDias} dias)`
+    const base = `${nomeCurtoFrente(frente)} sem retorno do cliente há ${formatarDias(s.dias ?? 0)} (prazo: ${frente.prazoDias} dias)`
     return s.diasParaBloqueio === null
       ? base
       : `${base}; ${textoBloqueio(s.diasParaBloqueio)}`
   }
-  return `${frente.nome} sem ação há ${formatarDias(s.dias ?? 0)} (prazo: ${frente.prazoDias} dias)`
+  return `${nomeCurtoFrente(frente)} sem ação há ${formatarDias(s.dias ?? 0)} (prazo: ${frente.prazoDias} dias)`
 }
 
 /** Razão dias/prazo usada para ordenar; "nunca" é o pior caso. */

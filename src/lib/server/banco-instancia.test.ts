@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import { TOTAL_TAREFAS_PLANILHA, montarPlanilha } from "../data/planilha-dataset"
 import { BancoNaoConfiguradoError } from "./errors"
 import { getBanco } from "./banco-instancia"
 import { modoDoBanco } from "./modo-banco"
@@ -30,14 +31,16 @@ describe("modoDoBanco", () => {
 })
 
 describe("getBanco", () => {
-  it("modo memória: banco semeado com a fixture e compartilhado entre chamadas", async () => {
+  it("modo memória: banco semeado com o dataset REAL da planilha e compartilhado entre chamadas", async () => {
     vi.stubEnv("RADAR_DB", "memoria")
     vi.stubEnv("NODE_ENV", "development")
     vi.spyOn(console, "warn").mockImplementation(() => {})
     const a = getBanco()
     expect(a).toBe(getBanco())
     expect(await a.selecionar("clientes")).toHaveLength(10)
-    expect(await a.selecionar("cliente_frentes")).toHaveLength(39)
+    expect(await a.selecionar("frentes")).toHaveLength(8)
+    expect(await a.selecionar("acoes")).toHaveLength(TOTAL_TAREFAS_PLANILHA)
+    expect(await a.selecionar("cliente_frentes")).toHaveLength(montarPlanilha().contratos!.length)
   })
 
   it("memoria-vazia começa sem dados", async () => {

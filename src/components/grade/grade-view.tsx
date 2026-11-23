@@ -22,7 +22,7 @@ import { useRadar } from "@/lib/hooks"
 import { useEntrada } from "@/lib/motion/use-entrada"
 
 function Conteudo() {
-  const { clients, frentes, grade } = useRadar()
+  const { clients, frentes, grade, configuracao } = useRadar()
   const [setor, setSetor] = useState("todos")
 
   const ativos = useMemo(() => clients.filter((c) => c.ativo), [clients])
@@ -76,7 +76,7 @@ function Conteudo() {
           <p className="mt-3 max-w-3xl text-sm text-muted-foreground">
             Problemas são frentes atrasadas ou críticas. &ldquo;Nunca&rdquo;
             marca uma frente sem nenhuma ação registrada. O canto marcado indica
-            aprovação travada há mais de 7 dias. Clique numa célula para abrir
+            aprovação travada há mais de {configuracao.limiteAprovacaoDias} dias. Clique numa célula para abrir
             a ficha do cliente.
           </p>
         </div>

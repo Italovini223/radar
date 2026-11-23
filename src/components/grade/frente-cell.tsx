@@ -64,7 +64,7 @@ export function FrenteCell({
       {status.travada ? (
         <span
           className="absolute top-0 right-0 size-0 border-t-[12px] border-l-[12px] border-t-state-warn border-l-transparent"
-          title="Aprovação travada há mais de 7 dias"
+          title="Aprovação travada"
         >
           <span className="sr-only">Aprovação travada</span>
         </span>

@@ -10,17 +10,18 @@ import { persist, type PersistStorage } from "zustand/middleware"
 
 import { aplicarCheckup, novoId, type EntradaCheckup } from "./domain/checkup"
 import { toISODate } from "./domain/rules"
-import type {
-  Acao,
-  Atribuicao,
-  Checkup,
-  Client,
-  Frente,
-  Opportunity,
-  RadarSnapshot,
-  ResultadoAds,
-  Setor,
-  StatusAcao,
+import {
+  CONFIGURACAO_PADRAO,
+  type Acao,
+  type Atribuicao,
+  type Checkup,
+  type Client,
+  type Frente,
+  type Opportunity,
+  type RadarSnapshot,
+  type ResultadoAds,
+  type Setor,
+  type StatusAcao,
 } from "./domain/types"
 import {
   localStorageRepository,
@@ -87,6 +88,8 @@ const vazio: RadarSnapshot = {
   acoes: [],
   checkups: [],
   atribuicoes: [],
+  contratos: [],
+  configuracao: CONFIGURACAO_PADRAO,
 }
 
 export const useRadarStore: UseBoundStore<
@@ -109,7 +112,7 @@ export const useRadarStore: UseBoundStore<
             set({ ready: true, agora: Date.now(), erro: erroDeLeitura })
             return
           }
-          if (get().frentes.length === 0) set(buildSeed(new Date()))
+          if (get().frentes.length === 0) set(buildSeed())
           set({ ready: true, agora: Date.now(), erro: null })
         } catch (e) {
           set({
@@ -123,7 +126,7 @@ export const useRadarStore: UseBoundStore<
         }
       },
 
-      resetarDemo: () => set({ ...buildSeed(new Date()), erro: null }),
+      resetarDemo: () => set({ ...buildSeed(), erro: null }),
 
       registrarAcao: (a) =>
         set((s) => {
@@ -217,6 +220,8 @@ export const useRadarStore: UseBoundStore<
         acoes: s.acoes,
         checkups: s.checkups,
         atribuicoes: s.atribuicoes,
+        contratos: s.contratos,
+        configuracao: s.configuracao,
       }),
     }
   )

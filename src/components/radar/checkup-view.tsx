@@ -130,7 +130,7 @@ function Formulario({
               const valor = datas[f.id] ?? ""
               const invalida = valor > hojeISO
               const preview = valor
-                ? classificarDias(diasDesde(valor, hoje), f.prazoDias)
+                ? classificarDias(diasDesde(valor, hoje), f.prazoDias, f.criticoAposDias)
                 : null
               return (
                 <li
@@ -286,7 +286,9 @@ function Conteudo() {
         <Formulario
           key={cliente.id}
           cliente={cliente}
-          frentes={frentes}
+          frentes={frentes.filter((f) =>
+            grade.some((g) => g.clientId === cliente.id && g.frenteId === f.id)
+          )}
           grade={grade}
           hoje={hoje}
         />

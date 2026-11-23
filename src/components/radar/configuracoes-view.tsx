@@ -108,7 +108,7 @@ function LinhaPrazo({ frente }: { frente: Frente }) {
 }
 
 function Conteudo() {
-  const { frentes } = useRadar()
+  const { frentes, configuracao } = useRadar()
   const resetarDemo = useRadarStore((s) => s.resetarDemo)
   const [confirma, setConfirma] = useState(false)
   const raiz = useRef<HTMLDivElement>(null)
@@ -162,7 +162,7 @@ function Conteudo() {
         </div>
         <p className="mt-3 text-xs text-muted-foreground">
           Crítica também vale para frente que nunca teve ação. Entrega
-          aguardando aprovação há mais de 7 dias gera um alerta próprio.
+          aguardando aprovação há mais de {configuracao.limiteAprovacaoDias} dias gera um alerta próprio.
         </p>
       </section>
 

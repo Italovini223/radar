@@ -10,6 +10,7 @@ export type Setor =
   | "Conteúdo"
   | "Materiais"
   | "Redação"
+  | "Desenvolvimento"
 
 export const SETORES: readonly Setor[] = [
   "Mídia paga",
@@ -18,13 +19,22 @@ export const SETORES: readonly Setor[] = [
   "Conteúdo",
   "Materiais",
   "Redação",
+  "Desenvolvimento",
 ]
+
+/** Frente cujo relógio é "dias sem retorno do cliente" em lojas em criação. */
+export const FRENTE_DESENVOLVIMENTO_ID = "desenvolvimento"
+
+export type TipoCliente = "operacao" | "loja_em_criacao"
 
 export interface Client {
   id: string
   /** Nome anonimizado/fictício. */
   nome: string
-  segmento: string
+  /** Nicho de atuação (ex.: "Moda", "Pet"). */
+  nicho: string
+  /** `loja_em_criacao` usa o relógio de retorno do cliente (ver rules.ts). */
+  tipo: TipoCliente
   /** Squad responsável (nunca pessoa real). */
   responsavel: string
   ativo: boolean
@@ -34,13 +44,40 @@ export interface Frente {
   id: string
   nome: string
   setor: Setor
-  /** Prazo máximo desejado entre ações concluídas. */
+  /** Prazo máximo desejado entre ações concluídas (acima disso: atrasada). */
   prazoDias: number
+  /** "Vira crítico após" N dias (coluna própria da planilha). */
+  criticoAposDias: number
+}
+
+/** Frente contratada por um cliente. Par sem contrato não é avaliado. */
+export interface Contrato {
+  clientId: string
+  frenteId: string
+}
+
+/** Parâmetros globais do motor. */
+export interface Configuracao {
+  /** Ação aguardando aprovação há MAIS de N dias vira alerta. */
+  limiteAprovacaoDias: number
+  /** Loja em criação: dias sem retorno do cliente até o bloqueio contratual. */
+  bloqueioContratualDias: number
+  /** "Hoje" da demonstração, ISO `yyyy-MM-dd`. */
+  dataReferencia: string
+  /** true = ignora `dataReferencia` e usa a data real. */
+  usarHojeReal: boolean
+}
+
+export const CONFIGURACAO_PADRAO: Configuracao = {
+  limiteAprovacaoDias: 5,
+  bloqueioContratualDias: 90,
+  dataReferencia: "2026-11-13",
+  usarHojeReal: false,
 }
 
 export type StatusAcao = "concluida" | "em_andamento" | "aguardando_aprovacao"
 
-export type OrigemAcao = "seed" | "manual" | "checkup"
+export type OrigemAcao = "seed" | "manual" | "checkup" | "planilha"
 
 export interface Acao {
   id: string
@@ -53,6 +90,12 @@ export interface Acao {
   /** Obrigatório quando status = aguardando_aprovacao, ISO `yyyy-MM-dd`. */
   aguardandoDesde?: string
   origem?: OrigemAcao
+  /** Quem faz/fez a ação (texto livre; nunca pessoa real nos dados fictícios). */
+  responsavel?: string
+  /** ISO `yyyy-MM-dd`. */
+  criadaEm?: string
+  /** ISO `yyyy-MM-dd`; só para status = concluida. */
+  concluidaEm?: string
 }
 
 export type ResultadoAds = "estavel" | "caindo" | "subindo"
@@ -81,9 +124,21 @@ export interface StatusFrente {
   prazoDias: number
   /** Data da última ação concluída, ISO; undefined se nunca. */
   ultimaAcao?: string
-  /** Existe ação aguardando aprovação há mais de 7 dias neste par. */
+  /** Existe ação aguardando aprovação há mais de `limiteAprovacaoDias` neste par. */
   travada: boolean
+  /** Qual relógio gerou `dias`. */
+  relogio: "ultima_acao" | "retorno_cliente"
+  /**
+   * Só loja em criação com ação aguardando o cliente:
+   * `bloqueioContratualDias - dias`. Negativo ou zero = bloqueado.
+   */
+  diasParaBloqueio: number | null
+  /** Desde quando aguarda o cliente (retorno_cliente), ISO. */
+  aguardandoDesde?: string
 }
+
+/** Situação derivada do cliente (visão de carteira). */
+export type SituacaoCliente = "critico" | "atencao" | "ok"
 
 export type TipoOportunidade = "parada" | "aprovacao"
 export type Severidade = "alta" | "media"
@@ -101,6 +156,8 @@ export interface Opportunity {
   /** Dias parado (parada) ou dias aguardando aprovação (aprovacao). */
   diasParado: number | null
   prazoDias: number
+  /** Loja em criação aguardando o cliente: dias até o bloqueio contratual. */
+  diasParaBloqueio: number | null
   setorResponsavel: Setor
   /** "Nova" = acabou de cruzar o prazo (ver `JANELA_NOVA_DIAS`). */
   nova: boolean
@@ -121,4 +178,10 @@ export interface RadarSnapshot {
   acoes: Acao[]
   checkups: Checkup[]
   atribuicoes: Atribuicao[]
+  /**
+   * Frentes contratadas por cliente. Ausente = todas contratadas
+   * (compatibilidade com dados antigos).
+   */
+  contratos?: Contrato[]
+  configuracao: Configuracao
 }

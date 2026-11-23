@@ -83,6 +83,7 @@ function AcaoForm({
   hoje: Date
 }) {
   const registrarAcao = useRadarStore((s) => s.registrarAcao)
+  const limiteAprovacao = useRadarStore((s) => s.configuracao.limiteAprovacaoDias)
   const id = useId()
   const hojeISO = toISODate(hoje)
   const [frenteId, setFrenteId] = useState(frenteInicial ?? frentes[0]?.id ?? "")
@@ -199,7 +200,7 @@ function AcaoForm({
                 </Select>
                 {status === "aguardando_aprovacao" ? (
                   <FieldDescription>
-                    Acima de 7 dias vira alerta no Radar.
+                    Acima de {limiteAprovacao} dias vira alerta no Radar.
                   </FieldDescription>
                 ) : null}
               </Field>

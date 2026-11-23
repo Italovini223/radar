@@ -4,31 +4,39 @@ import { describe, expect, it } from "vitest"
 import { gerarRascunhoSincrono, AVISO_RASCUNHO } from "./ai/proposal"
 import { aplicarCheckup } from "./domain/checkup"
 import {
+  alertasDoCliente,
   calcularMetricas,
   derivarOportunidades,
   formatarDias,
+  proximaOportunidade,
+  textoBloqueio,
 } from "./domain/opportunities"
 import {
   DIAS_APROVACAO_TRAVADA,
   acoesTravadas,
+  agoraDaConfiguracao,
   avaliarFrente,
+  avisosDoCliente,
   classificarDias,
+  contextoDoSnapshot,
   montarGrade,
+  situacaoDoCliente,
   toISODate,
   ultimaAcaoConcluida,
 } from "./domain/rules"
 import type { Acao, Frente } from "./domain/types"
 import { buildSeed } from "./data/seed"
 
-/** "Hoje" fixo: 16/11/2026 (meio-dia local, para evitar bordas de fuso). */
-const NOW = new Date(2026, 10, 16, 12, 0, 0)
+/** "Hoje" do gabarito: 13/11/2026 (meio-dia local, para evitar bordas de fuso). */
+const NOW = new Date(2026, 10, 13, 12, 0, 0)
 const atras = (dias: number) => toISODate(addDays(NOW, -dias))
 
-const frente = (prazoDias: number): Frente => ({
+const frente = (prazoDias: number, criticoAposDias = prazoDias * 2): Frente => ({
   id: "f",
   nome: "Frente",
   setor: "Mídia paga",
   prazoDias,
+  criticoAposDias,
 })
 
 const acao = (
@@ -44,35 +52,47 @@ const acao = (
   ...extra,
 })
 
-describe("classificarDias: limites de 75% / 100% / 150%", () => {
-  // prazo 100 deixa os limites em números redondos
+describe("classificarDias: atenção 75% / atrasada > prazo / crítica >= criticoAposDias", () => {
+  // prazo 100 / crítico 200 deixa os limites em números redondos
   it.each([
     [0, "em_dia"],
     [74, "em_dia"],
-    [75, "atencao"], // exatamente 75% já é atenção
-    [100, "atencao"], // exatamente 100% ainda é atenção
+    [75, "atencao"], // exatamente 75% já é atenção (aviso)
+    [100, "atencao"], // exatamente o prazo ainda é atenção
     [101, "atrasada"],
-    [150, "atrasada"], // exatamente 150% ainda é atrasada
-    [151, "critica"],
-  ] as const)("prazo 100, %i dias => %s", (dias, esperado) => {
-    expect(classificarDias(dias, 100)).toEqual({
+    [199, "atrasada"],
+    [200, "critica"], // "vira crítico após": dias >= criticoAposDias
+    [201, "critica"],
+  ] as const)("prazo 100 / crítico 200, %i dias => %s", (dias, esperado) => {
+    expect(classificarDias(dias, 100, 200)).toEqual({
       estado: esperado,
       nunca: false,
     })
   })
 
-  it("prazo 30: 22 em dia, 23 atenção, 30 atenção, 31 atrasada, 45 atrasada, 46 crítica", () => {
-    expect(classificarDias(22, 30).estado).toBe("em_dia")
-    expect(classificarDias(23, 30).estado).toBe("atencao")
-    expect(classificarDias(30, 30).estado).toBe("atencao")
-    expect(classificarDias(31, 30).estado).toBe("atrasada")
-    expect(classificarDias(45, 30).estado).toBe("atrasada")
-    expect(classificarDias(46, 30).estado).toBe("critica")
+  it("o limiar crítico é a coluna própria, não 1,5x: prazo 30 / crítico 45 mantém os números do motor antigo", () => {
+    expect(classificarDias(22, 30, 45).estado).toBe("em_dia")
+    expect(classificarDias(23, 30, 45).estado).toBe("atencao")
+    expect(classificarDias(30, 30, 45).estado).toBe("atencao")
+    expect(classificarDias(31, 30, 45).estado).toBe("atrasada")
+    expect(classificarDias(44, 30, 45).estado).toBe("atrasada")
+    expect(classificarDias(45, 30, 45).estado).toBe("critica")
+  })
+
+  it("prazo 30 / crítico 60 (Google Ads da planilha)", () => {
+    expect(classificarDias(59, 30, 60).estado).toBe("atrasada")
+    expect(classificarDias(60, 30, 60).estado).toBe("critica")
+    expect(classificarDias(46, 30, 60).estado).toBe("atrasada") // antes: crítica (> 150%)
+  })
+
+  it("sem criticoAposDias informado, assume 2x o prazo", () => {
+    expect(classificarDias(59, 30).estado).toBe("atrasada")
+    expect(classificarDias(60, 30).estado).toBe("critica")
   })
 
   it("nunca teve ação => crítica, marcada como nunca", () => {
-    expect(classificarDias(null, 30)).toEqual({ estado: "critica", nunca: true })
-    expect(classificarDias(null, 365)).toEqual({ estado: "critica", nunca: true })
+    expect(classificarDias(null, 30, 60)).toEqual({ estado: "critica", nunca: true })
+    expect(classificarDias(null, 365, 730)).toEqual({ estado: "critica", nunca: true })
   })
 })
 
@@ -86,8 +106,10 @@ describe("avaliarFrente", () => {
     expect(ultimaAcaoConcluida(acoes, "c", "f")?.data).toBe(atras(50))
     const s = avaliarFrente(acoes, "c", frente(30), NOW)
     expect(s.dias).toBe(50)
-    expect(s.estado).toBe("critica")
+    // Motor antigo: crítica (50 > 150% de 30). Agora: prazo 30 / crítico 60.
+    expect(s.estado).toBe("atrasada")
     expect(s.nunca).toBe(false)
+    expect(avaliarFrente(acoes, "c", frente(30, 50), NOW).estado).toBe("critica")
   })
 
   it("sem nenhuma ação concluída é 'nunca' e crítica", () => {
@@ -103,17 +125,26 @@ describe("avaliarFrente", () => {
   })
 })
 
-describe("aprovação travada (> 7 dias)", () => {
+describe("aprovação travada (> 5 dias, parametrizável)", () => {
   const aguardando = (dias: number) =>
     acao(dias, {
       status: "aguardando_aprovacao",
       aguardandoDesde: atras(dias),
     })
 
-  it("limite: 7 dias não alerta, 8 dias alerta", () => {
-    expect(DIAS_APROVACAO_TRAVADA).toBe(7)
-    expect(acoesTravadas([aguardando(7)], NOW)).toHaveLength(0)
-    expect(acoesTravadas([aguardando(8)], NOW)).toHaveLength(1)
+  it("limite padrão: 5 dias não alerta, 6 dias alerta (antes: 7/8)", () => {
+    expect(DIAS_APROVACAO_TRAVADA).toBe(5)
+    expect(acoesTravadas([aguardando(5)], NOW)).toHaveLength(0)
+    expect(acoesTravadas([aguardando(6)], NOW)).toHaveLength(1)
+  })
+
+  it("o limite vem da configuração", () => {
+    expect(acoesTravadas([aguardando(8)], NOW, 10)).toHaveLength(0)
+    expect(acoesTravadas([aguardando(11)], NOW, 10)).toHaveLength(1)
+    const s = avaliarFrente([acao(5), aguardando(8)], "c", frente(30), NOW, {
+      limiteAprovacaoDias: 10,
+    })
+    expect(s.travada).toBe(false)
   })
 
   it("só considera status aguardando_aprovacao", () => {
@@ -127,192 +158,335 @@ describe("aprovação travada (> 7 dias)", () => {
   })
 })
 
-describe("seed + oráculo dos gargalos plantados", () => {
-  const seed = buildSeed(NOW)
-  const grade = montarGrade(seed.clients, seed.frentes, seed.acoes, NOW)
+describe("loja em criação (desenvolvimento): relógio de retorno do cliente", () => {
+  const dev: Frente = {
+    id: "desenvolvimento",
+    nome: "Desenvolvimento · loja em criação",
+    setor: "Desenvolvimento",
+    prazoDias: 30,
+    criticoAposDias: 60,
+  }
+  const doDev = (dias: number, extra: Partial<Acao> = {}) =>
+    acao(dias, { frenteId: "desenvolvimento", ...extra })
+  const aguardandoDev = (dias: number) =>
+    doDev(dias, { status: "aguardando_aprovacao", aguardandoDesde: atras(dias) })
+  const loja = { tipoCliente: "loja_em_criacao" as const }
+
+  it.each([
+    [10, "em_dia", 80],
+    [23, "atencao", 67],
+    [30, "atencao", 60],
+    [31, "atrasada", 59],
+    [59, "atrasada", 31],
+    [60, "critica", 30],
+    [66, "critica", 24],
+    [90, "critica", 0],
+    [100, "critica", -10],
+  ] as const)("aguardando há %i dias => %s, diasParaBloqueio %i", (dias, estado, bloqueio) => {
+    const s = avaliarFrente([aguardandoDev(dias)], "c", dev, NOW, loja)
+    expect(s).toMatchObject({
+      estado,
+      dias,
+      diasParaBloqueio: bloqueio,
+      relogio: "retorno_cliente",
+      travada: false,
+      nunca: false,
+    })
+  })
+
+  it("o relógio é a ação aguardando MAIS ANTIGA; follow-ups concluídos não o reiniciam", () => {
+    const acoes = [
+      doDev(40),
+      doDev(12),
+      aguardandoDev(20),
+      aguardandoDev(66),
+    ]
+    const s = avaliarFrente(acoes, "c", dev, NOW, loja)
+    expect(s.dias).toBe(66)
+    expect(s.diasParaBloqueio).toBe(24)
+    expect(s.aguardandoDesde).toBe(atras(66))
+  })
+
+  it("o limite de bloqueio vem da configuração", () => {
+    const s = avaliarFrente([aguardandoDev(66)], "c", dev, NOW, {
+      ...loja,
+      bloqueioContratualDias: 120,
+    })
+    expect(s.diasParaBloqueio).toBe(54)
+  })
+
+  it("sem ação aguardando, cai na regra geral (última concluída)", () => {
+    const s = avaliarFrente([doDev(40)], "c", dev, NOW, loja)
+    expect(s).toMatchObject({
+      relogio: "ultima_acao",
+      dias: 40,
+      estado: "atrasada",
+      diasParaBloqueio: null,
+    })
+  })
+
+  it("cliente de operação na mesma frente usa a regra geral e a aprovação travada de 5 dias", () => {
+    const s = avaliarFrente([doDev(5), aguardandoDev(20)], "c", dev, NOW, {
+      tipoCliente: "operacao",
+    })
+    expect(s.relogio).toBe("ultima_acao")
+    expect(s.diasParaBloqueio).toBeNull()
+    expect(s.travada).toBe(true)
+  })
+
+  it("a aprovação travada de 5 dias NÃO se aplica a loja em criação x desenvolvimento", () => {
+    const s = avaliarFrente([aguardandoDev(8)], "c", dev, NOW, loja)
+    expect(s.travada).toBe(false)
+    expect(s.estado).toBe("em_dia")
+  })
+
+  it("textoBloqueio", () => {
+    expect(textoBloqueio(24)).toBe("faltam 24 dias para o bloqueio contratual")
+    expect(textoBloqueio(1)).toBe("falta 1 dia para o bloqueio contratual")
+    expect(textoBloqueio(0)).toBe("bloqueio contratual atingido hoje")
+    expect(textoBloqueio(-10)).toBe("bloqueio contratual atingido há 10 dias")
+  })
+})
+
+describe("agoraDaConfiguracao", () => {
+  const hojeReal = new Date(2026, 10, 23, 9, 0, 0)
+  it("usa a data de referência por padrão", () => {
+    const d = agoraDaConfiguracao(
+      { dataReferencia: "2026-11-13", usarHojeReal: false },
+      hojeReal
+    )
+    expect(toISODate(d)).toBe("2026-11-13")
+  })
+  it("usarHojeReal ignora a data de referência", () => {
+    expect(
+      agoraDaConfiguracao({ dataReferencia: "2026-11-13", usarHojeReal: true }, hojeReal)
+    ).toBe(hojeReal)
+  })
+  it("data de referência inválida cai na data real", () => {
+    expect(
+      agoraDaConfiguracao({ dataReferencia: "xx", usarHojeReal: false }, hojeReal)
+    ).toBe(hojeReal)
+  })
+})
+
+describe("fixture do gabarito + oráculo dos gargalos (regras da planilha)", () => {
+  const seed = buildSeed()
+  const ctx = contextoDoSnapshot(seed)
+  const grade = montarGrade(seed.clients, seed.frentes, seed.acoes, NOW, ctx)
+  const opps = () => derivarOportunidades(seed.clients, seed.frentes, seed.acoes, NOW, ctx)
   const celula = (clientId: string, frenteId: string) => {
     const s = grade.find((g) => g.clientId === clientId && g.frenteId === frenteId)
     if (!s) throw new Error(`célula ausente: ${clientId}/${frenteId}`)
     return s
   }
 
-  it("5 clientes x 8 frentes", () => {
-    expect(seed.clients).toHaveLength(5)
+  it("10 clientes x 8 frentes; a grade só tem os pares contratados", () => {
+    expect(seed.clients).toHaveLength(10)
     expect(seed.frentes).toHaveLength(8)
-    expect(grade).toHaveLength(40)
+    expect(seed.contratos).toHaveLength(39)
+    expect(grade).toHaveLength(39)
   })
 
-  it("prazos iniciais por frente", () => {
-    const prazo = Object.fromEntries(seed.frentes.map((f) => [f.id, f.prazoDias]))
-    expect(prazo).toEqual({
-      "google-ads": 30,
-      "meta-ads": 30,
-      crm: 15,
-      cro: 180,
-      layout: 365,
-      conteudo: 30,
-      materiais: 30,
-      redacao: 30,
+  it("sem contratos no snapshot, todas as frentes valem (compatibilidade)", () => {
+    expect(montarGrade(seed.clients, seed.frentes, seed.acoes, NOW)).toHaveLength(80)
+  })
+
+  it("prazos e 'vira crítico após' por frente (planilha)", () => {
+    const prazos = Object.fromEntries(
+      seed.frentes.map((f) => [f.id, [f.prazoDias, f.criticoAposDias]])
+    )
+    expect(prazos).toEqual({
+      "google-ads": [30, 60],
+      "meta-ads": [15, 30],
+      crm: [60, 120],
+      conteudo: [14, 28],
+      materiais: [30, 60],
+      redacao: [30, 60],
+      desenvolvimento: [30, 60],
+      cro: [180, 360],
     })
   })
 
-  it("Flor de Sal: Google Ads parado (40 dias, prazo 30) => atrasada", () => {
-    expect(celula("flor-de-sal", "google-ads")).toMatchObject({
-      estado: "atrasada",
-      dias: 40,
-      nunca: false,
-    })
+  it("Aurora Moda: Google Ads 69 d crítica; CRM 85 d atrasada", () => {
+    expect(celula("aurora-moda", "google-ads")).toMatchObject({ estado: "critica", dias: 69 })
+    expect(celula("aurora-moda", "crm")).toMatchObject({ estado: "atrasada", dias: 85 })
   })
 
-  it("Casa Nativa: Layout há ~2 anos => crítica", () => {
-    const s = celula("casa-nativa", "layout")
-    expect(s.estado).toBe("critica")
-    expect(s.dias).toBe(730)
+  it("Ninho: CRM 156 d e CRO ~13 meses => críticas", () => {
+    expect(celula("ninho-casa-decor", "crm")).toMatchObject({ estado: "critica", dias: 156 })
+    expect(celula("ninho-casa-decor", "cro")).toMatchObject({ estado: "critica", dias: 389 })
   })
 
-  it("Velô Bikes: CRM sem nenhuma ação => crítica (nunca)", () => {
-    expect(celula("velo-bikes", "crm")).toMatchObject({
-      estado: "critica",
-      nunca: true,
-      dias: null,
-    })
+  it("frente não contratada nunca vira 'nunca teve ação'", () => {
+    expect(grade.some((g) => g.clientId === "aurora-moda" && g.frenteId === "cro")).toBe(false)
+    expect(grade.filter((g) => g.nunca)).toEqual([])
+    expect(opps().some((o) => o.clientId === "raiz-organicos" && o.frenteId !== "desenvolvimento")).toBe(false)
   })
 
-  it("Nossa Horta: Conteúdo há 90 dias => crítica (> 150% de 30)", () => {
-    expect(celula("nossa-horta", "conteudo")).toMatchObject({
-      estado: "critica",
-      dias: 90,
-    })
-  })
-
-  it("5º cliente: tudo em dia por prazo; só a aprovação está travada", () => {
-    const aurora = grade.filter((g) => g.clientId === "aurora-pet")
-    expect(aurora.every((g) => g.estado === "em_dia" || g.estado === "atencao")).toBe(true)
-    expect(aurora.filter((g) => g.travada).map((g) => g.frenteId)).toEqual(["redacao"])
-  })
-
-  it("o Radar lista EXATAMENTE as 5 oportunidades esperadas", () => {
-    const opps = derivarOportunidades(seed.clients, seed.frentes, seed.acoes, NOW)
-    expect(opps.map((o) => o.id).sort()).toEqual(
+  it("o Radar lista EXATAMENTE as 9 oportunidades esperadas", () => {
+    expect(opps().map((o) => o.id).sort()).toEqual(
       [
-        "aprovacao:aurora-pet:redacao",
-        "parada:casa-nativa:layout",
-        "parada:flor-de-sal:google-ads",
-        "parada:nossa-horta:conteudo",
-        "parada:velo-bikes:crm",
+        "aprovacao:aurora-moda:meta-ads",
+        "aprovacao:bella-pele:materiais",
+        "parada:aurora-moda:crm",
+        "parada:aurora-moda:google-ads",
+        "parada:ninho-casa-decor:crm",
+        "parada:ninho-casa-decor:cro",
+        "parada:patas-pet-store:google-ads",
+        "parada:raiz-organicos:desenvolvimento",
+        "parada:vitta-suplementos:conteudo",
       ].sort()
     )
   })
 
   it("severidade: crítica = alta; atrasada e aprovação travada = média", () => {
-    const opps = derivarOportunidades(seed.clients, seed.frentes, seed.acoes, NOW)
-    const por = Object.fromEntries(opps.map((o) => [o.id, o]))
-    expect(por["parada:velo-bikes:crm"].severidade).toBe("alta")
-    expect(por["parada:nossa-horta:conteudo"].severidade).toBe("alta")
-    expect(por["parada:casa-nativa:layout"].severidade).toBe("alta")
-    expect(por["parada:flor-de-sal:google-ads"].severidade).toBe("media")
-    expect(por["aprovacao:aurora-pet:redacao"].severidade).toBe("media")
+    const por = Object.fromEntries(opps().map((o) => [o.id, o]))
+    for (const id of [
+      "parada:ninho-casa-decor:crm",
+      "parada:ninho-casa-decor:cro",
+      "parada:aurora-moda:google-ads",
+      "parada:raiz-organicos:desenvolvimento",
+    ]) {
+      expect(por[id].severidade).toBe("alta")
+    }
+    for (const id of [
+      "parada:aurora-moda:crm",
+      "parada:patas-pet-store:google-ads",
+      "parada:vitta-suplementos:conteudo",
+      "aprovacao:aurora-moda:meta-ads",
+      "aprovacao:bella-pele:materiais",
+    ]) {
+      expect(por[id].severidade).toBe("media")
+    }
   })
 
-  it("ordenação: altas primeiro, 'nunca' é o pior caso, paradas antes de aprovações", () => {
-    const opps = derivarOportunidades(seed.clients, seed.frentes, seed.acoes, NOW)
-    expect(opps.map((o) => o.id)).toEqual([
-      "parada:velo-bikes:crm",
-      "parada:nossa-horta:conteudo",
-      "parada:casa-nativa:layout",
-      "parada:flor-de-sal:google-ads",
-      "aprovacao:aurora-pet:redacao",
+  it("ordenação: altas primeiro, paradas antes de aprovações, pior razão dias/prazo primeiro", () => {
+    expect(opps().map((o) => o.id)).toEqual([
+      "parada:ninho-casa-decor:crm", // 156/60
+      "parada:aurora-moda:google-ads", // 69/30
+      "parada:raiz-organicos:desenvolvimento", // 66/30
+      "parada:ninho-casa-decor:cro", // 389/180
+      "parada:patas-pet-store:google-ads", // 54/30
+      "parada:vitta-suplementos:conteudo", // 24/14
+      "parada:aurora-moda:crm", // 85/60
+      "aprovacao:aurora-moda:meta-ads", // 9/5
+      "aprovacao:bella-pele:materiais", // 6/5
     ])
   })
 
   it("setor responsável vem da frente", () => {
-    const opps = derivarOportunidades(seed.clients, seed.frentes, seed.acoes, NOW)
-    const setor = (id: string) => opps.find((o) => o.id === id)?.setorResponsavel
-    expect(setor("parada:velo-bikes:crm")).toBe("CRM & Automação")
-    expect(setor("parada:casa-nativa:layout")).toBe("CRO & UX")
-    expect(setor("parada:flor-de-sal:google-ads")).toBe("Mídia paga")
+    const setor = (id: string) => opps().find((o) => o.id === id)?.setorResponsavel
+    expect(setor("parada:ninho-casa-decor:crm")).toBe("CRM & Automação")
+    expect(setor("parada:ninho-casa-decor:cro")).toBe("CRO & UX")
+    expect(setor("parada:aurora-moda:google-ads")).toBe("Mídia paga")
+    expect(setor("parada:raiz-organicos:desenvolvimento")).toBe("Desenvolvimento")
   })
 
-  it("'nova' = venceu o prazo há até 14 dias", () => {
-    const opps = derivarOportunidades(seed.clients, seed.frentes, seed.acoes, NOW)
-    const nova = (id: string) => opps.find((o) => o.id === id)?.nova
-    expect(nova("parada:flor-de-sal:google-ads")).toBe(true) // 40 - 30 = 10
-    expect(nova("parada:nossa-horta:conteudo")).toBe(false) // 90 - 30 = 60
-    expect(nova("parada:velo-bikes:crm")).toBe(false)
+  it("'nova' = venceu o prazo há até 14 dias (aprovação: passou do limite há até 14)", () => {
+    const nova = (id: string) => opps().find((o) => o.id === id)?.nova
+    expect(nova("parada:vitta-suplementos:conteudo")).toBe(true) // 24 - 14 = 10
+    expect(nova("parada:patas-pet-store:google-ads")).toBe(false) // 54 - 30 = 24
+    expect(nova("parada:ninho-casa-decor:crm")).toBe(false)
+    expect(nova("aprovacao:aurora-moda:meta-ads")).toBe(true) // 9 - 5 = 4
   })
 
   it("métricas calculadas", () => {
-    const m = calcularMetricas(seed.clients, seed.frentes, seed.acoes, NOW)
-    expect(m).toMatchObject({
-      clientesAtivos: 5,
-      oportunidades: 5,
-      clientesComOportunidade: 5,
-      prioritarias: 3,
-      frentesCriticas: 3,
-      aguardandoAprovacao: 2, // Aurora (10 dias) + Flor (3 dias)
-      aprovacaoTravada: 1,
+    expect(calcularMetricas(seed.clients, seed.frentes, seed.acoes, NOW, ctx)).toMatchObject({
+      clientesAtivos: 10,
+      clientesCriticos: 3,
+      clientesAtencao: 3,
+      clientesOk: 4,
+      oportunidades: 9,
+      clientesComOportunidade: 6,
+      novas: 3,
+      prioritarias: 4,
+      frentesCriticas: 4,
+      aguardandoAprovacao: 9,
+      aprovacaoTravada: 5, // Aurora (2) + Bella (3); Raiz não conta (regra de loja)
     })
   })
 
   it("cliente inativo some da grade e das oportunidades", () => {
     const clients = seed.clients.map((c) =>
-      c.id === "velo-bikes" ? { ...c, ativo: false } : c
+      c.id === "ninho-casa-decor" ? { ...c, ativo: false } : c
     )
-    const opps = derivarOportunidades(clients, seed.frentes, seed.acoes, NOW)
-    expect(opps.some((o) => o.clientId === "velo-bikes")).toBe(false)
-    expect(montarGrade(clients, seed.frentes, seed.acoes, NOW)).toHaveLength(32)
+    const r = derivarOportunidades(clients, seed.frentes, seed.acoes, NOW, ctx)
+    expect(r.some((o) => o.clientId === "ninho-casa-decor")).toBe(false)
+    expect(montarGrade(clients, seed.frentes, seed.acoes, NOW, ctx)).toHaveLength(35)
   })
 
   it("registrar uma ação resolve a oportunidade (par volta a em dia)", () => {
-    const acoes = [
+    const acoes: Acao[] = [
       ...seed.acoes,
       {
         id: "nova",
-        clientId: "flor-de-sal",
+        clientId: "aurora-moda",
         frenteId: "google-ads",
-        titulo: "Campanha retomada",
+        titulo: "Otimização de Google Ads feita hoje",
         data: atras(0),
-        status: "concluida" as const,
+        status: "concluida",
       },
     ]
-    const opps = derivarOportunidades(seed.clients, seed.frentes, acoes, NOW)
-    expect(opps.some((o) => o.id === "parada:flor-de-sal:google-ads")).toBe(false)
-    expect(opps).toHaveLength(4)
+    const r = derivarOportunidades(seed.clients, seed.frentes, acoes, NOW, ctx)
+    expect(r.some((o) => o.id === "parada:aurora-moda:google-ads")).toBe(false)
+    expect(r).toHaveLength(8)
+    // A próxima oportunidade do Aurora passa a ser o CRM atrasado.
+    expect(
+      proximaOportunidade("aurora-moda", seed.clients, seed.frentes, acoes, NOW, ctx)?.id
+    ).toBe("parada:aurora-moda:crm")
   })
 
-  it("mudar o prazo de Google Ads para 60 dias tira Flor de Sal do Radar", () => {
+  it("mudar o prazo de Google Ads para 60/120 tira Patas Pet Store do Radar", () => {
     const frentes = seed.frentes.map((f) =>
-      f.id === "google-ads" ? { ...f, prazoDias: 60 } : f
+      f.id === "google-ads" ? { ...f, prazoDias: 60, criticoAposDias: 120 } : f
     )
-    const opps = derivarOportunidades(seed.clients, frentes, seed.acoes, NOW)
-    expect(opps.some((o) => o.id === "parada:flor-de-sal:google-ads")).toBe(false)
+    const r = derivarOportunidades(seed.clients, frentes, seed.acoes, NOW, ctx)
+    expect(r.some((o) => o.id === "parada:patas-pet-store:google-ads")).toBe(false)
+    expect(situacaoDoCliente("patas-pet-store", seed.clients, frentes, seed.acoes, NOW, ctx)).toBe("ok")
   })
 
   it("é determinístico para o mesmo 'hoje' e muda com outro 'hoje'", () => {
-    const a = derivarOportunidades(seed.clients, seed.frentes, seed.acoes, NOW)
-    const b = derivarOportunidades(seed.clients, seed.frentes, seed.acoes, NOW)
+    const a = opps()
+    const b = opps()
     expect(a).toEqual(b)
-    const depois = derivarOportunidades(seed.clients, seed.frentes, seed.acoes, addDays(NOW, 60))
+    const depois = derivarOportunidades(seed.clients, seed.frentes, seed.acoes, addDays(NOW, 60), ctx)
     expect(depois.length).toBeGreaterThan(a.length)
+  })
+
+  it("alertas e avisos por cliente", () => {
+    expect(
+      alertasDoCliente("aurora-moda", seed.clients, seed.frentes, seed.acoes, NOW, ctx).map((o) => o.id)
+    ).toEqual([
+      "parada:aurora-moda:google-ads",
+      "parada:aurora-moda:crm",
+      "aprovacao:aurora-moda:meta-ads",
+    ])
+    expect(
+      avisosDoCliente("mundo-kids", seed.clients, seed.frentes, seed.acoes, NOW, ctx)
+        .map((g) => g.frenteId)
+        .sort()
+    ).toEqual(["cro", "redacao"])
   })
 })
 
 describe("aplicarCheckup", () => {
-  const seed = buildSeed(NOW)
+  const seed = buildSeed()
+  const google = seed.frentes.find((f) => f.id === "google-ads")!
+  const crm = seed.frentes.find((f) => f.id === "crm")!
 
   it("data mais recente: nova ação concluída e par sai do Radar", () => {
-    const r = aplicarCheckup(seed.acoes, seed.frentes, "flor-de-sal", [
+    const r = aplicarCheckup(seed.acoes, seed.frentes, "aurora-moda", [
       { frenteId: "google-ads", data: atras(1) },
     ])
     expect(r.alteradas).toEqual(["google-ads"])
-    const s = avaliarFrente(r.acoes, "flor-de-sal", seed.frentes[0], NOW)
+    const s = avaliarFrente(r.acoes, "aurora-moda", google, NOW)
     expect(s.dias).toBe(1)
     expect(s.estado).toBe("em_dia")
   })
 
   it("data igual à atual ou vazia: nada muda", () => {
-    const r = aplicarCheckup(seed.acoes, seed.frentes, "flor-de-sal", [
-      { frenteId: "google-ads", data: atras(40) },
+    const r = aplicarCheckup(seed.acoes, seed.frentes, "aurora-moda", [
+      { frenteId: "google-ads", data: atras(69) },
       { frenteId: "crm", data: "" },
     ])
     expect(r.alteradas).toEqual([])
@@ -320,27 +494,36 @@ describe("aplicarCheckup", () => {
   })
 
   it("data mais antiga: corrige o histórico e piora o estado", () => {
-    const r = aplicarCheckup(seed.acoes, seed.frentes, "aurora-pet", [
+    const r = aplicarCheckup(seed.acoes, seed.frentes, "techmania", [
       { frenteId: "google-ads", data: atras(100) },
     ])
-    const s = avaliarFrente(r.acoes, "aurora-pet", seed.frentes[0], NOW)
+    const s = avaliarFrente(r.acoes, "techmania", google, NOW)
     expect(s.dias).toBe(100)
     expect(s.estado).toBe("critica")
   })
 
-  it("frente sem ação (Velô/CRM): informar uma data tira de 'nunca'", () => {
-    const crm = seed.frentes.find((f) => f.id === "crm")!
-    const r = aplicarCheckup(seed.acoes, seed.frentes, "velo-bikes", [
+  it("frente sem ação (Ninho/CRM sem histórico): informar uma data tira de 'nunca'", () => {
+    const semCrm = seed.acoes.filter(
+      (a) => !(a.clientId === "ninho-casa-decor" && a.frenteId === "crm")
+    )
+    expect(avaliarFrente(semCrm, "ninho-casa-decor", crm, NOW).nunca).toBe(true)
+    const r = aplicarCheckup(semCrm, seed.frentes, "ninho-casa-decor", [
       { frenteId: "crm", data: atras(5) },
     ])
-    const s = avaliarFrente(r.acoes, "velo-bikes", crm, NOW)
+    const s = avaliarFrente(r.acoes, "ninho-casa-decor", crm, NOW)
     expect(s).toMatchObject({ nunca: false, dias: 5, estado: "em_dia" })
   })
 })
 
 describe("gerador simulado de rascunho", () => {
-  const seed = buildSeed(NOW)
-  const opps = derivarOportunidades(seed.clients, seed.frentes, seed.acoes, NOW)
+  const seed = buildSeed()
+  const opps = derivarOportunidades(
+    seed.clients,
+    seed.frentes,
+    seed.acoes,
+    NOW,
+    contextoDoSnapshot(seed)
+  )
 
   it("sempre carrega o aviso de rascunho e o setor da frente", () => {
     for (const o of opps) {
@@ -375,7 +558,7 @@ describe("gerador simulado de rascunho", () => {
       expect(p.texto).not.toMatch(/Oi, time/)
       if (o.tipo === "aprovacao") {
         expect(p.texto).toContain(formatarDias(o.diasParado ?? 0))
-        expect(p.texto).toContain("7 dias")
+        expect(p.texto).toContain("5 dias")
       } else {
         expect(p.texto).toContain(`${o.prazoDias} dias`)
         if (!o.nunca) expect(p.texto).toContain(formatarDias(o.diasParado ?? 0))

@@ -1,4 +1,4 @@
-import { formatarDias } from "../domain/opportunities"
+import { formatarDias, textoBloqueio } from "../domain/opportunities"
 import { DIAS_APROVACAO_TRAVADA } from "../domain/rules"
 import type { Opportunity, Setor } from "../domain/types"
 
@@ -19,6 +19,8 @@ export interface ProposalInput {
   setor: Setor
   /** Título da ação aguardando aprovação (tipo "aprovacao"). */
   tituloAcao?: string
+  /** Limite de aprovação da configuração (padrão: 5 dias). */
+  limiteAprovacaoDias?: number
 }
 
 export interface Proposal {
@@ -128,6 +130,9 @@ function situacao(o: Opportunity): string {
     return `com uma entrega aguardando aprovação há ${formatarDias(o.diasParado ?? 0)}`
   }
   if (o.nunca) return "sem nenhuma ação registrada"
+  if (o.diasParaBloqueio !== null) {
+    return `sem retorno do cliente há ${formatarDias(o.diasParado ?? 0)}`
+  }
   return `sem ação há ${formatarDias(o.diasParado ?? 0)}`
 }
 
@@ -157,14 +162,16 @@ function montar(input: ProposalInput): Proposal {
     return {
       titulo: `Lembrete de aprovação para ${cliente}`,
       resumo: resumoDaOportunidade(input),
-      texto: `${saudacao}\n\nA entrega "${input.tituloAcao ?? "pendente"}" está aguardando a aprovação de vocês há ${formatarDias(o.diasParado ?? 0)}, e nosso limite de espera é de ${DIAS_APROVACAO_TRAVADA} dias. Se faltar alguma informação para aprovar, é só nos dizer que a gente ajusta.\n\n${PERGUNTA_APROVACAO}`,
+      texto: `${saudacao}\n\nA entrega "${input.tituloAcao ?? "pendente"}" está aguardando a aprovação de vocês há ${formatarDias(o.diasParado ?? 0)}, e nosso limite de espera é de ${input.limiteAprovacaoDias ?? DIAS_APROVACAO_TRAVADA} dias. Se faltar alguma informação para aprovar, é só nos dizer que a gente ajusta.\n\n${PERGUNTA_APROVACAO}`,
       setorSugerido: input.setor,
       aviso: AVISO_RASCUNHO,
       geradoPor: "simulado",
     }
   }
   const modelo = MODELOS[o.frenteId] ?? MODELO_PADRAO
-  const abertura = o.nunca
+  const abertura = o.diasParaBloqueio !== null
+    ? `Na frente de ${input.frenteNome}, estamos há ${diasExtenso(o.diasParado ?? 0)} sem retorno de vocês, e o prazo de referência é de ${o.prazoDias} dias; ${textoBloqueio(o.diasParaBloqueio)}.`
+    : o.nunca
     ? `Na frente de ${input.frenteNome} ainda não temos nenhuma ação registrada, e o prazo de referência é de ${o.prazoDias} dias.`
     : `Na frente de ${input.frenteNome}, a última ação concluída foi há ${diasExtenso(o.diasParado ?? 0)}, e o prazo de referência é de ${o.prazoDias} dias.`
   return {

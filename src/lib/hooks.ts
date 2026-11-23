@@ -6,7 +6,7 @@ import {
   calcularMetricas,
   derivarOportunidades,
 } from "./domain/opportunities"
-import { montarGrade } from "./domain/rules"
+import { contextoDoSnapshot, montarGrade } from "./domain/rules"
 import { useRadarStore } from "./store"
 
 /**
@@ -22,6 +22,8 @@ export function useRadar() {
   const acoes = useRadarStore((s) => s.acoes)
   const checkups = useRadarStore((s) => s.checkups)
   const atribuicoes = useRadarStore((s) => s.atribuicoes)
+  const contratos = useRadarStore((s) => s.contratos)
+  const configuracao = useRadarStore((s) => s.configuracao)
 
   const hoje = useMemo(() => new Date(agora || 0), [agora])
 
@@ -29,12 +31,13 @@ export function useRadar() {
     if (!ready || !agora) {
       return { grade: [], oportunidades: [], metricas: null }
     }
+    const ctx = contextoDoSnapshot({ contratos, configuracao })
     return {
-      grade: montarGrade(clients, frentes, acoes, hoje),
-      oportunidades: derivarOportunidades(clients, frentes, acoes, hoje),
-      metricas: calcularMetricas(clients, frentes, acoes, hoje),
+      grade: montarGrade(clients, frentes, acoes, hoje, ctx),
+      oportunidades: derivarOportunidades(clients, frentes, acoes, hoje, ctx),
+      metricas: calcularMetricas(clients, frentes, acoes, hoje, ctx),
     }
-  }, [ready, agora, clients, frentes, acoes, hoje])
+  }, [ready, agora, clients, frentes, acoes, contratos, configuracao, hoje])
 
   return {
     ready: ready && agora > 0,
@@ -45,6 +48,8 @@ export function useRadar() {
     acoes,
     checkups,
     atribuicoes,
+    contratos,
+    configuracao,
     ...derivado,
   }
 }

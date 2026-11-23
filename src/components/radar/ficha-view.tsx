@@ -121,7 +121,7 @@ function Conteudo({ id }: { id: string }) {
         title={cliente.nome}
         description={
           <>
-            {cliente.segmento} · {cliente.responsavel} ·{" "}
+            {cliente.nicho} · {cliente.responsavel} ·{" "}
             <span className="tnum">
               {emDia} de {linhas.length} frentes em dia, {nOpps}{" "}
               {nOpps === 1 ? "oportunidade" : "oportunidades"}

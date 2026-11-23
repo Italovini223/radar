@@ -1,9 +1,13 @@
 import {
   DIAS_APROVACAO_TRAVADA,
   JANELA_NOVA_DIAS,
-  acoesTravadas,
+  criarContratado,
+  desdeAguardando,
   diasDesde,
   montarGrade,
+  situacoesDaCarteira,
+  travadasDaCarteira,
+  type ContextoRegras,
 } from "./rules"
 import type {
   Acao,
@@ -21,32 +25,50 @@ export function formatarDias(dias: number): string {
   return `${dias} ${dias === 1 ? "dia" : "dias"}`
 }
 
+/** "faltam 24 dias para o bloqueio contratual" (ou já atingido). */
+export function textoBloqueio(diasParaBloqueio: number): string {
+  if (diasParaBloqueio > 1) {
+    return `faltam ${diasParaBloqueio} dias para o bloqueio contratual`
+  }
+  if (diasParaBloqueio === 1) return "falta 1 dia para o bloqueio contratual"
+  if (diasParaBloqueio === 0) return "bloqueio contratual atingido hoje"
+  return `bloqueio contratual atingido há ${formatarDias(-diasParaBloqueio)}`
+}
+
 function motivoParada(frente: Frente, s: StatusFrente): string {
   if (s.nunca) return `${frente.nome} sem nenhuma ação registrada`
+  if (s.relogio === "retorno_cliente") {
+    const base = `${frente.nome} sem retorno do cliente há ${formatarDias(s.dias ?? 0)} (prazo: ${frente.prazoDias} dias)`
+    return s.diasParaBloqueio === null
+      ? base
+      : `${base}; ${textoBloqueio(s.diasParaBloqueio)}`
+  }
   return `${frente.nome} sem ação há ${formatarDias(s.dias ?? 0)} (prazo: ${frente.prazoDias} dias)`
 }
 
 /** Razão dias/prazo usada para ordenar; "nunca" é o pior caso. */
-function peso(o: Opportunity): number {
+function peso(o: Opportunity, limiteAprovacao: number): number {
   if (o.diasParado === null) return Number.POSITIVE_INFINITY
   return o.tipo === "aprovacao"
-    ? o.diasParado / DIAS_APROVACAO_TRAVADA
+    ? o.diasParado / limiteAprovacao
     : o.diasParado / o.prazoDias
 }
 
 /**
- * Oportunidade = todo par atrasada/critica + as ações travadas em aprovação.
+ * Oportunidade = todo par contratado atrasada/critica + as ações travadas em
+ * aprovação. "Atenção" (perto do prazo) NÃO gera oportunidade.
  * Prioridade alta = critica. Derivada, nunca guardada.
  */
 export function derivarOportunidades(
   clients: readonly Client[],
   frentes: readonly Frente[],
   acoes: readonly Acao[],
-  now: Date
+  now: Date,
+  ctx: ContextoRegras = {}
 ): Opportunity[] {
   const frentePorId = new Map(frentes.map((f) => [f.id, f]))
-  const ativos = new Set(clients.filter((c) => c.ativo).map((c) => c.id))
-  const grade = montarGrade(clients, frentes, acoes, now)
+  const limiteAprovacao = ctx.limiteAprovacaoDias ?? DIAS_APROVACAO_TRAVADA
+  const grade = montarGrade(clients, frentes, acoes, now, ctx)
   const out: Opportunity[] = []
 
   for (const s of grade) {
@@ -64,6 +86,7 @@ export function derivarOportunidades(
       motivo: motivoParada(frente, s),
       diasParado: s.dias,
       prazoDias: frente.prazoDias,
+      diasParaBloqueio: s.diasParaBloqueio,
       setorResponsavel: frente.setor,
       nova: !s.nunca && (s.dias ?? 0) - frente.prazoDias <= JANELA_NOVA_DIAS,
     })
@@ -71,18 +94,16 @@ export function derivarOportunidades(
 
   // Aprovação travada: uma oportunidade por par, usando a ação mais antiga.
   const vistos = new Set<string>()
-  const travadas = acoesTravadas(acoes, now)
-    .filter((a) => ativos.has(a.clientId))
-    .sort((a, b) =>
-      (a.aguardandoDesde ?? a.data).localeCompare(b.aguardandoDesde ?? b.data)
-    )
+  const travadas = travadasDaCarteira(clients, acoes, now, ctx).sort((a, b) =>
+    desdeAguardando(a).localeCompare(desdeAguardando(b))
+  )
   for (const a of travadas) {
     const chave = `${a.clientId}:${a.frenteId}`
     if (vistos.has(chave)) continue
     vistos.add(chave)
     const frente = frentePorId.get(a.frenteId)
     if (!frente) continue
-    const dias = diasDesde(a.aguardandoDesde ?? a.data, now)
+    const dias = diasDesde(desdeAguardando(a), now)
     const grade1 = grade.find(
       (g) => g.clientId === a.clientId && g.frenteId === a.frenteId
     )
@@ -97,8 +118,9 @@ export function derivarOportunidades(
       motivo: `"${a.titulo}" aguarda aprovação há ${formatarDias(dias)}`,
       diasParado: dias,
       prazoDias: frente.prazoDias,
+      diasParaBloqueio: null,
       setorResponsavel: frente.setor,
-      nova: dias - DIAS_APROVACAO_TRAVADA <= JANELA_NOVA_DIAS,
+      nova: dias - limiteAprovacao <= JANELA_NOVA_DIAS,
     })
   }
 
@@ -107,8 +129,8 @@ export function derivarOportunidades(
   const rankSeveridade = (o: Opportunity) => (o.severidade === "alta" ? 0 : 1)
   const rankTipo = (o: Opportunity) => (o.tipo === "parada" ? 0 : 1)
   return out.sort((a, b) => {
-    const pa = peso(a)
-    const pb = peso(b)
+    const pa = peso(a, limiteAprovacao)
+    const pb = peso(b, limiteAprovacao)
     return (
       rankSeveridade(a) - rankSeveridade(b) ||
       rankTipo(a) - rankTipo(b) ||
@@ -118,8 +140,65 @@ export function derivarOportunidades(
   })
 }
 
+/** Alertas (oportunidades) de um cliente, já na ordem do Radar. */
+export function alertasDoCliente(
+  clientId: string,
+  clients: readonly Client[],
+  frentes: readonly Frente[],
+  acoes: readonly Acao[],
+  now: Date,
+  ctx: ContextoRegras = {}
+): Opportunity[] {
+  return derivarOportunidades(
+    clients.filter((c) => c.id === clientId),
+    frentes,
+    acoes,
+    now,
+    ctx
+  )
+}
+
+/** Gravidade para escolher a "próxima oportunidade": crítica > atrasada > aprovação. */
+export function rankOportunidade(o: Opportunity): number {
+  if (o.tipo === "aprovacao") return 1
+  return o.estado === "critica" ? 3 : 2
+}
+
+/**
+ * Próxima oportunidade sugerida de um cliente: a de maior severidade
+ * (crítica > atrasada > aprovação travada); empate = mais dias parado
+ * ("nunca" é o pior caso). `null` se o cliente não tem alertas.
+ */
+export function proximaOportunidade(
+  clientId: string,
+  clients: readonly Client[],
+  frentes: readonly Frente[],
+  acoes: readonly Acao[],
+  now: Date,
+  ctx: ContextoRegras = {}
+): Opportunity | null {
+  const diasOuMax = (o: Opportunity) =>
+    o.diasParado === null ? Number.POSITIVE_INFINITY : o.diasParado
+  const lista = alertasDoCliente(clientId, clients, frentes, acoes, now, ctx)
+  let melhor: Opportunity | null = null
+  for (const o of lista) {
+    if (
+      !melhor ||
+      rankOportunidade(o) > rankOportunidade(melhor) ||
+      (rankOportunidade(o) === rankOportunidade(melhor) &&
+        diasOuMax(o) > diasOuMax(melhor))
+    ) {
+      melhor = o
+    }
+  }
+  return melhor
+}
+
 export interface Metricas {
   clientesAtivos: number
+  clientesCriticos: number
+  clientesAtencao: number
+  clientesOk: number
   oportunidades: number
   clientesComOportunidade: number
   novas: number
@@ -134,16 +213,25 @@ export function calcularMetricas(
   clients: readonly Client[],
   frentes: readonly Frente[],
   acoes: readonly Acao[],
-  now: Date
+  now: Date,
+  ctx: ContextoRegras = {}
 ): Metricas {
-  const grade = montarGrade(clients, frentes, acoes, now)
-  const opps = derivarOportunidades(clients, frentes, acoes, now)
+  const grade = montarGrade(clients, frentes, acoes, now, ctx)
+  const opps = derivarOportunidades(clients, frentes, acoes, now, ctx)
+  const situacoes = [...situacoesDaCarteira(clients, frentes, acoes, now, ctx).values()]
   const ativos = new Set(clients.filter((c) => c.ativo).map((c) => c.id))
+  const contratado = criarContratado(ctx.contratos)
   const aguardando = acoes.filter(
-    (a) => a.status === "aguardando_aprovacao" && ativos.has(a.clientId)
+    (a) =>
+      a.status === "aguardando_aprovacao" &&
+      ativos.has(a.clientId) &&
+      contratado(a.clientId, a.frenteId)
   )
   return {
     clientesAtivos: ativos.size,
+    clientesCriticos: situacoes.filter((x) => x === "critico").length,
+    clientesAtencao: situacoes.filter((x) => x === "atencao").length,
+    clientesOk: situacoes.filter((x) => x === "ok").length,
     oportunidades: opps.length,
     clientesComOportunidade: new Set(opps.map((o) => o.clientId)).size,
     novas: opps.filter((o) => o.nova).length,
@@ -151,6 +239,6 @@ export function calcularMetricas(
     frentesEmAtencao: grade.filter((s) => s.estado !== "em_dia").length,
     frentesCriticas: grade.filter((s) => s.estado === "critica").length,
     aguardandoAprovacao: aguardando.length,
-    aprovacaoTravada: acoesTravadas(aguardando, now).length,
+    aprovacaoTravada: travadasDaCarteira(clients, acoes, now, ctx).length,
   }
 }

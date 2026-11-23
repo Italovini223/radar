@@ -6,6 +6,7 @@ import { EstadoBadge } from "@/components/radar/estado"
 import { Button } from "@/components/ui/button"
 import { impactoDaOportunidade } from "@/lib/ai/proposal"
 import { formatarDias } from "@/lib/domain/opportunities"
+import { useRadarStore } from "@/lib/store"
 import type {
   Atribuicao,
   Client,
@@ -140,6 +141,7 @@ export function OportunidadeLinha({
   onVerProposta,
 }: Props) {
   const aprovacao = o.tipo === "aprovacao"
+  const limiteAprovacao = useRadarStore((s) => s.configuracao.limiteAprovacaoDias)
   return (
     <li
       data-flip-id={o.id}
@@ -173,7 +175,7 @@ export function OportunidadeLinha({
           {o.diasParado === null ? "Nunca" : formatarDias(o.diasParado)}
         </span>
         <span className="block text-muted-foreground">
-          {aprovacao ? "limite: 7 dias" : `prazo: ${o.prazoDias} dias`}
+          {aprovacao ? `limite: ${limiteAprovacao} dias` : `prazo: ${o.prazoDias} dias`}
         </span>
       </p>
       <Button

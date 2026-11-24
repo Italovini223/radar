@@ -13,7 +13,13 @@ export default function Error({ reset }: { error: Error; reset: () => void }) {
           erro voltar, use &quot;Resetar dados de demonstração&quot; em
           Configurações.
         </p>
-        <Button className="mt-3" size="sm" variant="outline" onClick={reset}>
+        <Button
+          className="mt-3"
+          size="sm"
+          variant="outline"
+          dica="Carregar esta tela de novo"
+          onClick={reset}
+        >
           Tentar de novo
         </Button>
       </AlertDescription>

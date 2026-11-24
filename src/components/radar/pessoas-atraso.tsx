@@ -2,6 +2,7 @@ import Link from "next/link"
 
 import { AvatarPessoa } from "@/components/pessoas/avatar-pessoa"
 import { ESTADOS, EstadoGlyph } from "@/components/radar/estado"
+import { Dica } from "@/components/ui/dica"
 import { nomeCurtoFrente } from "@/lib/domain/frentes"
 import { formatarDias } from "@/lib/domain/opportunities"
 import type { PessoaEmAtraso } from "@/lib/domain/pessoas"
@@ -73,6 +74,7 @@ export function PessoasAtraso({
                     const f = frentePorId.get(d.frenteId)
                     return (
                       <li key={d.frenteId}>
+                        <Dica texto={`Destacar ${f ? nomeCurtoFrente(f) : d.frenteId} na tabela de frentes`}>
                         <Link
                           href={`/clientes/${clienteId}?frente=${d.frenteId}`}
                           scroll={false}
@@ -96,6 +98,7 @@ export function PessoasAtraso({
                             {d.nunca || d.dias === null ? "nunca" : formatarDias(d.dias)}
                           </span>
                         </Link>
+                        </Dica>
                       </li>
                     )
                   })}

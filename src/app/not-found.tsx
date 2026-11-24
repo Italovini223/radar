@@ -19,7 +19,7 @@ export default function NotFound() {
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button asChild size="sm">
+        <Button asChild size="sm" dica="Ir para a tela principal">
           <Link href="/radar">Voltar ao Radar</Link>
         </Button>
       </EmptyContent>

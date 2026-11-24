@@ -228,10 +228,20 @@ function AcaoForm({
             </div>
           </FieldGroup>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              dica="Fechar sem registrar"
+              onClick={() => onOpenChange(false)}
+            >
               Cancelar
             </Button>
-            <Button type="submit">Registrar ação</Button>
+            <Button
+              type="submit"
+              dica="Salvar a ação: se concluída, o prazo da frente volta a contar do zero"
+            >
+              Registrar ação
+            </Button>
           </DialogFooter>
         </form>
   )

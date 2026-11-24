@@ -27,6 +27,7 @@ import { ConfirmacaoPosAcao } from "@/components/radar/confirmacao-pos-acao"
 import { ProposalDialog } from "@/components/radar/proposal-dialog"
 import { PainelSaude, type AbaRadar } from "@/components/radar/painel-saude"
 import { Button } from "@/components/ui/button"
+import { Dica } from "@/components/ui/dica"
 import {
   Empty,
   EmptyContent,
@@ -61,12 +62,12 @@ function normalizar(t: string) {
     .toLowerCase()
 }
 
-const ABAS: { valor: Aba; rotulo: string }[] = [
-  { valor: "todas", rotulo: "Todas" },
-  { valor: "criticas", rotulo: "Críticas" },
-  { valor: "atrasadas", rotulo: "Atrasadas" },
-  { valor: "aprovacao", rotulo: "Aguardando aprovação" },
-  { valor: "novas", rotulo: "Novas" },
+const ABAS: { valor: Aba; rotulo: string; dica: string }[] = [
+  { valor: "todas", rotulo: "Todas", dica: "Mostrar todas as oportunidades" },
+  { valor: "criticas", rotulo: "Críticas", dica: "Mostrar só as frentes críticas (passaram do limite ou nunca tiveram ação)" },
+  { valor: "atrasadas", rotulo: "Atrasadas", dica: "Mostrar só as frentes que passaram do prazo, antes de virar críticas" },
+  { valor: "aprovacao", rotulo: "Aguardando aprovação", dica: "Mostrar só as entregas travadas esperando o cliente aprovar" },
+  { valor: "novas", rotulo: "Novas", dica: "Mostrar só os alertas novos (prazo vencido há até 14 dias)" },
 ]
 
 const ATRASO_BUSCA_MS = 250
@@ -270,6 +271,7 @@ function Conteudo() {
         }
         actions={
           <Button
+            dica="Recalcular alertas e prazos com os dados atuais"
             onClick={() => {
               atualizarAgora()
               toast.success(
@@ -306,22 +308,24 @@ function Conteudo() {
               className="w-full flex-wrap justify-start gap-x-6 gap-y-1 border-b group-data-horizontal/tabs:h-auto"
             >
               {ABAS.map((a) => (
-                <TabsTrigger
-                  key={a.valor}
-                  value={a.valor}
-                  className="group/aba flex-none px-0 py-2.5"
-                >
+                <Dica key={a.valor} texto={a.dica}>
+                  <TabsTrigger
+                    value={a.valor}
+                    className="group/aba flex-none px-0 py-2.5"
+                  >
                   {a.rotulo}
                   <span className="tnum rounded-full bg-pill px-1.5 text-xs font-medium text-muted-foreground group-data-active/aba:bg-ink group-data-active/aba:text-on-ink">
                     {contagens[a.valor]}
                   </span>
-                </TabsTrigger>
+                  </TabsTrigger>
+                </Dica>
               ))}
             </TabsList>
           </Tabs>
 
           <div className="flex w-full flex-wrap items-center gap-2">
             <span className="mr-1 text-sm text-muted-foreground">Filtrar por</span>
+            <Dica texto="Digite parte do nome do cliente, da frente ou do motivo do alerta">
             <Input
               type="search"
               value={busca}
@@ -332,13 +336,16 @@ function Conteudo() {
               aria-label="Buscar oportunidades"
               className="w-full sm:w-64"
             />
+            </Dica>
             <Select value={setor} onValueChange={setSetor}>
+              <Dica texto="Mostrar só os alertas de um setor da agência">
               <SelectTrigger
                 className="w-full sm:w-44"
                 aria-label="Filtrar por setor"
               >
                 <SelectValue />
               </SelectTrigger>
+              </Dica>
               <SelectContent>
                 <SelectGroup>
                   <SelectItem value="todos">Todos os setores</SelectItem>
@@ -351,12 +358,14 @@ function Conteudo() {
               </SelectContent>
             </Select>
             <Select value={ordem} onValueChange={(v) => setOrdem(v as Ordem)}>
+              <Dica texto="Trocar a ordem da lista: por gravidade ou por nome do cliente">
               <SelectTrigger
                 className="w-full sm:w-44"
                 aria-label="Ordenar por"
               >
                 <SelectValue />
               </SelectTrigger>
+              </Dica>
               <SelectContent>
                 <SelectGroup>
                   <SelectItem value="gravidade">Ordem: gravidade</SelectItem>
@@ -378,7 +387,7 @@ function Conteudo() {
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
-              <Button asChild size="sm" variant="outline">
+              <Button asChild size="sm" variant="outline" dica="Revisar as datas de um cliente para o Radar recalcular">
                 <Link href="/checkup">Fazer check-up</Link>
               </Button>
             </EmptyContent>

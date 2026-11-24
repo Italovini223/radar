@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { ChevronRight, Settings } from "lucide-react"
 
 import { RadarMark } from "@/components/brand/radar-mark"
+import { Dica } from "@/components/ui/dica"
 import { NAV_CONFIG, estaAtivo, secaoAtual } from "@/components/layout/nav-itens"
 import { dataCurta } from "@/lib/domain/rotulos"
 import { useRadar } from "@/lib/hooks"
@@ -27,6 +28,7 @@ export function Topbar() {
 
   return (
     <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-3 bg-background px-4 sm:px-8 lg:px-10">
+      <Dica texto="Ir para o Radar" lado="bottom">
       <Link
         href="/radar"
         aria-label="Weethub Radar, ir para o Radar"
@@ -34,17 +36,20 @@ export function Topbar() {
       >
         <RadarMark className="size-8" />
       </Link>
+      </Dica>
 
       {aninhado ? (
         <nav aria-label="Você está em" className="min-w-0">
           <ol className="flex items-center gap-1.5 text-lg">
             <li>
+              <Dica texto="Voltar para a lista de clientes" lado="bottom">
               <Link
                 href="/clientes"
                 className="text-muted-foreground hover:underline"
               >
                 Clientes
               </Link>
+              </Dica>
             </li>
             <li aria-hidden className="text-muted-foreground">
               <ChevronRight className="size-4" />
@@ -61,9 +66,12 @@ export function Topbar() {
       )}
 
       <div className="ml-auto flex items-center gap-2">
+        <Dica
+          texto="Clientes e ações são fictícios. Clique para trocar a data de referência ou resetar a demonstração."
+          lado="bottom"
+        >
         <Link
           href="/configuracoes"
-          title="Clientes e ações são fictícios e ficam salvos no banco do Radar."
           className="hidden h-[26px] items-center gap-[5px] rounded-full bg-pill px-[11px] text-xs whitespace-nowrap text-muted-foreground outline-none hover:brightness-[.97] focus-visible:outline-2 focus-visible:outline-ring sm:inline-flex"
         >
           <i aria-hidden className="size-[7px] rounded-full bg-state-warn-bar" />
@@ -72,11 +80,12 @@ export function Topbar() {
             <span className="tnum">· ref. {dataCurta(configuracao.dataReferencia)}</span>
           )}
         </Link>
+        </Dica>
+        <Dica texto={NAV_CONFIG.dica} lado="bottom">
         <Link
           href={NAV_CONFIG.href}
           aria-label={NAV_CONFIG.label}
           aria-current={emConfig ? "page" : undefined}
-          title={NAV_CONFIG.label}
           className={cn(
             "grid size-10 place-items-center rounded-full outline-none transition-[background-color,filter] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
             emConfig
@@ -86,6 +95,7 @@ export function Topbar() {
         >
           <Settings className="size-[17px]" strokeWidth={1.6} aria-hidden />
         </Link>
+        </Dica>
       </div>
     </header>
   )

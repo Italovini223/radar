@@ -120,7 +120,7 @@ function Conteudo({ id }: { id: string }) {
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button asChild size="sm">
+          <Button asChild size="sm" dica="Voltar para a lista de clientes">
             <Link href="/clientes">Ver todos os clientes</Link>
           </Button>
         </EmptyContent>
@@ -160,12 +160,19 @@ function Conteudo({ id }: { id: string }) {
         }
         actions={
           <>
-            <Button asChild variant="outline">
+            <Button
+              asChild
+              variant="outline"
+              dica="Revisar de uma vez a data da última ação em cada frente"
+            >
               <Link href={`/checkup?cliente=${cliente.id}`}>
                 Fazer check-up
               </Link>
             </Button>
-            <Button onClick={() => setDialogo(true)}>
+            <Button
+              dica="Registrar o que foi feito numa frente: o prazo volta a contar do zero"
+              onClick={() => setDialogo(true)}
+            >
               Registrar ação
             </Button>
           </>
@@ -452,6 +459,7 @@ function Conteudo({ id }: { id: string }) {
                         size="sm"
                         variant="outline"
                         className="w-fit"
+                        dica="O cliente aprovou: concluir a entrega e destravar a frente"
                         onClick={() =>
                           mudarStatus(a.id, "concluida", "Entrega aprovada e concluída.")
                         }
@@ -464,6 +472,7 @@ function Conteudo({ id }: { id: string }) {
                         size="sm"
                         variant="outline"
                         className="w-fit"
+                        dica="Marcar esta ação como feita: conta como última ação da frente"
                         onClick={() =>
                           mudarStatus(a.id, "concluida", "Ação concluída.")
                         }

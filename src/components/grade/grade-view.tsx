@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react"
 
 import { GradeTable } from "@/components/grade/grade-table"
 import { Legend } from "@/components/grade/legend"
+import { Dica } from "@/components/ui/dica"
 import {
   ComDados,
   PageHeading,
@@ -46,9 +47,11 @@ function Conteudo() {
         }
         actions={
           <Select value={setor} onValueChange={setSetor}>
-            <SelectTrigger className="w-48" aria-label="Filtrar frentes por setor">
-              <SelectValue />
-            </SelectTrigger>
+            <Dica texto="Mostrar só as frentes de um setor da agência">
+              <SelectTrigger className="w-48" aria-label="Filtrar frentes por setor">
+                <SelectValue />
+              </SelectTrigger>
+            </Dica>
             <SelectContent>
               <SelectGroup>
                 <SelectItem value="todos">Todos os setores</SelectItem>

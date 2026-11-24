@@ -11,6 +11,7 @@ import {
   SemResultados,
 } from "@/components/radar/page-states"
 import { SituacaoBadge } from "@/components/radar/estado"
+import { Dica } from "@/components/ui/dica"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ESTADO_ORDEM, situacaoDaGrade } from "@/lib/domain/rules"
@@ -107,6 +108,7 @@ function Conteudo() {
           </span>
         }
       />
+      <Dica texto="Digite parte do nome ou do nicho do cliente">
       <Input
         data-entra
         type="search"
@@ -118,6 +120,7 @@ function Conteudo() {
         aria-label="Buscar clientes"
         className="mb-5 w-full sm:w-80"
       />
+      </Dica>
 
       {visiveis.length === 0 ? (
         <SemResultados
@@ -139,12 +142,14 @@ function Conteudo() {
             >
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                  <Link
-                    href={`/clientes/${cliente.id}`}
-                    className="font-medium hover:underline"
-                  >
-                    {cliente.nome}
-                  </Link>
+                  <Dica texto={`Abrir a ficha de ${cliente.nome}`}>
+                    <Link
+                      href={`/clientes/${cliente.id}`}
+                      className="botao-cliente botao-cliente-sm"
+                    >
+                      {cliente.nome}
+                    </Link>
+                  </Dica>
                   <SituacaoBadge situacao={situacao} />
                 </div>
                 <span className="block text-sm text-muted-foreground">
@@ -174,6 +179,7 @@ function Conteudo() {
                 size="sm"
                 variant="outline"
                 className="mt-2 w-fit sm:mt-0"
+                dica="Ver frentes, painel, responsáveis e linha do tempo deste cliente"
               >
                 <Link
                   href={`/clientes/${cliente.id}`}

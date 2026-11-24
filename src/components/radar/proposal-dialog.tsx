@@ -217,7 +217,12 @@ function ProposalBody({
               className="max-h-56 leading-relaxed"
             />
             <div className="flex flex-wrap items-center gap-3">
-              <Button variant="outline" size="sm" onClick={copiar}>
+              <Button
+                variant="outline"
+                size="sm"
+                dica="Copiar o texto para colar no e-mail ou WhatsApp do cliente"
+                onClick={copiar}
+              >
                 Copiar texto
               </Button>
               <span aria-live="polite" data-confirmacao="copiado">
@@ -262,7 +267,9 @@ function ProposalBody({
                   atribuída.
                 </span>
                 <DialogClose asChild>
-                  <Button size="sm">Fechar</Button>
+                  <Button size="sm" dica="Fechar a proposta">
+                    Fechar
+                  </Button>
                 </DialogClose>
               </div>
             ) : (
@@ -290,7 +297,11 @@ function ProposalBody({
                     </SelectContent>
                   </Select>
                 </Field>
-                <Button onClick={atribuirAoSetor} disabled={!setor}>
+                <Button
+                  onClick={atribuirAoSetor}
+                  disabled={!setor}
+                  dica="Registrar internamente qual setor vai tocar esta frente"
+                >
                   Atribuir ao setor
                 </Button>
               </div>

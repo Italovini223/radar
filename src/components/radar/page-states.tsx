@@ -98,7 +98,10 @@ export function BancoVazio() {
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button onClick={() => setConfirma(true)}>
+          <Button
+            dica="Preencher o banco com os dados fictícios do gabarito"
+            onClick={() => setConfirma(true)}
+          >
             Carregar dados de demonstração
           </Button>
         </EmptyContent>
@@ -114,7 +117,11 @@ export function BancoVazio() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirma(false)}>
+            <Button
+              variant="outline"
+              dica="Fechar sem mudar nada"
+              onClick={() => setConfirma(false)}
+            >
               Cancelar
             </Button>
             <Button
@@ -144,10 +151,20 @@ export function ErroDados({ mensagem }: { mensagem: string }) {
       <AlertDescription>
         <p>{mensagem}</p>
         <div className="mt-3 flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" onClick={() => void iniciar()}>
+          <Button
+            size="sm"
+            variant="outline"
+            dica="Tentar carregar os dados outra vez"
+            onClick={() => void iniciar()}
+          >
             Tentar de novo
           </Button>
-          <Button size="sm" variant="destructive" onClick={() => resetarDemo()}>
+          <Button
+            size="sm"
+            variant="destructive"
+            dica="Apagar tudo e recarregar os dados de demonstração"
+            onClick={() => resetarDemo()}
+          >
             Resetar dados de demonstração
           </Button>
         </div>
@@ -173,7 +190,12 @@ export function SemResultados({
       </EmptyHeader>
       {onLimpar ? (
         <EmptyContent>
-          <Button size="sm" variant="outline" onClick={onLimpar}>
+          <Button
+            size="sm"
+            variant="outline"
+            dica="Remover busca, setor e aba e voltar a ver tudo"
+            onClick={onLimpar}
+          >
             Limpar filtros
           </Button>
         </EmptyContent>

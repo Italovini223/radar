@@ -7,6 +7,7 @@ import { RotateCw } from "lucide-react"
 import { toast } from "sonner"
 
 import { RadarMark } from "@/components/brand/radar-mark"
+import { Dica } from "@/components/ui/dica"
 import { NAV_PRINCIPAL, estaAtivo } from "@/components/layout/nav-itens"
 import { dataCurta } from "@/lib/domain/rotulos"
 import { useRadar } from "@/lib/hooks"
@@ -51,6 +52,13 @@ export function Dock() {
             const contagem = ehRadar && criticas > 0 ? criticas : undefined
             return (
               <li key={item.href}>
+                <Dica
+                  texto={
+                    contagem !== undefined
+                      ? `${item.dica} · ${contagem} ${contagem === 1 ? "crítica" : "críticas"}`
+                      : item.dica
+                  }
+                >
                 <Link
                   href={item.href}
                   aria-current={ativo ? "page" : undefined}
@@ -59,7 +67,6 @@ export function Dock() {
                       ? `${item.label} (${contagem} ${contagem === 1 ? "crítica" : "críticas"})`
                       : item.label
                   }
-                  title={item.label}
                   className={cn(
                     BOTAO,
                     ativo
@@ -81,14 +88,15 @@ export function Dock() {
                     </span>
                   ) : null}
                 </Link>
+                </Dica>
               </li>
             )
           })}
           <li>
+            <Dica texto="Atualizar o radar: recalcula alertas e prazos com os dados atuais">
             <button
               type="button"
               aria-label="Atualizar radar"
-              title="Atualizar radar"
               disabled={!ready}
               onClick={() => {
                 atualizarAgora()
@@ -105,6 +113,7 @@ export function Dock() {
             >
               <RotateCw className="size-[17px]" strokeWidth={1.6} aria-hidden />
             </button>
+            </Dica>
           </li>
         </ul>
         {quando ? (

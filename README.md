@@ -51,8 +51,8 @@ O estado vive no processo do servidor: recarregar a página mantém os dados; re
 
 | Rota | Tela |
 |---|---|
-| `/radar` | Painel "Saúde da carteira" (barra por estado + 4 indicadores que filtram), abas, busca e filtro por setor (filtros na URL), críticas em cartão cheio, demais em linha, "Ver proposta" e "Registrar ação" direto no cartão, confirmação "alerta resolvido + próxima oportunidade" |
-| `/grade` | Grade cliente x frente com estado em cada célula |
+| `/radar` | Painel "Saúde da carteira" ("N de M clientes precisam de ação", barra de clientes Crítico/Atenção/Ok + 4 indicadores de frentes que filtram), gráfico "Alertas por frente", abas, busca, filtro por setor e "Agrupar por cliente" (filtros na URL), aviso "mais N alertas" no cartão, "Recalcular alertas", críticas em cartão cheio, demais em linha, "Ver proposta" e "Registrar ação" direto no cartão, confirmação "alerta resolvido + próxima oportunidade" |
+| `/grade` | Grade cliente x frente com estado em cada célula, coluna Cliente fixa, "—" nas frentes não contratadas e legenda de leitura |
 | `/clientes` | Lista de clientes com a situação (Crítico / Atenção / Ok) |
 | `/clientes/[id]` | Ficha: situação, frentes contratadas, bloco de loja em criação (bloqueio contratual), linha do tempo com responsável, registrar ação |
 | `/checkup` | Check-up manual (~5 min por cliente) |
@@ -96,7 +96,7 @@ PRODUCT.md  DESIGN.md        contexto de produto e tokens visuais
 
 A demonstração é a **planilha real** do time, 100% fictícia (`src/lib/data/planilha-dataset.ts`: 10 clientes, 8 frentes e 172 tarefas, transcritas da planilha; as frentes contratadas vêm das tarefas), com "hoje" = **13/11/2026** (data de referência da configuração). A planilha só traz responsável por tarefa: o responsável por cliente fica vazio e não é exibido. O motor segue as regras da planilha:
 
-- **Atrasada**: dias sem ação > prazo da frente. **Crítica**: dias >= "vira crítico após" (coluna própria). **Atenção** (>= 75% do prazo): só aviso, não gera alerta.
+- **Atrasada**: dias sem ação > prazo da frente. **Crítica**: dias >= "vira crítico após" (coluna própria). **Perto do prazo** (>= 75% do prazo; identificador interno `atencao`): só aviso, não gera alerta. "Atenção" é só a situação do cliente.
 - **Aprovação travada**: ação aguardando aprovação há **mais de 5 dias** (configurável).
 - **Frente contratada**: o par cliente x frente só existe se contratado.
 - **Loja em criação** (frente Desenvolvimento): o relógio é "dias sem retorno do cliente" (30 / 60), com bloqueio contratual em 90 dias (mostra quantos faltam).

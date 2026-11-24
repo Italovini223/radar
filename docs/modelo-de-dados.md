@@ -33,7 +33,7 @@ Em `src/lib/domain/rules.ts` (funções puras; "hoje" é sempre parâmetro):
 
 | Regra | Valor |
 |---|---|
-| Atenção | dias >= 75% do prazo e <= prazo: aviso, **não** alerta |
+| Perto do prazo (id. interno `atencao`) | dias >= 75% do prazo e <= prazo: aviso, **não** alerta |
 | Atrasada | dias > prazo |
 | Crítica | dias >= `criticoAposDias`, ou nunca teve ação |
 | Aprovação travada | aguardando há **mais** de `limiteAprovacaoDias` dias |

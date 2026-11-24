@@ -41,6 +41,16 @@ interface Props {
   agrupado?: boolean
 }
 
+/**
+ * O motivo de loja em criação já termina em "; faltam 24 dias para o bloqueio
+ * contratual". No cartão essa contagem aparece em destaque ao lado, então sai
+ * do texto corrido para não repetir (o motivo do domínio não muda).
+ */
+function motivoVisivel(o: Opportunity): string {
+  if (o.diasParaBloqueio === null) return o.motivo
+  return o.motivo.replace(`; ${textoBloqueio(o.diasParaBloqueio)}`, "")
+}
+
 /** Ponto amarelo de 6px: oportunidade nova (venceu o prazo há até 14 dias). */
 function PontoNova() {
   return (
@@ -74,7 +84,7 @@ function MaisAlertas({
         type="button"
         onClick={() => onVer(cliente)}
         data-mais-alertas={cliente.id}
-        className="inline-flex items-center gap-1.5 rounded-sm text-sm text-muted-foreground underline-offset-4 outline-none hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        className="inline-flex items-center gap-1.5 rounded-sm text-sm text-muted-foreground underline-offset-4 outline-none hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
         <span aria-hidden>·</span>
         <span className="tnum">
@@ -156,7 +166,7 @@ export function OportunidadeCheia({
                 <MaisAlertas n={maisAlertas} cliente={cliente} onVer={onVerCliente} />
               ) : null}
             </div>
-            <p className="mt-2 text-base font-medium">{o.motivo}</p>
+            <p className="mt-2 text-base font-medium">{motivoVisivel(o)}</p>
             <p className="mt-1 text-sm text-muted-foreground">{impacto}</p>
             <div className="mt-3">
               <Metadados o={o} cliente={cliente} atribuicao={atribuicao} />
@@ -257,7 +267,7 @@ export function OportunidadeLinha({
         ) : null}
       </div>
       <div className="min-w-0">
-        <p className="text-sm text-foreground">{o.motivo}</p>
+        <p className="text-sm text-foreground">{motivoVisivel(o)}</p>
         {semRetornoDoCliente(o) && o.diasParaBloqueio !== null ? (
           <p
             data-bloqueio

@@ -10,6 +10,9 @@ import { toast } from "sonner"
 import { AcaoDialog, ROTULO_STATUS } from "@/components/radar/acao-dialog"
 import { ConfirmacaoPosAcao } from "@/components/radar/confirmacao-pos-acao"
 import { EstadoBadge, SituacaoBadge } from "@/components/radar/estado"
+import { PainelCliente } from "@/components/radar/painel-cliente"
+import { PessoasAtraso } from "@/components/radar/pessoas-atraso"
+import { PilhaAvatares } from "@/components/pessoas/avatar-pessoa"
 import {
   ComDados,
   PageHeading,
@@ -32,6 +35,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { formatarDias } from "@/lib/domain/opportunities"
+import { pessoasEmAtraso, pessoasPorFrente } from "@/lib/domain/pessoas"
 import { textoBlocoBloqueio } from "@/lib/domain/rotulos"
 import { situacaoDaGrade } from "@/lib/domain/rules"
 import type { StatusAcao } from "@/lib/domain/types"
@@ -85,6 +89,11 @@ function Conteudo({ id }: { id: string }) {
             b.data.localeCompare(a.data) || b.id.localeCompare(a.id)
         ),
     [acoes, id]
+  )
+  const pessoasDaFrente = useMemo(() => pessoasPorFrente(acoes, id), [acoes, id])
+  const emAtraso = useMemo(
+    () => pessoasEmAtraso(linhas, acoes, id),
+    [linhas, acoes, id]
   )
   const ultimoCheckup = useMemo(
     () =>
@@ -205,6 +214,23 @@ function Conteudo({ id }: { id: string }) {
         </section>
       ) : null}
 
+      <PainelCliente
+        clienteId={cliente.id}
+        linhas={linhas}
+        acoes={acoes}
+        hoje={hoje}
+        frentePorId={frentePorId}
+        ultimaAcao={timeline[0]?.data}
+      />
+
+      {linhas.some((l) => l.estado === "atrasada" || l.estado === "critica") ? (
+        <PessoasAtraso
+          clienteId={cliente.id}
+          pessoas={emAtraso}
+          frentePorId={frentePorId}
+        />
+      ) : null}
+
       <div className="grid gap-8 min-[1400px]:grid-cols-[minmax(0,1fr)_24rem]">
         <section aria-labelledby="titulo-frentes" className="min-w-0">
           <h2 id="titulo-frentes" className="mb-3 text-xl font-medium">
@@ -238,6 +264,13 @@ function Conteudo({ id }: { id: string }) {
                         </span>
                       ) : null}
                     </div>
+                  </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="legenda">Responsável</span>
+                    <PilhaAvatares
+                      pessoas={pessoasDaFrente.get(l.frenteId) ?? []}
+                      alerta={l.estado === "atrasada" || l.estado === "critica"}
+                    />
                   </div>
                   <dl className="tnum mt-3 grid grid-cols-3 gap-x-3 text-sm">
                     <div>
@@ -279,8 +312,11 @@ function Conteudo({ id }: { id: string }) {
                   <TableHead scope="col" className="text-sm font-medium text-foreground">
                     Prazo
                   </TableHead>
-                  <TableHead scope="col" className="pr-4 text-sm font-medium text-foreground">
+                  <TableHead scope="col" className="text-sm font-medium text-foreground">
                     Estado
+                  </TableHead>
+                  <TableHead scope="col" className="pr-4 text-sm font-medium text-foreground">
+                    Responsável
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -316,7 +352,7 @@ function Conteudo({ id }: { id: string }) {
                       <TableCell className="tnum text-muted-foreground">
                         {l.prazoDias} dias
                       </TableCell>
-                      <TableCell className="pr-4">
+                      <TableCell>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                           <EstadoBadge estado={l.estado} nunca={l.nunca} />
                           {l.travada ? (
@@ -325,6 +361,12 @@ function Conteudo({ id }: { id: string }) {
                             </span>
                           ) : null}
                         </div>
+                      </TableCell>
+                      <TableCell className="pr-4">
+                        <PilhaAvatares
+                          pessoas={pessoasDaFrente.get(l.frenteId) ?? []}
+                          alerta={l.estado === "atrasada" || l.estado === "critica"}
+                        />
                       </TableCell>
                     </TableRow>
                   )
@@ -354,9 +396,16 @@ function Conteudo({ id }: { id: string }) {
         </section>
 
         <section aria-labelledby="titulo-timeline" className="min-w-0">
-          <h2 id="titulo-timeline" className="mb-3 text-xl font-medium">
-            Linha do tempo
-          </h2>
+          <div className="mb-3 flex items-baseline justify-between gap-3">
+            <h2 id="titulo-timeline" className="text-xl font-medium">
+              Linha do tempo
+            </h2>
+            {timeline.length > 0 ? (
+              <span className="legenda tnum">
+                {timeline.length} {timeline.length === 1 ? "ação" : "ações"}
+              </span>
+            ) : null}
+          </div>
           {timeline.length === 0 ? (
             <Empty className="border py-10">
               <EmptyHeader>
@@ -369,7 +418,9 @@ function Conteudo({ id }: { id: string }) {
           ) : (
             <ol
               ref={timelineRef}
-              className="flex flex-col rounded-lg bg-card"
+              tabIndex={0}
+              aria-label={`Linha do tempo: ${timeline.length} ações, da mais recente para a mais antiga`}
+              className="flex max-h-[min(40rem,calc(100svh-11rem))] flex-col overflow-y-auto overscroll-contain rounded-lg bg-card outline-none [scrollbar-gutter:stable] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             >
               {timeline.map((a) => {
                 const f = frentePorId.get(a.frenteId)

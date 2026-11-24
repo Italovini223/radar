@@ -5,7 +5,9 @@ import {
   agruparPorCliente,
   alertasPorCliente,
   alertasPorFrente,
+  emClientes,
   resumoCarteira,
+  tituloCarteira,
 } from "@/lib/domain/carteira"
 import { derivarOportunidades } from "@/lib/domain/opportunities"
 import {
@@ -59,6 +61,29 @@ describe("resumoCarteira", () => {
       atencao: 3,
       ok: 4,
     })
+  })
+})
+
+describe("tituloCarteira / emClientes", () => {
+  it("plural, singular e zero", () => {
+    const r = (c: number, a: number, o: number) =>
+      tituloCarteira(
+        resumoCarteira([
+          ...Array<SituacaoCliente>(c).fill("critico"),
+          ...Array<SituacaoCliente>(a).fill("atencao"),
+          ...Array<SituacaoCliente>(o).fill("ok"),
+        ])
+      )
+    expect(r(3, 3, 4)).toBe("6 de 10 clientes precisam de ação")
+    expect(r(1, 0, 2)).toBe("1 de 3 clientes precisa de ação")
+    expect(r(1, 0, 0)).toBe("1 de 1 cliente precisa de ação")
+    expect(r(0, 0, 5)).toBe("Nenhum cliente precisa de ação")
+    expect(r(0, 0, 0)).toBe("Nenhum cliente precisa de ação")
+  })
+  it("emClientes", () => {
+    expect(emClientes(1)).toBe("em 1 cliente")
+    expect(emClientes(3)).toBe("em 3 clientes")
+    expect(emClientes(0)).toBe("nenhum cliente")
   })
 })
 

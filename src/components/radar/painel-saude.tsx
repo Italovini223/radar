@@ -3,17 +3,27 @@
 import { useRef, type ReactNode } from "react"
 import Link from "next/link"
 
-import { EstadoGlyph } from "@/components/radar/estado"
-import { Badge } from "@/components/ui/badge"
+import {
+  ESTADOS,
+  ESTADO_DA_SITUACAO,
+  EstadoGlyph,
+} from "@/components/radar/estado"
 import { Dica } from "@/components/ui/dica"
 import { gsap, useGSAP } from "@/lib/motion/gsap"
 import { movimento } from "@/lib/motion/movimento"
 import { Numero } from "@/lib/motion/numero"
 import { DUR, EASE } from "@/lib/motion/tokens"
+import {
+  emClientes,
+  resumoCarteira,
+  tituloCarteira,
+} from "@/lib/domain/carteira"
 import { formatarDias } from "@/lib/domain/opportunities"
+import { ROTULO_SITUACAO } from "@/lib/domain/rotulos"
 import type {
   EstadoFrente,
   Opportunity,
+  SituacaoCliente,
   StatusFrente,
 } from "@/lib/domain/types"
 import { cn } from "@/lib/utils"
@@ -25,15 +35,18 @@ export type AbaRadar =
   | "aprovacao"
   | "novas"
 
+/**
+ * Barra de CLIENTES por situação (não de pares cliente x frente). Marcador e
+ * cor vêm da situação: Crítico (coral), Atenção (laranja), Ok (cinza).
+ */
 const SEGMENTOS: {
-  estado: EstadoFrente
-  rotulo: string
-  cor: string
+  situacao: SituacaoCliente
+  /** Para o texto de leitor de tela: "3 críticos". */
+  plural: string
 }[] = [
-  { estado: "em_dia", rotulo: "Em dia", cor: "bg-state-ok-bar" },
-  { estado: "atencao", rotulo: "Atenção", cor: "bg-state-warn-bar" },
-  { estado: "atrasada", rotulo: "Atrasada", cor: "bg-state-late-bar" },
-  { estado: "critica", rotulo: "Crítica", cor: "bg-state-crit-bar" },
+  { situacao: "critico", plural: "críticos" },
+  { situacao: "atencao", plural: "em atenção" },
+  { situacao: "ok", plural: "ok" },
 ]
 
 /** Últimas proporções mostradas: ao voltar para a tela, a barra parte delas. */
@@ -133,39 +146,49 @@ function Kpi({
 }
 
 /**
- * Painel "Saúde da carteira": barra segmentada com os pares cliente x frente
- * por estado + 4 indicadores. Críticas, atrasadas e aguardando aprovação
- * filtram a lista (clicar de novo volta para "todas"); "Em atenção" não gera
- * oportunidade, então leva à Grade.
+ * Painel "Saúde da carteira": diz quantos CLIENTES precisam de ação, com uma
+ * barra de clientes por situação (Crítico, Atenção, Ok), e 4 indicadores de
+ * frentes ("em N clientes"). Críticas, atrasadas e aguardando aprovação
+ * filtram a lista (clicar de novo volta para "todas"); "Perto do prazo" não
+ * gera oportunidade, então leva à Grade.
  */
 export function PainelSaude({
   grade,
   oportunidades,
-  clientesAtivos,
+  situacoes,
   ativa,
   onFiltrar,
 }: {
   grade: StatusFrente[]
   oportunidades: Opportunity[]
-  clientesAtivos: number
+  /** Situação de cada cliente ativo. */
+  situacoes: ReadonlyMap<string, SituacaoCliente>
   ativa: AbaRadar
   onFiltrar: (a: AbaRadar) => void
 }) {
-  const pares = grade.length
-  const conta = (e: EstadoFrente) => grade.filter((g) => g.estado === e).length
-  const contagens = SEGMENTOS.map((s) => ({ ...s, n: conta(s.estado) }))
-  const pct = (n: number) => (pares === 0 ? 0 : Math.round((n / pares) * 100))
+  const resumo = resumoCarteira(situacoes.values())
+  const titulo = tituloCarteira(resumo)
+  const quantos: Record<SituacaoCliente, number> = {
+    critico: resumo.criticos,
+    atencao: resumo.atencao,
+    ok: resumo.ok,
+  }
+  const contagens = SEGMENTOS.map((s) => ({ ...s, n: quantos[s.situacao] }))
+  const pct = (n: number) =>
+    resumo.total === 0 ? 0 : Math.round((n / resumo.total) * 100)
 
-  const criticas = conta("critica")
-  const atrasadas = conta("atrasada")
-  const atencao = conta("atencao")
+  const daFrente = (e: EstadoFrente) => grade.filter((g) => g.estado === e)
+  const clientesDe = (lista: { clientId: string }[]) =>
+    new Set(lista.map((g) => g.clientId)).size
+  const criticas = daFrente("critica")
+  const atrasadas = daFrente("atrasada")
+  const pertoDoPrazo = daFrente("atencao")
   const travadas = oportunidades.filter((o) => o.tipo === "aprovacao")
   const maisAntiga = Math.max(0, ...travadas.map((o) => o.diasParado ?? 0))
-  const comAlerta = new Set(oportunidades.map((o) => o.clientId)).size
 
-  const resumo = `Saúde da carteira: ${contagens
-    .map((s) => `${s.n} ${s.rotulo.toLowerCase()} (${pct(s.n)}%)`)
-    .join(", ")}, em ${pares} pares cliente por frente.`
+  const resumoBarra = `Saúde da carteira: ${titulo.toLowerCase()}. ${contagens
+    .map((s) => `${s.n} ${s.plural} (${pct(s.n)}%)`)
+    .join(", ")}, de ${resumo.total} clientes.`
 
   const alternar = (a: AbaRadar) => onFiltrar(a === ativa ? "todas" : a)
 
@@ -200,7 +223,7 @@ export function PainelSaude({
   useGSAP(
     () => {
       const t = setTimeout(() => {
-        for (const s of contagens) memoriaBarra.set(s.estado, s.n)
+        for (const s of contagens) memoriaBarra.set(s.situacao, s.n)
       }, 0)
       return () => clearTimeout(t)
     },
@@ -241,27 +264,14 @@ export function PainelSaude({
       className="rounded-lg bg-card"
     >
       <div className="px-4 pt-5 pb-5 sm:px-5">
-        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <h2 id="titulo-saude" className="text-lg">
-            Saúde da carteira
-          </h2>
-          <p className="tnum flex flex-wrap gap-1.5">
-            <Badge variant="secondary">
-              <b>{clientesAtivos}</b>
-              {clientesAtivos === 1 ? "cliente" : "clientes"}
-            </Badge>
-            <Badge variant="secondary">
-              <b>{comAlerta}</b> com alerta
-            </Badge>
-            <Badge variant="secondary">
-              <b>{pares}</b> pares cliente × frente
-            </Badge>
-          </p>
-        </div>
+        <h2 id="titulo-saude" className="mb-3 text-lg">
+          <span className="legenda mb-0.5 block">Saúde da carteira</span>
+          {titulo}
+        </h2>
 
         <div
           role="img"
-          aria-label={resumo}
+          aria-label={resumoBarra}
           data-barra-saude
           className="flex h-2.5 w-full gap-1"
         >
@@ -269,10 +279,13 @@ export function PainelSaude({
             .filter((s) => s.n > 0)
             .map((s) => (
               <span
-                key={s.estado}
-                data-segmento={s.estado}
+                key={s.situacao}
+                data-segmento={s.situacao}
                 data-n={s.n}
-                className={cn("block h-full rounded-full", s.cor)}
+                className={cn(
+                  "block h-full rounded-full",
+                  ESTADOS[ESTADO_DA_SITUACAO[s.situacao]].marcador
+                )}
                 style={{ flexGrow: s.n, flexBasis: 0 }}
               />
             ))}
@@ -280,9 +293,11 @@ export function PainelSaude({
 
         <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs">
           {contagens.map((s) => (
-            <li key={s.estado} className="tnum flex items-center gap-1.5">
-              <EstadoGlyph estado={s.estado} />
-              <span className="text-muted-foreground">{s.rotulo}</span>
+            <li key={s.situacao} className="tnum flex items-center gap-1.5">
+              <EstadoGlyph estado={ESTADO_DA_SITUACAO[s.situacao]} />
+              <span className="text-muted-foreground">
+                {ROTULO_SITUACAO[s.situacao]}
+              </span>
               <span className="font-medium">{s.n}</span>
               <span className="text-muted-foreground">{pct(s.n)}%</span>
             </li>
@@ -297,8 +312,8 @@ export function PainelSaude({
           glifo={<EstadoGlyph estado="critica" />}
           cor="text-state-crit"
           corLinha="bg-state-crit"
-          numero={criticas}
-          apoio={`de ${pares} pares`}
+          numero={criticas.length}
+          apoio={emClientes(clientesDe(criticas))}
           selecionado={ativa === "criticas"}
           dica="Filtrar a lista abaixo: só as críticas"
           onClick={() => alternar("criticas")}
@@ -309,22 +324,22 @@ export function PainelSaude({
           glifo={<EstadoGlyph estado="atrasada" />}
           cor="text-state-late"
           corLinha="bg-state-late"
-          numero={atrasadas}
-          apoio={`de ${pares} pares`}
+          numero={atrasadas.length}
+          apoio={emClientes(clientesDe(atrasadas))}
           selecionado={ativa === "atrasadas"}
           dica="Filtrar a lista abaixo: só as atrasadas"
           onClick={() => alternar("atrasadas")}
         />
         <Kpi
           dataKpi="atencao"
-          rotulo="Em atenção"
+          rotulo={ESTADOS.atencao.label}
           glifo={<EstadoGlyph estado="atencao" />}
           cor="text-state-warn"
           corLinha="bg-state-warn"
-          numero={atencao}
-          apoio="ainda sem alerta · ver na Grade"
+          numero={pertoDoPrazo.length}
+          apoio={emClientes(clientesDe(pertoDoPrazo))}
           href="/grade"
-          dica="Abrir a Grade para ver as frentes perto do prazo"
+          dica="Ainda sem alerta: abrir a Grade para ver as frentes perto do prazo"
         />
         <Kpi
           dataKpi="aprovacao"
@@ -336,7 +351,7 @@ export function PainelSaude({
           apoio={
             travadas.length === 0
               ? "nenhuma travada"
-              : `mais antiga: ${formatarDias(maisAntiga)}`
+              : `${emClientes(clientesDe(travadas))} · mais antiga: ${formatarDias(maisAntiga)}`
           }
           selecionado={ativa === "aprovacao"}
           dica="Filtrar a lista abaixo: só as entregas aguardando aprovação"

@@ -6,7 +6,12 @@ import {
   calcularMetricas,
   derivarOportunidades,
 } from "./domain/opportunities"
-import { contextoDoSnapshot, montarGrade } from "./domain/rules"
+import {
+  contextoDoSnapshot,
+  montarGrade,
+  situacoesDaCarteira,
+} from "./domain/rules"
+import type { SituacaoCliente } from "./domain/types"
 import { useRadarStore } from "./store"
 
 /**
@@ -30,13 +35,19 @@ export function useRadar() {
 
   const derivado = useMemo(() => {
     if (!ready || !agora) {
-      return { grade: [], oportunidades: [], metricas: null }
+      return {
+        grade: [],
+        oportunidades: [],
+        metricas: null,
+        situacoes: new Map<string, SituacaoCliente>(),
+      }
     }
     const ctx = contextoDoSnapshot({ contratos, configuracao })
     return {
       grade: montarGrade(clients, frentes, acoes, hoje, ctx),
       oportunidades: derivarOportunidades(clients, frentes, acoes, hoje, ctx),
       metricas: calcularMetricas(clients, frentes, acoes, hoje, ctx),
+      situacoes: situacoesDaCarteira(clients, frentes, acoes, hoje, ctx),
     }
   }, [ready, agora, clients, frentes, acoes, contratos, configuracao, hoje])
 

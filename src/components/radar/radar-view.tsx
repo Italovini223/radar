@@ -100,6 +100,7 @@ function Conteudo() {
     atribuicoes,
     oportunidades,
     grade,
+    situacoes,
     hoje,
     configuracao,
     contratos,
@@ -289,7 +290,7 @@ function Conteudo() {
       <PainelSaude
         grade={grade}
         oportunidades={oportunidades}
-        clientesAtivos={clients.filter((c) => c.ativo).length}
+        situacoes={situacoes}
         ativa={aba}
         onFiltrar={setAba}
       />

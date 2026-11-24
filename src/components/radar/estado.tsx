@@ -126,7 +126,7 @@ export function EstadoBadge({
   )
 }
 
-const ESTADO_DA_SITUACAO: Record<SituacaoCliente, EstadoFrente> = {
+export const ESTADO_DA_SITUACAO: Record<SituacaoCliente, EstadoFrente> = {
   critico: "critica",
   atencao: "atrasada",
   ok: "em_dia",

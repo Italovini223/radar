@@ -44,6 +44,24 @@ export function resumoCarteira(
   }
 }
 
+/**
+ * Frase do painel "Saúde da carteira": "6 de 10 clientes precisam de ação";
+ * com 0, "Nenhum cliente precisa de ação"; no singular, "1 de 3 clientes
+ * precisa de ação".
+ */
+export function tituloCarteira(r: ResumoCarteira): string {
+  if (r.precisamAcao === 0) return "Nenhum cliente precisa de ação"
+  const verbo = r.precisamAcao === 1 ? "precisa" : "precisam"
+  const clientes = r.total === 1 ? "cliente" : "clientes"
+  return `${r.precisamAcao} de ${r.total} ${clientes} ${verbo} de ação`
+}
+
+/** "em 3 clientes" / "em 1 cliente" / "nenhum cliente" (apoio dos indicadores). */
+export function emClientes(n: number): string {
+  if (n === 0) return "nenhum cliente"
+  return `em ${n} ${n === 1 ? "cliente" : "clientes"}`
+}
+
 const ORDEM_SITUACAO: Record<SituacaoCliente, number> = {
   critico: 2,
   atencao: 1,
@@ -154,5 +172,10 @@ export function alertasPorFrente(
       return { frente, criticas: c, atrasadas: a, total: c + a, i }
     })
     .sort((x, y) => y.total - x.total || y.criticas - x.criticas || x.i - y.i)
-    .map(({ i: _i, ...resto }) => resto)
+    .map(({ frente, criticas: c, atrasadas: a, total }) => ({
+      frente,
+      criticas: c,
+      atrasadas: a,
+      total,
+    }))
 }

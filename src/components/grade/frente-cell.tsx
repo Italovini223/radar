@@ -100,3 +100,21 @@ export function FrenteCell({
     </Dica>
   )
 }
+
+/**
+ * Frente que o cliente não contratou: "—" em cinza, sem link. Não vale como
+ * problema nem entra em nenhuma contagem (o par nem existe na grade).
+ */
+export function FrenteNaoContratada() {
+  return (
+    <span
+      role="img"
+      aria-label="Frente não contratada"
+      title="Frente não contratada"
+      data-nao-contratada
+      className="flex min-h-11 items-center px-2.5 py-1.5 text-sm text-muted-foreground"
+    >
+      <span aria-hidden>—</span>
+    </span>
+  )
+}

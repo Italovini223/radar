@@ -1,9 +1,12 @@
 "use client"
 
-import { useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import Link from "next/link"
 
-import { FrenteCell } from "@/components/grade/frente-cell"
+import {
+  FrenteCell,
+  FrenteNaoContratada,
+} from "@/components/grade/frente-cell"
 import { Dica } from "@/components/ui/dica"
 import {
   Table,
@@ -14,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { alertasPorFrente } from "@/lib/domain/carteira"
 import { ESTADO_ORDEM } from "@/lib/domain/rules"
 import { gsap, useGSAP } from "@/lib/motion/gsap"
 import { movimento } from "@/lib/motion/movimento"
@@ -23,6 +27,14 @@ import { nomeCurtoFrente } from "@/lib/domain/frentes"
 
 /** Último estado visto de cada célula: quem mudou desde a última vez pisca. */
 const estadosVistos = new Map<string, string>()
+
+/**
+ * Coluna fixa (cliente): quando a tabela rola para o lado, a coluna ganha uma
+ * sombra sutil na borda direita. O estado vem de `data-rolagem` na raiz
+ * (ver o efeito abaixo); sem rolagem lateral, sem sombra.
+ */
+const COLUNA_FIXA =
+  "sticky left-0 z-[1] bg-card transition-shadow group-data-[rolagem=true]/grade:shadow-[6px_0_8px_-6px_rgb(28_28_26/0.22)]"
 
 const ehProblema = (s: StatusFrente) =>
   s.estado === "atrasada" || s.estado === "critica"
@@ -77,12 +89,30 @@ export function GradeTable({
       )
   }, [clients, frentes, grade])
 
-  const porFrente = frentes.map((f) =>
-    grade.filter((s) => s.frenteId === f.id && ehProblema(s)).length
-  )
+  // Mesma função do gráfico "Alertas por frente" do Radar: os números batem.
+  const porFrente = useMemo(() => {
+    const totais = new Map(
+      alertasPorFrente(grade, frentes).map((a) => [a.frente.id, a.total])
+    )
+    return frentes.map((f) => totais.get(f.id) ?? 0)
+  }, [grade, frentes])
   const total = porFrente.reduce((a, b) => a + b, 0)
 
   const raiz = useRef<HTMLDivElement>(null)
+
+  // Rolagem lateral: o contêiner que rola é o da tabela (overflow-x-auto do
+  // componente Table), então o estado é lido dele e gravado na raiz.
+  useEffect(() => {
+    const el = raiz.current
+    const rolagem = el?.querySelector<HTMLElement>("[data-slot=table-container]")
+    if (!el || !rolagem) return
+    const atualizar = () => {
+      el.dataset.rolagem = rolagem.scrollLeft > 1 ? "true" : "false"
+    }
+    atualizar()
+    rolagem.addEventListener("scroll", atualizar, { passive: true })
+    return () => rolagem.removeEventListener("scroll", atualizar)
+  }, [])
   useFlipLista(raiz, linhas.map((l) => l.cliente.id).join("|"))
 
   // Célula que mudou de estado faz um flash curto (só opacidade, 0,6 s).
@@ -124,7 +154,11 @@ export function GradeTable({
   )
 
   return (
-    <div ref={raiz} className="overflow-hidden rounded-lg bg-card">
+    <div
+      ref={raiz}
+      data-rolagem="false"
+      className="group/grade overflow-hidden rounded-lg bg-card"
+    >
       <Table className="min-w-[56rem] border-separate border-spacing-0">
         <caption className="sr-only">
           Grade de clientes por frente, do cliente em pior estado para o
@@ -135,7 +169,7 @@ export function GradeTable({
           <TableRow className="hover:bg-transparent">
             <TableHead
               scope="col"
-              className="sticky left-0 z-[1] h-14 w-40 border-b bg-card px-3 text-xs font-normal normal-case tracking-normal text-muted-foreground"
+              className={`${COLUNA_FIXA} h-14 w-40 border-b px-3 text-xs font-normal normal-case tracking-normal text-muted-foreground`}
             >
               Cliente
             </TableHead>
@@ -168,13 +202,20 @@ export function GradeTable({
             >
               <TableHead
                 scope="row"
-                className="sticky left-0 z-[1] border-b bg-card px-3 py-1.5 text-left align-middle normal-case tracking-normal text-foreground"
+                className={`${COLUNA_FIXA} border-b px-3 py-1.5 text-left align-middle normal-case tracking-normal text-foreground`}
               >
-                <Dica texto={`Abrir a ficha de ${c.nome}`} lado="right">
-                  <Link href={`/clientes/${c.id}`} className="botao-cliente botao-cliente-sm">
-                    {c.nome}
-                  </Link>
-                </Dica>
+                {/* No celular a coluna fixa é estreita (nome cortado com
+                    reticências), para sobrar espaço de rolagem às frentes. */}
+                <div className="max-w-[7.5rem] sm:max-w-none">
+                  <Dica texto={`Abrir a ficha de ${c.nome}`} lado="right">
+                    <Link
+                      href={`/clientes/${c.id}`}
+                      className="botao-cliente botao-cliente-sm"
+                    >
+                      <span className="truncate">{c.nome}</span>
+                    </Link>
+                  </Dica>
+                </div>
               </TableHead>
               {frentes.map((f) => {
                 const status = porChave.get(`${c.id}:${f.id}`)
@@ -182,7 +223,9 @@ export function GradeTable({
                   <TableCell key={f.id} className="border-b p-1 align-middle">
                     {status ? (
                       <FrenteCell status={status} cliente={c} frente={f} />
-                    ) : null}
+                    ) : (
+                      <FrenteNaoContratada />
+                    )}
                   </TableCell>
                 )
               })}
@@ -196,7 +239,7 @@ export function GradeTable({
           <TableRow className="hover:bg-transparent">
             <TableHead
               scope="row"
-              className="sticky left-0 z-[1] bg-card px-3 py-3 text-left text-sm font-medium normal-case tracking-normal text-foreground"
+              className={`${COLUNA_FIXA} px-3 py-3 text-left text-sm font-medium normal-case tracking-normal text-foreground`}
             >
               Problemas
             </TableHead>

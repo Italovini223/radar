@@ -25,6 +25,7 @@ import {
 import { AcaoDialog } from "@/components/radar/acao-dialog"
 import { ConfirmacaoPosAcao } from "@/components/radar/confirmacao-pos-acao"
 import { ProposalDialog } from "@/components/radar/proposal-dialog"
+import { AlertasPorFrente } from "@/components/radar/alertas-por-frente"
 import { GrupoDoCliente } from "@/components/radar/grupo-cliente"
 import { PainelSaude, type AbaRadar } from "@/components/radar/painel-saude"
 import { Button } from "@/components/ui/button"
@@ -329,13 +330,16 @@ function Conteudo() {
         }
       />
 
-      <PainelSaude
-        grade={grade}
-        oportunidades={oportunidades}
-        situacoes={situacoes}
-        ativa={aba}
-        onFiltrar={setAba}
-      />
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <PainelSaude
+          grade={grade}
+          oportunidades={oportunidades}
+          situacoes={situacoes}
+          ativa={aba}
+          onFiltrar={setAba}
+        />
+        <AlertasPorFrente grade={grade} frentes={frentes} />
+      </div>
 
       <ConfirmacaoPosAcao className="mt-6" />
 

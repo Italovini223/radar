@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 import { nomeCurtoFrente } from "@/lib/domain/frentes"
 import { formatarDias } from "@/lib/domain/opportunities"
 import {
+  ROTULO_ESTADO_FRENTE,
   ROTULO_SITUACAO,
   bloqueioCurto,
   dataCurta,
@@ -49,6 +50,16 @@ describe("rótulos de relógio e bloqueio", () => {
       "Sem retorno do cliente há 95 dias · bloqueado: o limite contratual de 90 dias foi atingido"
     )
     expect(textoBlocoBloqueio(90, 0, 90)).toContain("bloqueado")
+  })
+  it("estado da frente: o identificador 'atencao' aparece como 'Perto do prazo'", () => {
+    expect(ROTULO_ESTADO_FRENTE).toEqual({
+      em_dia: "Em dia",
+      atencao: "Perto do prazo",
+      atrasada: "Atrasada",
+      critica: "Crítica",
+    })
+    // "Atenção" é só a situação do CLIENTE: os dois níveis não se misturam.
+    expect(Object.values(ROTULO_ESTADO_FRENTE)).not.toContain("Atenção")
   })
   it("situação do cliente", () => {
     expect(ROTULO_SITUACAO).toEqual({ critico: "Crítico", atencao: "Atenção", ok: "Ok" })

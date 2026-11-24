@@ -4,6 +4,7 @@ import { ptBR } from "date-fns/locale"
 import { formatarDias } from "./opportunities"
 import type {
   Configuracao,
+  EstadoFrente,
   Frente,
   SituacaoCliente,
 } from "./types"
@@ -26,6 +27,28 @@ export function rotuloDataReferencia(
     return `Hoje: ${dataCurta(format(hoje, "yyyy-MM-dd"))}`
   }
   return `Data de referência: ${dataCurta(config.dataReferencia)} (demonstração)`
+}
+
+/**
+ * VOCABULÁRIO (rótulo visível x identificador interno)
+ *
+ * Há dois níveis com palavras parecidas, e a tela os mantém separados:
+ *
+ *  - FRENTE (par cliente x frente), `EstadoFrente`:
+ *      Em dia · Perto do prazo · Atrasada · Crítica (+ "Nunca").
+ *  - CLIENTE, `SituacaoCliente`: Crítico · Atenção · Ok.
+ *
+ * O identificador interno `EstadoFrente = "atencao"` NÃO foi renomeado (evita
+ * uma troca ampla no domínio, nos testes e nos dados); só o rótulo visível é
+ * "Perto do prazo". Por isso, em código, `"atencao"` de uma frente aparece na
+ * tela como "Perto do prazo", e só `SituacaoCliente` "atencao" aparece como
+ * "Atenção". Dívida opcional: renomear o identificador para `perto_do_prazo`.
+ */
+export const ROTULO_ESTADO_FRENTE: Record<EstadoFrente, string> = {
+  em_dia: "Em dia",
+  atencao: "Perto do prazo",
+  atrasada: "Atrasada",
+  critica: "Crítica",
 }
 
 export const ROTULO_SITUACAO: Record<SituacaoCliente, string> = {

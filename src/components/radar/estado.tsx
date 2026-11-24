@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils"
-import { ROTULO_SITUACAO } from "@/lib/domain/rotulos"
+import { ROTULO_ESTADO_FRENTE, ROTULO_SITUACAO } from "@/lib/domain/rotulos"
 import type {
   EstadoFrente,
   SituacaoCliente,
@@ -9,8 +9,12 @@ import type {
 /**
  * Vocabulário visual dos estados. Regra: cor NUNCA vem sozinha: sempre com um
  * marcador de forma própria + texto. Triângulo = já estourou o prazo
- * (atrasada, crítica); bolinha = ainda não estourou (atenção, em dia). É o
+ * (atrasada, crítica); bolinha = ainda não estourou (perto do prazo, em dia). É o
  * mesmo marcador do radar, então quem olha a lista reconhece o ponto.
+ *
+ * Rótulo visível x identificador: o estado interno `atencao` aparece como
+ * "Perto do prazo" (ver `ROTULO_ESTADO_FRENTE` em rotulos.ts); "Atenção" é só
+ * a situação do CLIENTE.
  */
 export const ESTADOS: Record<
   EstadoFrente,
@@ -26,28 +30,28 @@ export const ESTADOS: Record<
   }
 > = {
   em_dia: {
-    label: "Em dia",
+    label: ROTULO_ESTADO_FRENTE.em_dia,
     descricao: "Menos de 75% do prazo",
     texto: "text-muted-foreground",
     marcador: "bg-state-ok-bar",
     classe: "bg-state-ok-soft text-state-ok border-state-ok-line",
   },
   atencao: {
-    label: "Atenção",
+    label: ROTULO_ESTADO_FRENTE.atencao,
     descricao: "Entre 75% e 100% do prazo (aviso, não gera alerta)",
     texto: "text-state-warn",
     marcador: "bg-state-warn-bar",
     classe: "bg-state-warn-soft text-state-warn border-state-warn-line",
   },
   atrasada: {
-    label: "Atrasada",
+    label: ROTULO_ESTADO_FRENTE.atrasada,
     descricao: "Passou do prazo, antes de virar crítica",
     texto: "text-state-late",
     marcador: "bg-state-late-bar",
     classe: "bg-state-late-soft text-state-late border-state-late-line",
   },
   critica: {
-    label: "Crítica",
+    label: ROTULO_ESTADO_FRENTE.critica,
     descricao: "Atingiu o limite \"vira crítico após\" da frente ou nunca teve ação",
     texto: "text-state-crit",
     marcador: "bg-state-crit-bar",
@@ -65,7 +69,7 @@ const ehTriangulo = (estado: EstadoFrente, nunca: boolean) =>
 
 /**
  * Marcador de dado (não é ícone decorativo): triângulo de 9px para atrasada,
- * crítica e "nunca"; bolinha de 7px para atenção e em dia. A cor vem do
+ * crítica e "nunca"; bolinha de 7px para perto do prazo e em dia. A cor vem do
  * estado (coral, laranja, amarelo, cinza), independente da cor do texto.
  */
 export function EstadoGlyph({

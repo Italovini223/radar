@@ -112,7 +112,7 @@ const FAIXAS = [
 function Saude({ linhas }: { linhas: StatusFrente[] }) {
   const pct = saudeDoCliente(linhas)
   const ok = linhas.filter((l) => l.estado === "em_dia" || l.estado === "atencao").length
-  const rotulo = pct >= 80 ? "Boa" : pct >= 50 ? "Atenção" : "Crítica"
+  const rotulo = pct >= 80 ? "Boa" : pct >= 50 ? "Regular" : "Crítica"
   const texto =
     pct >= 80 ? "text-state-ok" : pct >= 50 ? ESTADOS.atrasada.texto : ESTADOS.critica.texto
   const cx = 100

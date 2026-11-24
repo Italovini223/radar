@@ -11,7 +11,7 @@ const LIMITE_AMARELO = 0.7
 
 /**
  * Célula da grade. Sem fundo colorido: o número muda de cor e ganha marcador
- * só quando há alerta (atenção, atrasada, crítica). Embaixo dos números que
+ * só quando há alerta (perto do prazo, atrasada, crítica). Embaixo dos números que
  * ainda não estouraram o prazo, uma barrinha de 44px mostra quanto do prazo
  * já foi usado; acima de 70% ela fica amarela. Clique leva à ficha do
  * cliente com a frente em destaque.

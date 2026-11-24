@@ -108,7 +108,7 @@ function Conteudo() {
     configuracao,
     contratos,
   } = useRadar()
-  const atualizarAgora = useRadarStore((s) => s.atualizarAgora)
+  const recalcularAgora = useRadarStore((s) => s.recalcularAgora)
 
   // Filtros vivem na URL (compartilháveis e com voltar do navegador).
   const router = useRouter()
@@ -314,17 +314,17 @@ function Conteudo() {
         }
         actions={
           <Button
-            dica="Recalcular alertas e prazos com os dados atuais"
+            dica="Recalcula alertas e prazos com os dados atuais"
             onClick={() => {
-              atualizarAgora()
+              recalcularAgora()
               toast.success(
                 configuracao.usarHojeReal
-                  ? "Radar atualizado com a data de hoje."
-                  : "Radar recalculado na data de referência."
+                  ? "Alertas recalculados com a data de hoje."
+                  : "Alertas recalculados na data de referência."
               )
             }}
           >
-            Atualizar radar
+            Recalcular alertas
           </Button>
         }
       />

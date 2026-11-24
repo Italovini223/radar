@@ -29,7 +29,7 @@ const BOTAO =
 export function Dock() {
   const pathname = usePathname()
   const { ready, situacoes, hoje, configuracao } = useRadar()
-  const atualizarAgora = useRadarStore((s) => s.atualizarAgora)
+  const recalcularAgora = useRadarStore((s) => s.recalcularAgora)
 
   // Clientes com alerta = Crítico + Atenção (mesma conta do painel do Radar).
   const comAlerta = ready ? resumoCarteira(situacoes.values()).precisamAcao : 0
@@ -95,17 +95,17 @@ export function Dock() {
             )
           })}
           <li>
-            <Dica texto="Atualizar o radar: recalcula alertas e prazos com os dados atuais">
+            <Dica texto="Recalcular alertas: atualiza alertas e prazos com os dados atuais">
             <button
               type="button"
-              aria-label="Atualizar radar"
+              aria-label="Recalcular alertas"
               disabled={!ready}
               onClick={() => {
-                atualizarAgora()
+                recalcularAgora()
                 toast.success(
                   configuracao.usarHojeReal
-                    ? "Radar atualizado com a data de hoje."
-                    : "Radar recalculado na data de referência."
+                    ? "Alertas recalculados com a data de hoje."
+                    : "Alertas recalculados na data de referência."
                 )
               }}
               className={cn(

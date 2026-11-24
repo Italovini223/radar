@@ -1,10 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="Weethub Radar">
   <title>Weethub Radar</title>
-  <!-- Anel: a carteira de clientes. -->
-  <circle cx="24" cy="24" r="17" fill="none" stroke="#000" stroke-width="10"/>
-  <!-- Setor amarelo: a frente que ficou parada, acesa pelo radar. -->
-  <path fill="#fcbd20" d="M24 2A22 22 0 0 1 46 24H36A12 12 0 0 0 24 12Z"/>
-  <!-- Ponteiro e pivô: o varrimento do radar apontando para o setor. -->
-  <path d="M24 24L31.5 16.5" fill="none" stroke="#000" stroke-width="2.6" stroke-linecap="round"/>
-  <circle cx="24" cy="24" r="3.4" fill="#000"/>
+  <!-- Marca para fundo claro. -->
+  <!-- Anel de 8 segmentos (as frentes); o primeiro, aceso em amarelo Weethub. -->
+  <path fill="#fcbd20" d="M25.15 2.03A22 22 0 0 1 38.72 7.65L33.03 13.97A13.5 13.5 0 0 0 24.71 10.52Z"/>
+  <path fill="#c4c2ba" d="M40.35 9.28A22 22 0 0 1 45.97 22.85L37.48 23.29A13.5 13.5 0 0 0 34.03 14.97Z"/>
+  <path fill="#c4c2ba" d="M45.97 25.15A22 22 0 0 1 40.35 38.72L34.03 33.03A13.5 13.5 0 0 0 37.48 24.71Z"/>
+  <path fill="#c4c2ba" d="M38.72 40.35A22 22 0 0 1 25.15 45.97L24.71 37.48A13.5 13.5 0 0 0 33.03 34.03Z"/>
+  <path fill="#c4c2ba" d="M22.85 45.97A22 22 0 0 1 9.28 40.35L14.97 34.03A13.5 13.5 0 0 0 23.29 37.48Z"/>
+  <path fill="#c4c2ba" d="M7.65 38.72A22 22 0 0 1 2.03 25.15L10.52 24.71A13.5 13.5 0 0 0 13.97 33.03Z"/>
+  <path fill="#c4c2ba" d="M2.03 22.85A22 22 0 0 1 7.65 9.28L13.97 14.97A13.5 13.5 0 0 0 10.52 23.29Z"/>
+  <path fill="#c4c2ba" d="M9.28 7.65A22 22 0 0 1 22.85 2.03L23.29 10.52A13.5 13.5 0 0 0 14.97 13.97Z"/>
+  <!-- Centro: o ponto de observação. -->
+  <circle cx="24" cy="24" r="3.2" fill="#1c1c1a"/>
 </svg>

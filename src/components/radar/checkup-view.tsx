@@ -125,7 +125,7 @@ function Formulario({
           Já vem preenchido com o que está registrado. Altere só o que estiver
           diferente; campo vazio não muda nada.
         </FieldDescription>
-        <div className="overflow-hidden rounded-lg border bg-card shadow-card">
+        <div className="overflow-hidden rounded-lg bg-card">
           <ul>
             {frentes.map((f) => {
               const valor = datas[f.id] ?? ""
@@ -139,7 +139,7 @@ function Formulario({
                   className="grid grid-cols-1 items-center gap-x-4 gap-y-2 border-b px-4 py-3 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_11rem_10rem]"
                 >
                   <div>
-                    <label htmlFor={`${id}-${f.id}`} className="font-semibold">
+                    <label htmlFor={`${id}-${f.id}`} className="font-medium">
                       {nomeCurtoFrente(f)}
                     </label>
                     <p className="tnum text-xs text-muted-foreground">
@@ -222,16 +222,16 @@ function Formulario({
           role="status"
           className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-lg border border-state-ok-line bg-state-ok-soft px-4 py-3 text-sm text-state-ok"
         >
-          <span className="font-bold">Check-up salvo.</span>
-          <Link href="/radar" className="font-semibold underline">
+          <span className="font-medium">Check-up salvo.</span>
+          <Link href="/radar" className="font-medium underline">
             Ver no Radar
           </Link>
-          <Link href="/grade" className="font-semibold underline">
+          <Link href="/grade" className="font-medium underline">
             Ver na Grade
           </Link>
           <Link
             href={`/clientes/${cliente.id}`}
-            className="font-semibold underline"
+            className="font-medium underline"
           >
             Abrir ficha
           </Link>

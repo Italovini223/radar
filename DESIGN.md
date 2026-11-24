@@ -1,142 +1,148 @@
 ---
 name: Weethub Radar
-description: Ferramenta de operação diária da agência Weethub para ver, por cliente e frente, o que está parado. Visual de painel SaaS (referência: painel de gestão de tarefas com trilho de ícones, fundo cinza-claro e cartões brancos), azul como cor de ação, amarelo Weethub só na marca. Nunito Sans, modo claro, densidade média.
+description: Ferramenta de operação diária da agência Weethub para ver, por cliente e frente, o que está parado. Painéis claros sobre fundo cinza-quente, Geist, botões em pílula, navegação em dock flutuante, coral para a ação que resolve o alerta e amarelo Weethub só na marca. Modo claro, densidade média.
 colors:
-  ink: "#1f2937"
-  primary: "#1f6feb"
-  primary-hover: "#1a5fd0"
-  primary-foreground: "#ffffff"
-  link: "#1d5fd1"
-  accent: "#eef4fe"
+  bg: "#e9e8e4"
+  panel: "#f3f2ef"
+  panel-hi: "#fbfaf8"
+  pill: "#e3e2dd"
+  line: "#dcdbd5"
+  ink: "#1c1c1a"
+  ink-2: "#66655f"
+  ink-3: "#8a8984"
+  on-ink: "#fbfaf8"
   brand: "#fcbd20"
-  brand-foreground: "#1f2937"
-  canvas: "#f3f4f6"
-  surface: "#ffffff"
-  ink-muted: "#5f6672"
-  line: "#e5e7eb"
-  line-input: "#8c939f"
-  state-ok: "#18794e"
-  state-ok-soft: "#e7f6ee"
-  state-ok-bar: "#2fb36b"
-  state-warn: "#92510a"
-  state-warn-soft: "#fff4d6"
-  state-warn-bar: "#f2a31b"
-  state-late: "#b34100"
-  state-late-soft: "#ffeddf"
-  state-late-bar: "#f57c22"
-  state-crit: "#c62828"
-  state-crit-soft: "#fdecec"
-  state-crit-bar: "#e53935"
+  glow: "rgba(240, 232, 70, 0.8)"
+  orange: "#ffa64d"
+  orange-soft: "#ffe2c2"
+  coral: "#ff5a52"
+  coral-strong: "#cd3b32"
+  coral-soft: "#ffe1de"
+  crit-text: "#c4382f"
+  late-text: "#a35a00"
+  warn-text: "#8a6200"
+  ok: "#2a7d40"
+  dot-idle: "#c9c8c2"
 typography:
-  family: "Nunito Sans, ui-sans-serif, system-ui, sans-serif"
-  page-title: { fontSize: "1.75rem", fontWeight: 700, lineHeight: 1.2 }
-  topbar-title: { fontSize: "1.125rem", fontWeight: 400, textTransform: uppercase, letterSpacing: "0.025em" }
-  section: { fontSize: "1.25rem", fontWeight: 700 }
-  kpi: { fontSize: "1.875rem", fontWeight: 800 }
-  body: { fontSize: "0.9375rem", fontWeight: 400, lineHeight: 1.5 }
-  label: { fontSize: "0.8125rem", fontWeight: 700 }
-  overline: { fontSize: "0.75rem", fontWeight: 700, textTransform: uppercase, letterSpacing: "0.025em" }
+  family: "Geist, Helvetica Neue, Arial, sans-serif"
+  page-title: { fontSize: "28px", fontWeight: 400, letterSpacing: "-0.02em" }
+  panel-title: { fontSize: "17px", lineHeight: "22px", fontWeight: 400 }
+  emphasis: { fontSize: "15px", lineHeight: "20px", fontWeight: 500 }
+  body: { fontSize: "13px", lineHeight: "18px", fontWeight: 400 }
+  small: { fontSize: "12px", fontWeight: 400 }
+  caption: { fontSize: "11px", lineHeight: "14px", fontWeight: 400, color: "ink-2" }
+  stat: { fontSize: "34px", lineHeight: "36px", fontWeight: 300, letterSpacing: "-0.02em" }
 rounded:
-  sm: "4px"
-  control: "6px"
-  card: "8px"
-  dialog: "12px"
-  pill: "9999px (só contadores e avatares)"
+  sm: "10px (controles, item selecionado)"
+  md: "18px (painéis)"
+  lg: "28px (moldura, diálogos)"
+  full: "999px (botões, pílulas, dock, campos)"
 shadow:
-  card: "0 1px 2px rgb(16 24 40 / .05), 0 1px 3px rgb(16 24 40 / .06)"
-  card-hover: "0 2px 4px rgb(16 24 40 / .06), 0 4px 12px rgb(16 24 40 / .08)"
-  pop: "0 8px 24px rgb(16 24 40 / .12)"
-spacing: { xs: "4px", sm: "8px", md: "16px", lg: "24px", xl: "32px" }
+  panel: "nenhuma"
+  dock: "0 6px 24px rgb(28 28 26 / .08)"
+  pop: "0 12px 40px rgb(28 28 26 / .14)"
+spacing: { s-1: "4px", s-2: "8px", s-3: "12px", s-4: "16px", s-5: "20px", s-6: "28px" }
 ---
 
 # Design System: Weethub Radar
 
-> **Origem.** Esta versão segue o painel de referência aprovado (print "Meu painel": trilho de ícones à esquerda com bloco amarelo da marca, barra superior branca com o título da seção em caixa alta, fundo cinza-claro, cartões brancos com sombra curta, azul como cor de ação). Substitui a identidade editorial anterior (off-white, Fraunces, botões pretos em pílula). Todos os valores vivem em `src/app/globals.css`; os componentes só usam tokens.
+> **Origem.** Esta versão segue o guia de componentes do Radar (`weethub-radar-componentes.html`, guia de identidade visual): fundo cinza-quente, painéis claros sem sombra, Geist, pílulas, dock flutuante embaixo, status em texto com marcador e coral para resolver o alerta. Substitui o "painel SaaS" anterior (Nunito Sans, azul de ação, trilho de ícones, cartões brancos com sombra). Todos os valores vivem em `src/app/globals.css`; os componentes só usam tokens.
 
 ## Overview
 
-O Radar continua sendo uma mesa de triagem: o time abre, vê o que pede ação e despacha. O visual agora é o de um painel SaaS familiar: estrutura clara (trilho + barra superior + conteúdo em cartões), azul para tudo que é clicável, cor de estado só para dado.
+O Radar é uma mesa de triagem: o time abre, vê o que pede ação e despacha. O visual é calmo e plano: painéis um tom acima do fundo, quase nenhuma borda, tipografia leve e cor só onde há alerta.
 
 **Key Characteristics:**
-- Azul (`--primary`) é a cor de ação: botão principal, item ativo, aba ativa, links, foco.
-- Amarelo Weethub (`--brand`) é marca: bloco do logo no trilho, ponto de "Nova", seleção de texto. Nunca texto sobre claro.
-- Fundo cinza-claro (`--background`) e conteúdo em superfícies brancas com borda hairline + sombra curta (`.superficie` ou `rounded-lg border bg-card shadow-card`).
-- Os quatro estados (em dia, atenção, atrasada, crítica) são o único uso de cor semântica, sempre com glifo + texto.
-- Uma família só (Nunito Sans). Números sempre tabulares.
+- **Tinta** (`--ink`) é a ação de sistema: "Atualizar radar", item ativo da dock, aba ativa, foco.
+- **Coral** (`--coral-strong`, variante `resolver` do botão) é a ação que resolve o alerta: "Ver proposta". **Uma vez por tela**, no alerta mais urgente.
+- **Cinza** (`--pill`) é todo o resto: botões secundários, pílulas, botões da dock.
+- **Amarelo Weethub** (`--brand`) é marca: o segmento aceso do logo, o marcador de "Atenção" e o ponto de "Nova". Nunca texto, nunca fundo de botão.
+- Status sempre como **texto colorido + marcador** (triângulo ou bolinha), sem chip, sem fundo, sem borda.
+- Uma família só (Geist) em pesos 300, 400 e 500. Números sempre tabulares.
 
 ## Colors
 
-### Ação e marca
-- **Primário** `#1f6feb` (hover `#1a5fd0`), texto branco (4,6:1). **Link** `#1d5fd1` para texto azul sobre branco (5,6:1).
-- **Accent** `#eef4fe`: fundo do item ativo do trilho, aba/contador ativo, hover de linhas e botões contorno.
-- **Amarelo Weethub** `#fcbd20`: só fundo (bloco da marca, ponto "Nova"). Texto sobre ele é `#1f2937`.
+### Superfícies e tinta
+- **Fundo** `#e9e8e4` (página). **Painel** `#f3f2ef` (cartões, tabelas, dock). **Painel claro** `#fbfaf8` (diálogos, campos, hover, linha selecionada). **Pílula** `#e3e2dd` (botões cinza, pílulas, contadores). **Linha** `#dcdbd5` (divisores).
+- **Tinta** `#1c1c1a` (texto e ação de sistema; 15,3:1 no painel). **Tinta 2** `#66655f` (texto secundário e legendas; 5,2:1 no painel, 4,8:1 no fundo). **Tinta 3** `#8a8984` (3,1:1): só borda de campo, eixos e marcações; **nunca texto**.
+- No `globals.css`, os papéis do shadcn apontam para essas primitivas: `background`=fundo, `card`=painel, `popover`/`accent`=painel claro, `muted`/`secondary`=pílula, `border`=linha, `input`=tinta 3, `primary`/`ring`/`link`=tinta, `resolver`=coral-strong.
 
-### Neutros
-- **Canvas** `#f3f4f6` (fundo da página), **Superfície** `#ffffff` (cartões, tabelas, trilho, barra superior, campos).
-- **Tinta** `#1f2937`, **Tinta suave** `#5f6672` (5,9:1 sobre branco), **Linha** `#e5e7eb`, **Linha de campo** `#8c939f` (3,1:1, critério 1.4.11).
-- Cabeçalho de tabela: `bg-gray-50`.
+### Coral (resolver)
+- `#cd3b32` com texto `#fbfaf8` (4,7:1), hover `#b8332b`. O guia traz `#d63c34`, que dá 4,4:1 com o texto claro do botão; foi escurecido para passar AA.
 
-### Estados (texto / fundo suave / linha / barra)
-Texto e fundo suave passam AA (≥ 4,5:1). A cor "barra" é a versão viva, usada só em áreas grandes de cor sem texto (barra de saúde).
-- **Em dia** `#18794e` / `#e7f6ee` / `#b5e2c9` / `#2fb36b`
-- **Atenção** `#92510a` / `#fff4d6` / `#f6d77e` / `#f2a31b`
-- **Atrasada** `#b34100` / `#ffeddf` / `#fcc39b` / `#f57c22`
-- **Crítica** `#c62828` / `#fdecec` / `#f5b5b5` / `#e53935` (também o destrutivo)
+### Estados (texto / marcador / fundo suave)
+O texto passa 4,5:1 sobre o painel e o painel claro. Use status sobre painéis, não direto no fundo da página.
+- **Crítica** `#c4382f` / coral `#ff5a52` / `#ffe1de` (também o destrutivo)
+- **Atrasada** `#a35a00` / laranja `#ffa64d` / `#ffe2c2`
+- **Atenção** `#8a6200` / amarelo `#fcbd20` / `#fcefc9`
+- **Em dia** tinta 2 `#66655f` / cinza `#c9c8c2`
+- **Sucesso** (confirmações, "Atribuída a…") `#2a7d40` / `#e3efe4`
 
-**A Regra do Estado Completo.** Cor de estado sempre vem com glifo e rótulo.
-**A Regra do Amarelo de Marca.** Amarelo identifica a marca, não comunica estado nem ação.
+**A Regra do Marcador.** Triângulo = já estourou o prazo (crítica em coral, atrasada em laranja, "nunca teve ação" em coral). Bolinha = ainda não estourou (atenção em amarelo, em dia em cinza). É o mesmo marcador do radar, então a lista e o radar falam a mesma língua.
+**A Regra do Estado Completo.** Cor de estado sempre vem com marcador e rótulo.
 
 ## Typography
 
-**Nunito Sans** via `next/font/google` (`--font-nunito`), em todo o UI.
+**Geist** via `next/font/google` (`--font-geist`), em todo o UI. Escala: 11 · 12 · 13 · 15 · 17 · 20 · 28 · 34.
 
-- **Título da barra superior**: 18px, 400, caixa alta, tracking 0,025em ("RADAR", "CLIENTES > VELÔ BIKES").
-- **Título de página (h1)**: 24–28px, 700.
-- **Título de seção (h2)**: 18–20px, 700.
-- **KPI**: 28–30px, 800, tabular. "Parado há" do cartão crítico: 28px, 800, cor de crítica.
-- **Corpo**: 15px, 400. **Rótulo/chip**: 13px, 700.
-- **Overline** (cabeçalho de tabela, "PARADO HÁ", rótulos do trilho): 11–12px, 700, caixa alta, tracking 0,025em.
-- Botões: 15px, 600, **caixa normal** (sem caixa alta).
+- **Título de página (h1)**: 28px, 400, tracking -0,02em.
+- **Título de painel** ("Saúde da carteira", "Fila de hoje"): 17px/22px, 400.
+- **Destaque** (nome do cliente no cartão, motivo do alerta): 15px, 500.
+- **Corpo**: 13px/18px, 400. Botões: 13px, 500, **caixa normal**.
+- **Legenda** (`.legenda`): 11px/14px, tinta 2, caixa normal. Substitui os antigos overlines em caixa alta ("Parado há", cabeçalhos de tabela).
+- **Número** (`.numero`): peso 300, tabular, tracking -0,02em; 34px nos indicadores, 28px no cartão crítico. A unidade vai num `<small>` de 12px em tinta 2 ("90 <small>dias</small>").
+- Pesos: só 300 (números), 400 (texto e títulos) e 500 (ênfase, botões, status). Sem 600+.
+- **Sem caixa alta** no UI.
 
 ## Layout
 
-- **Trilho de ícones** (76px, branco, borda à direita) a partir de 1024px: bloco amarelo de 64px com a marca no topo; itens de 64px com ícone (20px) + rótulo curto em caixa alta; ativo = fundo accent + texto/ícone azul; contagens como bolinha azul sobre o ícone; Configurações ("Ajustes") separado embaixo. Abaixo de 1024px: botão de menu abre a lista completa (ícone + rótulo) num painel lateral.
-- **Barra superior** (64px, branca, sempre visível): título da seção em caixa alta ou caminho Clientes › Cliente; à direita, o selo "Dados de demonstração" (leva a Configurações).
-- **Conteúdo**: largura máxima 1320px, margens 16/32/40px. Cabeçalho da página (h1 + subtítulo + ações à direita), depois cartões.
+- **Cabeçalho** (64px, sobre o fundo, sem barra branca): marca, nome da seção em 17px (ou o caminho Clientes › Cliente), à direita a pílula "Dados de demonstração" e o botão redondo de Configurações.
+- **Dock** (navegação): barra flutuante centralizada a 16–20px do rodapé, fundo painel, `shadow-dock`, raio total. Botões redondos de 40px em pílula; o ativo em tinta com ícone claro (o Radar usa a própria marca, versão escura quando ativo). Contador coral (texto em tinta) com o número de críticas sobre o Radar. O último botão atualiza o radar, com "Atualizado / hoje, 09:12" (ou a data de referência) ao lado a partir de 640px. **Ordem: Radar, Grade, Clientes, Check-up, Atualizar.** Não há sidebar nem menu lateral no celular: a dock cabe em 375px.
+- **Conteúdo**: largura máxima 1320px, margens 16/32/40px, 112px livres embaixo para a dock.
 
 ## Elevation & Shapes
 
-- Cartões e tabelas: raio 8px, borda `#e5e7eb`, `shadow-card`; cartão clicável sobe para `shadow-card-hover`.
-- Controles (botão, campo, select, toggle, chip de estado): raio 6px.
-- Diálogos e popovers: raio 12px, `shadow-pop`, véu `gray-900/45`.
-- Pílula só para contadores (abas, trilho) e avatares.
+- Painéis: fundo painel, raio 18px, **sem borda e sem sombra**. Padding 20px.
+- Diálogos: painel claro, raio 28px, `shadow-pop`, véu tinta a 40%.
+- Só o que flutua tem sombra (dock, diálogos, menus).
+- Botões, campos, selects, pílulas, abas e dock: `rounded-full`. Itens de menu, linha selecionada e células da grade: 10px.
 
 ## Components
 
-### Buttons
-36px de altura, raio 6px, 15px/600, caixa normal.
-- **Primário**: azul cheio, texto branco, `shadow-card`. Um por tela.
-- **Contorno**: fundo branco, borda `#e5e7eb`, texto azul; hover accent.
-- **Secundário**: fundo accent, texto azul (equivalente a "Mais filtros" da referência).
-- **Ghost**: texto cinza, hover cinza. **Destrutivo**: branco com borda e texto vermelho.
+### Botões
+Pílula de 40px (`sm` 32px), padding 22px, 13px/500, caixa normal.
+- **`resolver`** (coral): "Ver proposta" no alerta mais urgente da tela. Um por tela.
+- **`default`** (tinta): ação de sistema ("Atualizar radar", "Salvar", "Atribuir ao setor").
+- **`outline` / `secondary`** (cinza): todo o resto ("Registrar ação", "Ficha", "Cancelar").
+- **`ghost`**: texto tinta 2, hover pílula. **`destructive`**: pílula com texto de crítica.
+- **`link`**: texto sublinhado ("Ver tudo").
 
-### Abas
-Texto 15px/700 cinza; ativa em azul com sublinhado azul de 2px; contador em pílula cinza (ativa: accent + azul). A lista de abas tem linha inferior própria; os filtros ficam numa linha abaixo, precedidos de "Filtrar por".
+### Status (`EstadoBadge`, `SituacaoBadge`, `EstadoGlyph`)
+Texto 12px/500 na cor do estado + marcador (triângulo de 9px ou bolinha de 7px). Sem fundo e sem borda. "Em dia" em tinta 2.
 
-### Painel "Saúde da carteira"
-Cartão branco. Barra segmentada de 10px, segmentos arredondados com 4px de intervalo nas cores "barra" dos estados; legenda com glifo, contagem e %. Grade de 4 KPIs separados por linhas; selecionado = fundo accent + sublinhado na cor do estado.
+### Pílula (`Badge variant="secondary"`)
+26px, fundo pílula, 12px em tinta 2, número em `<b>` 500 tinta ("**10** clientes"). Resume a carteira; não é clicável e não leva cor de status.
+
+### Números (indicadores do painel de saúde)
+Legenda com marcador em cima, número 34px/300 e uma linha curta embaixo. Só o número de críticas ganha cor. Selecionado = fundo painel claro + sublinhado de 2px na cor do estado.
+
+### Barra de saúde
+Segmentos arredondados de 10px nas cores de marcador (coral, laranja, amarelo, cinza), com 4px de intervalo; legenda com marcador, contagem e %.
+
+### Grade
+Tabela cliente × frente com os dias desde a última ação. **Sem células coloridas**: o número muda de cor e ganha marcador só quando há alerta. Embaixo dos números que ainda não estouraram o prazo, uma barrinha de 44×2px mostra quanto do prazo já foi usado; acima de 70% ela fica amarela. Aprovação travada = canto amarelo. Cabeçalho em 12px tinta 2, prazo em legenda.
 
 ### Cartão de oportunidade
-**Crítica**: cartão cheio com nome (hover azul), chip de estado, motivo, consequência, metadados; à direita overline "PARADO HÁ", número 800 em vermelho de crítica, prazo e "Ver proposta" primário. **Atrasada / travada**: linha compacta dentro de um cartão-lista, "Ver proposta" em contorno. "Nova" = ponto amarelo de 6px (+ texto para leitor de tela).
+**Crítica**: painel com nome (15px/500), status, motivo, consequência e metadados; à direita a legenda "Parado há", o número 28px/300 em texto de crítica, o prazo e as ações. **Atrasada / travada**: linha compacta dentro de um painel-lista, ações cinza. "Nova" = ponto amarelo de 6px (+ texto para leitor de tela).
 
-### Chips de estado e células da grade
-Raio 6px, fundo suave + linha + texto do estado + glifo. "Em dia" na grade é só "5 d" em cinza. Glifos: círculo cheio (em dia), meio círculo (atenção), anel (atrasada), X (crítica), traço (nunca). Aprovação travada = canto marcado.
+### Abas
+Texto 13px/500 tinta 2; ativa em tinta com sublinhado de 2px; contador em pílula (ativa: tinta com texto claro).
 
-### Tabelas
-Cartão branco; cabeçalho `bg-gray-50` com overline cinza; linhas com divisor hairline e hover accent a 50%.
+### Campos
+Painel claro, borda tinta 3 (3,1:1), `rounded-full` e 40px (textarea: 10px). Foco com contorno de 2px em tinta.
 
-### Inputs
-Branco, borda `#8c939f`, raio 6px, 36px; foco com anel azul de 2px.
+### Previstos no guia, ainda não implementados
+O guia também define o **radar circular** (anel externo com marcações a cada 4°, anel laranja segmentado por frente, halo `glow`, miolo com círculo coral da zona crítica e varredura de 7s), o **painel do cliente** com teia das 8 frentes (degradê coral → amarelo), a **fila de alertas** e os **gráficos** em barras com degradê ("Alertas por status", "Alertas por frente"), compostos na tela inicial de três colunas. Os tokens (`--glow`, `--orange-soft`, `--coral-soft`) já estão no `globals.css`; a tela vem numa próxima entrega.
 
 ## Movimento
 
@@ -149,25 +155,24 @@ Animação serve para mostrar **mudança de dado** e **entrada de tela**, nunca 
 - Painel de saúde: números contam até o novo valor (0,6 s), os segmentos da barra crescem até a proporção nova (partindo da última mostrada) e o sublinhado do indicador selecionado desliza.
 - Lista do Radar, Grade, Clientes e linha do tempo da ficha: quem fica desliza para o novo lugar (FLIP), quem entra sobe e aparece, quem sai deixa um fantasma que some. Na Grade, a célula que mudou de estado pisca (opacidade, 0,6 s).
 - Diálogos: opacidade + escala 0,98 a 1 (0,18 s) na abertura e no fechamento; "Copiado" e "Atribuída ao setor ..." entram com fade + 4 px.
-- O painel do "Menu" do celular desliza por CSS (Radix).
 
 ## Política de ícones
 
-- Ícones `lucide-react` (traço 2px) **na navegação** (trilho e menu do celular), no caminho da barra superior (chevron) e no selo de demonstração.
+- Ícones `lucide-react` com traço 1,6 **só na navegação** (dock e botão de Configurações) e no caminho do cabeçalho (chevron).
 - Botões de ação, abas e cabeçalhos continuam só com texto.
-- Glifos de estado não são ícones: são dado (`EstadoGlyph`).
+- Marcadores de estado não são ícones: são dado (`EstadoGlyph`).
 
 ## Do's and Don'ts
 
 ### Do
-- **Do** usar só tokens (`--primary`, `--link`, `--accent`, `--brand`, `--state-*`, `shadow-card`).
-- **Do** manter conteúdo em superfícies brancas sobre o fundo cinza.
+- **Do** usar só tokens (`bg-panel`, `bg-pill`, `text-ink-2`, `bg-resolver`, `--state-*`).
+- **Do** manter o conteúdo em painéis planos sobre o fundo cinza-quente.
 - **Do** mostrar o motivo de cada alerta em números (dias, prazo).
-- **Do** manter "Em dia" discreto.
+- **Do** manter "Em dia" discreto (cinza, bolinha).
 
 ### Don't
-- **Don't** usar o amarelo como texto, cor de estado ou cor de ação.
-- **Don't** usar azul para estado (azul = clicável).
-- **Don't** usar caixa alta em botões ou texto corrido (só barra superior, overlines e trilho).
-- **Don't** usar sombras grandes, gradientes ou glassmorphism.
+- **Don't** usar o coral mais de uma vez por tela, nem para ação de sistema.
+- **Don't** usar o amarelo como texto, fundo de botão ou cor de ação.
+- **Don't** usar tinta 3 (`#8a8984`) em texto.
+- **Don't** usar caixa alta, pesos acima de 500, sombras em painéis, bordas fortes ou células coloridas.
 - **Don't** depender só de cor para comunicar estado.

@@ -85,7 +85,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 isolate z-50 bg-gray-900/45",
+        "fixed inset-0 isolate z-50 bg-ink/40",
         className
       )}
       {...props}
@@ -127,7 +127,7 @@ function DialogContent({
         ref={aoMontar}
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl border bg-popover p-6 shadow-pop text-sm text-popover-foreground outline-none sm:max-w-sm",
+          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-2xl bg-popover p-6 shadow-pop text-sm text-popover-foreground outline-none sm:max-w-sm",
           className
         )}
         {...props}
@@ -172,7 +172,7 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        "-mx-6 -mb-6 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted p-4 px-6 sm:flex-row sm:justify-end",
+        "-mx-6 -mb-6 flex flex-col-reverse gap-2 rounded-b-2xl border-t bg-card p-4 px-6 sm:flex-row sm:justify-end",
         className
       )}
       {...props}
@@ -195,7 +195,7 @@ function DialogTitle({
     <DialogPrimitive.Title
       data-slot="dialog-title"
       className={cn(
-        "font-heading text-lg leading-tight font-bold",
+        "font-heading text-lg leading-tight font-medium",
         className
       )}
       {...props}

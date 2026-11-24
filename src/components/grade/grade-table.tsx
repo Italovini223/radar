@@ -31,7 +31,7 @@ function Numero({ n }: { n: number }) {
     <span
       className={
         n > 0
-          ? "tnum font-bold text-foreground"
+          ? "tnum font-medium text-foreground"
           : "tnum text-muted-foreground"
       }
     >
@@ -123,7 +123,7 @@ export function GradeTable({
   )
 
   return (
-    <div ref={raiz} className="overflow-hidden rounded-lg border bg-card shadow-card">
+    <div ref={raiz} className="overflow-hidden rounded-lg bg-card">
       <Table className="min-w-[56rem] border-separate border-spacing-0">
         <caption className="sr-only">
           Grade de clientes por frente, do cliente em pior estado para o
@@ -134,7 +134,7 @@ export function GradeTable({
           <TableRow className="hover:bg-transparent">
             <TableHead
               scope="col"
-              className="sticky left-0 z-[1] h-14 w-40 border-b bg-gray-50 px-3 text-sm font-bold normal-case tracking-normal text-foreground"
+              className="sticky left-0 z-[1] h-14 w-40 border-b bg-card px-3 text-xs font-normal normal-case tracking-normal text-muted-foreground"
             >
               Cliente
             </TableHead>
@@ -142,17 +142,17 @@ export function GradeTable({
               <TableHead
                 key={f.id}
                 scope="col"
-                className="h-14 border-b px-1.5 text-sm font-bold normal-case tracking-normal text-foreground"
+                className="h-14 border-b px-2.5 text-xs font-normal normal-case tracking-normal text-muted-foreground"
               >
                 <span className="block" title={f.nome}>{nomeCurtoFrente(f)}</span>
-                <span className="tnum block text-xs font-normal text-muted-foreground">
+                <span className="tnum block text-[0.6875rem] font-normal text-muted-foreground">
                   prazo {f.prazoDias} dias
                 </span>
               </TableHead>
             ))}
             <TableHead
               scope="col"
-              className="h-14 w-24 border-b px-3 text-right text-sm font-bold normal-case tracking-normal text-foreground"
+              className="h-14 w-24 border-b px-3 text-right text-xs font-normal normal-case tracking-normal text-muted-foreground"
             >
               Problemas
             </TableHead>
@@ -171,7 +171,7 @@ export function GradeTable({
               >
                 <Link
                   href={`/clientes/${c.id}`}
-                  className="text-sm font-bold hover:text-link"
+                  className="text-sm hover:underline"
                 >
                   {c.nome}
                 </Link>
@@ -192,11 +192,11 @@ export function GradeTable({
             </TableRow>
           ))}
         </TableBody>
-        <TableFooter className="bg-gray-50">
+        <TableFooter className="bg-card">
           <TableRow className="hover:bg-transparent">
             <TableHead
               scope="row"
-              className="sticky left-0 z-[1] bg-gray-50 px-3 py-3 text-left text-sm font-bold normal-case tracking-normal text-foreground"
+              className="sticky left-0 z-[1] bg-card px-3 py-3 text-left text-sm font-medium normal-case tracking-normal text-foreground"
             >
               Problemas
             </TableHead>

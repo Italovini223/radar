@@ -199,10 +199,10 @@ function ProposalBody({
       ) : (
         <>
           <section aria-labelledby={`${textoId}-titulo`} className="grid gap-2">
-            <h3 id={`${textoId}-titulo`} className="text-base font-semibold">
+            <h3 id={`${textoId}-titulo`} className="text-base font-medium">
               Texto para o cliente
             </h3>
-            <p className="text-sm font-semibold text-state-warn">
+            <p className="text-sm font-medium text-state-warn">
               {AVISO_RASCUNHO}. Edite à vontade.
             </p>
             <Textarea
@@ -227,8 +227,8 @@ function ProposalBody({
                     ref={aoAparecer}
                     className={
                       copia === "erro"
-                        ? "inline-block text-sm font-semibold text-destructive"
-                        : "inline-block text-sm font-semibold text-state-ok"
+                        ? "inline-block text-sm font-medium text-destructive"
+                        : "inline-block text-sm font-medium text-state-ok"
                     }
                   >
                     {copia === "copiado"
@@ -244,7 +244,7 @@ function ProposalBody({
             aria-labelledby={`${textoId}-interno`}
             className="grid gap-2 border-t pt-4"
           >
-            <h3 id={`${textoId}-interno`} className="text-base font-semibold">
+            <h3 id={`${textoId}-interno`} className="text-base font-medium">
               Interno
             </h3>
             <p className="text-sm text-muted-foreground">
@@ -257,7 +257,7 @@ function ProposalBody({
                 data-confirmacao="atribuida"
                 className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-state-ok-line bg-state-ok-soft px-4 py-3 text-sm text-state-ok"
               >
-                <span className="font-semibold">
+                <span className="font-medium">
                   Atribuída ao setor {atribuidaA}. Segue no Radar com a marca de
                   atribuída.
                 </span>

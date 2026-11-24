@@ -88,13 +88,13 @@ export function ConfirmacaoPosAcao({
       role="status"
       aria-live="polite"
       data-testid="confirmacao-pos-acao"
-      className={cn("rounded-lg border p-4 shadow-card sm:p-5", tom, className)}
+      className={cn("rounded-lg p-4 sm:p-5", tom, className)}
     >
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
         <div className="min-w-0 flex-1">
           <p
             className={cn(
-              "text-base font-bold",
+              "text-base font-medium",
               textos.tom === "resolvido" && "text-state-ok",
               textos.tom === "sem_efeito" && "text-state-warn"
             )}
@@ -113,10 +113,10 @@ export function ConfirmacaoPosAcao({
       <div className="mt-3 border-t border-current/10 pt-3">
         {proxima && textos.proxima ? (
           <>
-            <p className="text-xs font-bold tracking-wide text-muted-foreground uppercase">
+            <p className="legenda">
               {textos.proxima.titulo}
             </p>
-            <p className="mt-1 text-base font-semibold">{textos.proxima.frente}</p>
+            <p className="mt-1 text-base font-medium">{textos.proxima.frente}</p>
             <p className="text-sm text-foreground">{textos.proxima.motivo}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {frenteProxima ? (
@@ -142,7 +142,7 @@ export function ConfirmacaoPosAcao({
           </>
         ) : (
           <>
-            <p className="text-base font-semibold">{textos.vazio}</p>
+            <p className="text-base font-medium">{textos.vazio}</p>
             {!clienteId ? (
               <Button asChild size="sm" variant="outline" className="mt-3">
                 <Link href={`/clientes/${cliente.id}`}>Abrir ficha</Link>

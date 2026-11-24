@@ -7,7 +7,7 @@ import { montarGabarito as buildSeed } from "@/lib/data/gabarito-fixture"
 import { ErroApi, type RadarRepository } from "@/lib/data/repository"
 import type { Opportunity, RadarSnapshot } from "@/lib/domain/types"
 
-import { criarRadarStore } from "./store"
+import { criarRadarStore } from "@/lib/store"
 
 /** Promessa controlável, para observar o estado ANTES de o servidor responder. */
 function adiavel<T = void>() {

@@ -1,7 +1,7 @@
 /**
  * Interface MÍNIMA do banco usada por `radar-db.ts`. Quem a implementa:
  * `bancoSupabase` (supabase-adapter.ts) em produção e um fake em memória nos
- * testes (src/test/banco-fake.ts). Assim a lógica roda sem rede e sem segredo.
+ * testes (test/support/banco-fake.ts). Assim a lógica roda sem rede e sem segredo.
  */
 export type Tabela =
   | "clientes"

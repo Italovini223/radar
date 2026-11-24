@@ -28,8 +28,8 @@ vi.mock("@/lib/data/api-repository", async () => {
   }
 })
 
-import { registrarAcaoComResumo, salvarCheckupComResumo, useConfirmacaoStore } from "./confirmacao"
-import { useRadarStore } from "./store"
+import { registrarAcaoComResumo, salvarCheckupComResumo, useConfirmacaoStore } from "@/lib/confirmacao"
+import { useRadarStore } from "@/lib/store"
 
 const googleAurora = {
   clientId: "aurora-moda",

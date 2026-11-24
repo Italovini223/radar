@@ -1,8 +1,8 @@
 import { addDays } from "date-fns"
 import { describe, expect, it } from "vitest"
 
-import { gerarRascunhoSincrono, AVISO_RASCUNHO } from "./ai/proposal"
-import { aplicarCheckup } from "./domain/checkup"
+import { gerarRascunhoSincrono, AVISO_RASCUNHO } from "@/lib/ai/proposal"
+import { aplicarCheckup } from "@/lib/domain/checkup"
 import {
   alertasDoCliente,
   calcularMetricas,
@@ -10,7 +10,7 @@ import {
   formatarDias,
   proximaOportunidade,
   textoBloqueio,
-} from "./domain/opportunities"
+} from "@/lib/domain/opportunities"
 import {
   DIAS_APROVACAO_TRAVADA,
   acoesTravadas,
@@ -23,9 +23,9 @@ import {
   situacaoDoCliente,
   toISODate,
   ultimaAcaoConcluida,
-} from "./domain/rules"
-import type { Acao, Frente } from "./domain/types"
-import { montarGabarito as buildSeed } from "./data/gabarito-fixture"
+} from "@/lib/domain/rules"
+import type { Acao, Frente } from "@/lib/domain/types"
+import { montarGabarito as buildSeed } from "@/lib/data/gabarito-fixture"
 
 /** "Hoje" do gabarito: 13/11/2026 (meio-dia local, para evitar bordas de fuso). */
 const NOW = new Date(2026, 10, 13, 12, 0, 0)

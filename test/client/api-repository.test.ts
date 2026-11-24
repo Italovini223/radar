@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest"
 
-import { montarGabarito as buildSeed } from "./gabarito-fixture"
-import { criarApiRepository } from "./api-repository"
-import { ErroApi } from "./repository"
+import { montarGabarito as buildSeed } from "@/lib/data/gabarito-fixture"
+import { criarApiRepository } from "@/lib/data/api-repository"
+import { ErroApi } from "@/lib/data/repository"
 
 function envelope(dados: unknown, status = 200) {
   return new Response(JSON.stringify({ ok: true, dados }), { status })

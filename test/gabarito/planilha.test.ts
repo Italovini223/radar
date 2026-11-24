@@ -3,18 +3,18 @@ import { describe, expect, it } from "vitest"
 import {
   alertasDoCliente,
   proximaOportunidade,
-} from "../domain/opportunities"
+} from "@/lib/domain/opportunities"
 import {
   agoraDaConfiguracao,
   avisosDoCliente,
   contextoDoSnapshot,
   situacaoDoCliente,
-} from "../domain/rules"
+} from "@/lib/domain/rules"
 import {
   GABARITO_PLANILHA,
   TOTAL_TAREFAS_PLANILHA,
   montarPlanilha,
-} from "./planilha-dataset"
+} from "@/lib/data/planilha-dataset"
 
 /**
  * TESTE DO GABARITO SOBRE O DATASET REAL DA PLANILHA (10 clientes, 8 frentes,

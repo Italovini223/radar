@@ -10,13 +10,13 @@ import {
   toISODate,
 } from "@/lib/domain/rules"
 import type { Acao, RadarSnapshot } from "@/lib/domain/types"
-import { BancoFake } from "@/test/banco-fake"
+import { BancoFake } from "../support/banco-fake"
 
 import {
   ErroConflito,
   ErroNaoEncontrado,
   ErroRegra,
-} from "./errors"
+} from "@/lib/server/errors"
 import {
   acaoDeLinha,
   acaoParaLinha,
@@ -29,7 +29,7 @@ import {
   contratoDeLinha,
   frenteDeLinha,
   frenteParaLinha,
-} from "./mapeamento"
+} from "@/lib/server/mapeamento"
 import {
   atribuir,
   atualizarConfiguracao,
@@ -41,7 +41,7 @@ import {
   resetar,
   salvarCheckup,
   validarDataset,
-} from "./radar-db"
+} from "@/lib/server/radar-db"
 
 const HOJE = "2026-11-13"
 const atras = (dias: number) =>

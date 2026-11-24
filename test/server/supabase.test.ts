@@ -2,10 +2,10 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 
-import { ErroBanco } from "./errors"
-import { bancoSupabase } from "./supabase-adapter"
-import { getSupabase } from "./supabase"
-import { BancoNaoConfiguradoError } from "./errors"
+import { ErroBanco } from "@/lib/server/errors"
+import { bancoSupabase } from "@/lib/server/supabase-adapter"
+import { getSupabase } from "@/lib/server/supabase"
+import { BancoNaoConfiguradoError } from "@/lib/server/errors"
 
 afterEach(() => {
   vi.unstubAllEnvs()

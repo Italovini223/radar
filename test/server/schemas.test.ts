@@ -11,7 +11,7 @@ import {
   idRotaSchema,
   novaAcaoSchema,
   statusAcaoSchema,
-} from "./schemas"
+} from "@/lib/server/schemas"
 
 const acaoOk = {
   clientId: "aurora-moda",

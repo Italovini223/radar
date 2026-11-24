@@ -14,7 +14,7 @@ Requer Node 20+ e pnpm (`corepack enable` ativa o pnpm que vem com o Node).
 pnpm install
 cp .env.example .env.local   # preencha SUPABASE_SERVICE_ROLE_KEY (ver abaixo)
 pnpm dev                     # http://localhost:3000  (redireciona para /radar)
-pnpm test                    # vitest: motor de regras, gabarito, API, store (sem rede, sem segredo)
+pnpm test                    # vitest (pasta test/): regras, gabarito, API, store (sem rede, sem segredo)
 pnpm typecheck               # tsc --noEmit
 pnpm lint                    # eslint
 pnpm build                   # build de produção
@@ -80,7 +80,12 @@ src/
   lib/data/gabarito-fixture.ts  fixture sintética pequena, só para testes unitários
   lib/store.ts               zustand otimista (aplica, grava, reverte em falha)
   lib/motion/                animações GSAP (tokens, reduced-motion, entrada, contagem, listas)
-  lib/*.test.ts              testes (regras, gabarito, store); server/*.test.ts (API, banco)
+test/                      testes (vitest), centralizados e separados por categoria:
+  test/domain/             unitários do domínio puro (rules, pos-acao, rotulos)
+  test/server/             API, banco (com banco falso em memória), schemas, supabase, modo memória
+  test/client/             store otimista, confirmação pós-ação, cliente HTTP (api-repository)
+  test/gabarito/           aceitação: gabarito da planilha (situação por cliente, alertas esperados)
+  test/support/            apoio: banco-fake, stub do server-only
 components/brand/          RadarMark e RadarLogo (marca do sistema)
 docs/                        escopo-v1.md, modelo-de-dados.md, identidade.md, brand/board.html
 PRODUCT.md  DESIGN.md        contexto de produto e tokens visuais

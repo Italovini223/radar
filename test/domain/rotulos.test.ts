@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import { nomeCurtoFrente } from "./frentes"
-import { formatarDias } from "./opportunities"
+import { nomeCurtoFrente } from "@/lib/domain/frentes"
+import { formatarDias } from "@/lib/domain/opportunities"
 import {
   ROTULO_SITUACAO,
   bloqueioCurto,
@@ -10,7 +10,7 @@ import {
   rotuloRelogio,
   textoBlocoBloqueio,
   tituloSugerido,
-} from "./rotulos"
+} from "@/lib/domain/rotulos"
 
 describe("data de referência", () => {
   it("formata como '13 nov. 2026'", () => {

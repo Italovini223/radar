@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest"
 
-import { montarGabarito as buildSeed } from "./data/gabarito-fixture"
+import { montarGabarito as buildSeed } from "@/lib/data/gabarito-fixture"
 import {
   alertasDoCliente,
   proximaOportunidade,
-} from "./domain/opportunities"
+} from "@/lib/domain/opportunities"
 import {
   agoraDaConfiguracao,
   avisosDoCliente,
@@ -12,8 +12,8 @@ import {
   montarGrade,
   situacaoDoCliente,
   situacoesDaCarteira,
-} from "./domain/rules"
-import type { SituacaoCliente } from "./domain/types"
+} from "@/lib/domain/rules"
+import type { SituacaoCliente } from "@/lib/domain/types"
 
 /**
  * TESTE DO GABARITO (Sprint 2): "hoje" = 2026-11-13 (data de referência da

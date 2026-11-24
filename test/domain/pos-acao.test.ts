@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest"
 
 import { montarGabarito as buildSeed } from "@/lib/data/gabarito-fixture"
 
-import { derivarOportunidades } from "./opportunities"
-import { resumoPosAcao, textosPosAcao } from "./pos-acao"
-import { contextoDoSnapshot } from "./rules"
-import type { Acao, StatusAcao } from "./types"
+import { derivarOportunidades } from "@/lib/domain/opportunities"
+import { resumoPosAcao, textosPosAcao } from "@/lib/domain/pos-acao"
+import { contextoDoSnapshot } from "@/lib/domain/rules"
+import type { Acao, StatusAcao } from "@/lib/domain/types"
 
 const seed = buildSeed()
 const ctx = contextoDoSnapshot(seed)

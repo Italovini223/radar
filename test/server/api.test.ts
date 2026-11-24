@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { montarGabarito as buildSeed } from "@/lib/data/gabarito-fixture"
 import type { Banco } from "@/lib/server/banco"
 import { BancoNaoConfiguradoError, ErroBanco } from "@/lib/server/errors"
-import { BancoFake } from "@/test/banco-fake"
+import { BancoFake } from "../support/banco-fake"
 
 // Os route handlers chamam getBanco(); aqui ele devolve o fake (ou um erro).
 // Os handlers de /resetar usam buildSeed() (a planilha real); aqui ele devolve

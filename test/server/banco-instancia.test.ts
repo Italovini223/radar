@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { TOTAL_TAREFAS_PLANILHA, montarPlanilha } from "../data/planilha-dataset"
-import { BancoNaoConfiguradoError } from "./errors"
-import { getBanco } from "./banco-instancia"
-import { modoDoBanco } from "./modo-banco"
+import { TOTAL_TAREFAS_PLANILHA, montarPlanilha } from "@/lib/data/planilha-dataset"
+import { BancoNaoConfiguradoError } from "@/lib/server/errors"
+import { getBanco } from "@/lib/server/banco-instancia"
+import { modoDoBanco } from "@/lib/server/modo-banco"
 
 const g = globalThis as { __radarBancoMemoria?: unknown; __radarAvisoModoBanco?: boolean }
 

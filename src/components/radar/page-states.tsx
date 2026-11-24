@@ -24,7 +24,7 @@ import { useRadar } from "@/lib/hooks"
 import { useRadarStore } from "@/lib/store"
 
 /**
- * Cabeçalho de página: h1 em Nunito Sans 700. `italic` é só um complemento
+ * Cabeçalho de página: h1 em Geist 400, 28px. `italic` é só um complemento
  * existe só no h1 do /radar: nas demais telas, nome de cliente e títulos de
  * página ficam em romano. `description` só quando traz dado.
  */
@@ -89,7 +89,7 @@ export function BancoVazio() {
   const [carregando, setCarregando] = useState(false)
   return (
     <>
-      <Empty className="rounded-lg border bg-card py-12 shadow-card">
+      <Empty className="rounded-lg bg-card py-12">
         <EmptyHeader>
           <EmptyTitle>O banco de dados ainda está vazio</EmptyTitle>
           <EmptyDescription>
@@ -166,7 +166,7 @@ export function SemResultados({
   onLimpar?: () => void
 }) {
   return (
-    <Empty className="rounded-lg border bg-card py-10 shadow-card">
+    <Empty className="rounded-lg bg-card py-10">
       <EmptyHeader>
         <EmptyTitle>{titulo}</EmptyTitle>
         <EmptyDescription>{descricao}</EmptyDescription>

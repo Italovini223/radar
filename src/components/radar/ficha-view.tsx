@@ -171,19 +171,19 @@ function Conteudo({ id }: { id: string }) {
           data-entra
           data-testid="bloco-loja-em-criacao"
           className={cn(
-            "mb-6 rounded-lg border bg-card p-4 shadow-card sm:p-5",
+            "mb-6 rounded-lg bg-card p-4 sm:p-5",
             linhaLoja &&
               linhaLoja.diasParaBloqueio !== null &&
               linhaLoja.diasParaBloqueio <= 0 &&
               "border-state-crit-line bg-state-crit-soft"
           )}
         >
-          <h2 id="titulo-loja" className="text-xs font-bold tracking-wide text-muted-foreground uppercase">
+          <h2 id="titulo-loja" className="legenda">
             Loja em criação
           </h2>
           {linhaLoja && linhaLoja.dias !== null && linhaLoja.diasParaBloqueio !== null ? (
             <>
-              <p className="tnum mt-1 text-lg font-bold">
+              <p className="tnum mt-1 text-lg font-medium">
                 {textoBlocoBloqueio(
                   linhaLoja.dias,
                   linhaLoja.diasParaBloqueio,
@@ -207,7 +207,7 @@ function Conteudo({ id }: { id: string }) {
 
       <div className="grid gap-8 min-[1400px]:grid-cols-[minmax(0,1fr)_24rem]">
         <section aria-labelledby="titulo-frentes" className="min-w-0">
-          <h2 id="titulo-frentes" className="mb-3 text-xl font-bold">
+          <h2 id="titulo-frentes" className="mb-3 text-xl font-medium">
             Frentes
           </h2>
           {/* Abaixo de md: um cartão por frente, com o Estado visível. */}
@@ -221,19 +221,19 @@ function Conteudo({ id }: { id: string }) {
                   data-entra
                   data-destaque={destaque === l.frenteId || undefined}
                   className={cn(
-                    "rounded-lg border bg-card shadow-card p-4",
+                    "rounded-lg bg-card p-4",
                     destaque === l.frenteId && "border-foreground bg-secondary"
                   )}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
                     <div>
-                      <p className="font-bold">{nomeCurtoFrente(f)}</p>
+                      <p className="font-medium">{nomeCurtoFrente(f)}</p>
                       <p className="text-sm text-muted-foreground">{f.setor}</p>
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <EstadoBadge estado={l.estado} nunca={l.nunca} />
                       {l.travada ? (
-                        <span className="text-sm font-semibold text-state-warn">
+                        <span className="text-sm font-medium text-state-warn">
                           Aprovação travada
                         </span>
                       ) : null}
@@ -262,24 +262,24 @@ function Conteudo({ id }: { id: string }) {
 
           <div
             data-entra
-            className="hidden overflow-hidden rounded-lg border bg-card shadow-card md:block"
+            className="hidden overflow-hidden rounded-lg bg-card md:block"
           >
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead scope="col" className="h-11 px-4 text-sm font-bold text-foreground">
+                  <TableHead scope="col" className="h-11 px-4 text-sm font-medium text-foreground">
                     Frente
                   </TableHead>
-                  <TableHead scope="col" className="text-sm font-bold text-foreground">
+                  <TableHead scope="col" className="text-sm font-medium text-foreground">
                     Última ação
                   </TableHead>
-                  <TableHead scope="col" className="text-sm font-bold text-foreground">
+                  <TableHead scope="col" className="text-sm font-medium text-foreground">
                     Parado há
                   </TableHead>
-                  <TableHead scope="col" className="text-sm font-bold text-foreground">
+                  <TableHead scope="col" className="text-sm font-medium text-foreground">
                     Prazo
                   </TableHead>
-                  <TableHead scope="col" className="pr-4 text-sm font-bold text-foreground">
+                  <TableHead scope="col" className="pr-4 text-sm font-medium text-foreground">
                     Estado
                   </TableHead>
                 </TableRow>
@@ -297,7 +297,7 @@ function Conteudo({ id }: { id: string }) {
                       )}
                     >
                       <TableCell className="px-4 py-2.5">
-                        <span className="font-semibold">{nomeCurtoFrente(f)}</span>
+                        <span className="font-medium">{nomeCurtoFrente(f)}</span>
                         <span className="block text-sm text-muted-foreground">
                           {f.setor}
                         </span>
@@ -320,7 +320,7 @@ function Conteudo({ id }: { id: string }) {
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                           <EstadoBadge estado={l.estado} nunca={l.nunca} />
                           {l.travada ? (
-                            <span className="text-sm font-semibold text-state-warn">
+                            <span className="text-sm font-medium text-state-warn">
                               Aprovação travada
                             </span>
                           ) : null}
@@ -354,7 +354,7 @@ function Conteudo({ id }: { id: string }) {
         </section>
 
         <section aria-labelledby="titulo-timeline" className="min-w-0">
-          <h2 id="titulo-timeline" className="mb-3 text-xl font-bold">
+          <h2 id="titulo-timeline" className="mb-3 text-xl font-medium">
             Linha do tempo
           </h2>
           {timeline.length === 0 ? (
@@ -369,7 +369,7 @@ function Conteudo({ id }: { id: string }) {
           ) : (
             <ol
               ref={timelineRef}
-              className="flex flex-col rounded-lg border bg-card shadow-card"
+              className="flex flex-col rounded-lg bg-card"
             >
               {timeline.map((a) => {
                 const f = frentePorId.get(a.frenteId)
@@ -384,11 +384,11 @@ function Conteudo({ id }: { id: string }) {
                       <time dateTime={a.data} className="tnum font-medium text-foreground">
                         {data(a.data)}
                       </time>
-                      <span className="font-bold text-foreground">
+                      <span className="font-medium text-foreground">
                         {f ? nomeCurtoFrente(f) : a.frenteId}
                       </span>
                       {a.status !== "concluida" ? (
-                        <span className="font-semibold text-state-warn">
+                        <span className="font-medium text-state-warn">
                           {ROTULO_STATUS[a.status]}
                         </span>
                       ) : null}

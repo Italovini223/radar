@@ -60,7 +60,7 @@ O estado vive no processo do servidor: recarregar a página mantém os dados; re
 
 ## Stack
 
-Next.js 16.4 (App Router) + TypeScript + Tailwind v4 + shadcn/ui (base Radix, estilo `radix-nova`, lucide-react só dentro de `components/ui`) + date-fns (`pt-BR`) + zustand (store otimista; sem persistência local) + Supabase só no servidor (`@supabase/supabase-js`) + zod + GSAP (`gsap` + `@gsap/react`, só transform e opacidade, respeita `prefers-reduced-motion`) + vitest. Fontes via `next/font`: Fraunces (títulos, "Parado há" do cartão crítico, wordmark) e Urbanist (UI). Identidade visual extraída do site weethub.com (preto, off-white `#fffff7`, acento amarelo `#fcbd20`); o roxo do mockup foi descartado. Ver [`docs/identidade.md`](docs/identidade.md).
+Next.js 16.4 (App Router) + TypeScript + Tailwind v4 + shadcn/ui (base Radix, estilo `radix-nova`, lucide-react só dentro de `components/ui`) + date-fns (`pt-BR`) + zustand (store otimista; sem persistência local) + Supabase só no servidor (`@supabase/supabase-js`) + zod + GSAP (`gsap` + `@gsap/react`, só transform e opacidade, respeita `prefers-reduced-motion`) + vitest. Fonte via `next/font`: Geist em todo o UI. Identidade visual extraída do site weethub.com (preto, off-white `#fffff7`, acento amarelo `#fcbd20`); o roxo do mockup foi descartado. Ver [`docs/identidade.md`](docs/identidade.md).
 
 ## Estrutura
 
@@ -87,7 +87,7 @@ test/                      testes (vitest), centralizados e separados por catego
   test/client/             store otimista, confirmação pós-ação, cliente HTTP (api-repository)
   test/gabarito/           aceitação: gabarito da planilha (situação por cliente, alertas esperados)
   test/support/            apoio: banco-fake, stub do server-only
-components/brand/          RadarMark e RadarLogo (marca do sistema)
+components/brand/          RadarMark (marca do sistema)
 docs/                        escopo-v1.md, modelo-de-dados.md, identidade.md, brand/board.html
 PRODUCT.md  DESIGN.md        contexto de produto e tokens visuais
 ```

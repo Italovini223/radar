@@ -2,18 +2,19 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ChevronRight, FlaskConical } from "lucide-react"
+import { ChevronRight, Settings } from "lucide-react"
 
 import { RadarMark } from "@/components/brand/radar-mark"
-import { secaoAtual } from "@/components/layout/nav-itens"
-import { MobileNav } from "@/components/layout/mobile-nav"
+import { NAV_CONFIG, estaAtivo, secaoAtual } from "@/components/layout/nav-itens"
 import { dataCurta } from "@/lib/domain/rotulos"
 import { useRadar } from "@/lib/hooks"
+import { cn } from "@/lib/utils"
 
 /**
- * Barra superior branca (64px), como "MEU PAINEL" na referência: nome da
- * seção em caixa alta à esquerda (ou o caminho Clientes > Cliente na ficha)
- * e o aviso de dados de demonstração à direita. No celular carrega o "Menu".
+ * Cabeçalho sobre o fundo cinza (sem barra branca): marca, nome da seção em
+ * caixa normal (ou o caminho Clientes > Cliente na ficha), a pílula de dados
+ * de demonstração e o acesso a Configurações. A navegação principal fica na
+ * dock, embaixo.
  */
 export function Topbar() {
   const pathname = usePathname()
@@ -22,16 +23,16 @@ export function Topbar() {
   const aninhado = secao === "clientes" && !!id
   const nome = aninhado ? (clients.find((c) => c.id === id)?.nome ?? "Ficha") : ""
   const atual = secaoAtual(pathname)
+  const emConfig = estaAtivo(pathname, NAV_CONFIG.href)
 
   return (
-    <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 border-b bg-card px-4 sm:px-8 lg:px-10">
-      <MobileNav />
+    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-3 bg-background px-4 sm:px-8 lg:px-10">
       <Link
         href="/radar"
         aria-label="Weethub Radar, ir para o Radar"
-        className="flex size-9 items-center justify-center rounded-md bg-brand text-gray-900 outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
+        className="-m-1 rounded-full p-1 outline-none focus-visible:outline-2 focus-visible:outline-ring"
       >
-        <RadarMark pequena className="size-6" />
+        <RadarMark className="size-8" />
       </Link>
 
       {aninhado ? (
@@ -40,7 +41,7 @@ export function Topbar() {
             <li>
               <Link
                 href="/clientes"
-                className="tracking-wide text-muted-foreground uppercase hover:text-link"
+                className="text-muted-foreground hover:underline"
               >
                 Clientes
               </Link>
@@ -48,34 +49,44 @@ export function Topbar() {
             <li aria-hidden className="text-muted-foreground">
               <ChevronRight className="size-4" />
             </li>
-            <li
-              className="truncate font-semibold tracking-wide text-foreground uppercase"
-              aria-current="page"
-            >
+            <li className="truncate text-foreground" aria-current="page">
               {nome}
             </li>
           </ol>
         </nav>
       ) : (
-        <p className="truncate text-lg tracking-wide text-foreground uppercase">
+        <p className="truncate text-lg text-foreground">
           {atual?.label ?? "Weethub Radar"}
         </p>
       )}
 
-      <Link
-        href="/configuracoes"
-        title="Clientes e ações são fictícios e ficam salvos no banco do Radar."
-        className="ml-auto hidden items-center gap-1.5 rounded-md bg-state-warn-soft px-2.5 py-1.5 text-xs font-bold text-state-warn outline-none hover:brightness-95 focus-visible:ring-2 focus-visible:ring-ring sm:inline-flex"
-      >
-        <FlaskConical className="size-3.5" aria-hidden />
-        Dados de demonstração
-        {configuracao.usarHojeReal ? null : (
-          <span className="tnum font-semibold">
-            {" "}
-            · ref. {dataCurta(configuracao.dataReferencia)}
-          </span>
-        )}
-      </Link>
+      <div className="ml-auto flex items-center gap-2">
+        <Link
+          href="/configuracoes"
+          title="Clientes e ações são fictícios e ficam salvos no banco do Radar."
+          className="hidden h-[26px] items-center gap-[5px] rounded-full bg-pill px-[11px] text-xs whitespace-nowrap text-muted-foreground outline-none hover:brightness-[.97] focus-visible:outline-2 focus-visible:outline-ring sm:inline-flex"
+        >
+          <i aria-hidden className="size-[7px] rounded-full bg-state-warn-bar" />
+          <b className="font-medium text-foreground">Dados de demonstração</b>
+          {configuracao.usarHojeReal ? null : (
+            <span className="tnum">· ref. {dataCurta(configuracao.dataReferencia)}</span>
+          )}
+        </Link>
+        <Link
+          href={NAV_CONFIG.href}
+          aria-label={NAV_CONFIG.label}
+          aria-current={emConfig ? "page" : undefined}
+          title={NAV_CONFIG.label}
+          className={cn(
+            "grid size-10 place-items-center rounded-full outline-none transition-[background-color,filter] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
+            emConfig
+              ? "bg-ink text-on-ink"
+              : "bg-pill text-foreground hover:brightness-[.97]"
+          )}
+        >
+          <Settings className="size-[17px]" strokeWidth={1.6} aria-hidden />
+        </Link>
+      </div>
     </header>
   )
 }

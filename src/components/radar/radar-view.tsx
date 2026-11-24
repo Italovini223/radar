@@ -312,7 +312,7 @@ function Conteudo() {
                   className="group/aba flex-none px-0 py-2.5"
                 >
                   {a.rotulo}
-                  <span className="tnum rounded-full bg-gray-200/80 px-1.5 text-xs font-bold text-muted-foreground group-data-active/aba:bg-primary/10 group-data-active/aba:text-link">
+                  <span className="tnum rounded-full bg-pill px-1.5 text-xs font-medium text-muted-foreground group-data-active/aba:bg-ink group-data-active/aba:text-on-ink">
                     {contagens[a.valor]}
                   </span>
                 </TabsTrigger>
@@ -369,7 +369,7 @@ function Conteudo() {
 
         <div ref={lista} data-entra className="relative">
         {oportunidades.length === 0 ? (
-          <Empty className="rounded-lg border bg-card py-12 shadow-card">
+          <Empty className="rounded-lg bg-card py-12">
             <EmptyHeader>
               <EmptyTitle>Carteira em dia</EmptyTitle>
               <EmptyDescription>
@@ -393,7 +393,7 @@ function Conteudo() {
           <div className="flex flex-col gap-6">
             {criticas.length > 0 ? (
               <ul className="flex flex-col gap-3">
-                {criticas.map((o) => {
+                {criticas.map((o, i) => {
                   const cliente = clientePorId.get(o.clientId)
                   const frente = frentePorId.get(o.frenteId)
                   if (!cliente || !frente) return null
@@ -407,13 +407,14 @@ function Conteudo() {
                       tituloAcao={tituloAcaoDe(o)}
                       onVerProposta={abrirProposta}
                       onRegistrarAcao={setAcaoAlvo}
+                      destaque={i === 0}
                     />
                   )
                 })}
               </ul>
             ) : null}
             {demais.length > 0 ? (
-              <ul className="divide-y overflow-hidden rounded-lg border bg-card shadow-card">
+              <ul className="divide-y overflow-hidden rounded-lg bg-card">
                 {demais.map((o) => {
                   const cliente = clientePorId.get(o.clientId)
                   const frente = frentePorId.get(o.frenteId)
@@ -443,7 +444,7 @@ function Conteudo() {
             aria-live="polite"
           >
             Mostrando{" "}
-            <b className="font-semibold text-foreground">{visiveis.length}</b> de{" "}
+            <b className="font-medium text-foreground">{visiveis.length}</b> de{" "}
             {n} oportunidades
           </p>
         ) : null}

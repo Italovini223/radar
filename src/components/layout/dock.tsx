@@ -1,0 +1,123 @@
+"use client"
+
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { format } from "date-fns"
+import { RotateCw } from "lucide-react"
+import { toast } from "sonner"
+
+import { RadarMark } from "@/components/brand/radar-mark"
+import { NAV_PRINCIPAL, estaAtivo } from "@/components/layout/nav-itens"
+import { dataCurta } from "@/lib/domain/rotulos"
+import { useRadar } from "@/lib/hooks"
+import { useRadarStore } from "@/lib/store"
+import { cn } from "@/lib/utils"
+
+const BOTAO =
+  "relative grid size-10 shrink-0 place-items-center rounded-full outline-none transition-[background-color,color,filter] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+
+/**
+ * Navegação em barra flutuante embaixo da tela (não é sidebar). Botões
+ * redondos de 40px em `pill`; o ativo fica em tinta com ícone claro. O
+ * contador coral no Radar mostra quantas críticas existem. O último botão
+ * atualiza o radar, com o horário (ou a data de referência) ao lado.
+ * Ordem: Radar, Grade, Clientes, Check-up, Atualizar.
+ */
+export function Dock() {
+  const pathname = usePathname()
+  const { ready, grade, hoje, configuracao } = useRadar()
+  const atualizarAgora = useRadarStore((s) => s.atualizarAgora)
+
+  const criticas = ready
+    ? grade.filter((s) => s.estado === "critica").length
+    : 0
+  const quando = !ready
+    ? null
+    : configuracao.usarHojeReal
+      ? `hoje, ${format(hoje, "HH:mm")}`
+      : `ref. ${dataCurta(configuracao.dataReferencia)}`
+
+  return (
+    <div className="pointer-events-none fixed inset-x-0 bottom-4 z-30 flex justify-center px-4 sm:bottom-5">
+      <nav
+        aria-label="Principal"
+        className="pointer-events-auto flex items-center gap-1.5 rounded-full bg-panel p-1.5 shadow-dock"
+      >
+        <ul className="flex items-center gap-1.5">
+          {NAV_PRINCIPAL.map((item) => {
+            const ativo = estaAtivo(pathname, item.href)
+            const Icone = item.icone
+            const ehRadar = item.href === "/radar"
+            const contagem = ehRadar && criticas > 0 ? criticas : undefined
+            return (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  aria-current={ativo ? "page" : undefined}
+                  aria-label={
+                    contagem !== undefined
+                      ? `${item.label} (${contagem} ${contagem === 1 ? "crítica" : "críticas"})`
+                      : item.label
+                  }
+                  title={item.label}
+                  className={cn(
+                    BOTAO,
+                    ativo
+                      ? "bg-ink text-on-ink"
+                      : "bg-pill text-foreground hover:brightness-[.97]"
+                  )}
+                >
+                  {ehRadar ? (
+                    <RadarMark tom={ativo ? "escuro" : "claro"} className="size-[22px]" />
+                  ) : (
+                    <Icone className="size-[17px]" strokeWidth={1.6} aria-hidden />
+                  )}
+                  {contagem !== undefined ? (
+                    <span
+                      aria-hidden
+                      className="tnum absolute -top-[3px] -right-[3px] grid h-4 min-w-4 place-items-center rounded-full bg-state-crit-bar px-1 text-[0.625rem] leading-none font-medium text-ink"
+                    >
+                      {contagem}
+                    </span>
+                  ) : null}
+                </Link>
+              </li>
+            )
+          })}
+          <li>
+            <button
+              type="button"
+              aria-label="Atualizar radar"
+              title="Atualizar radar"
+              disabled={!ready}
+              onClick={() => {
+                atualizarAgora()
+                toast.success(
+                  configuracao.usarHojeReal
+                    ? "Radar atualizado com a data de hoje."
+                    : "Radar recalculado na data de referência."
+                )
+              }}
+              className={cn(
+                BOTAO,
+                "bg-pill text-foreground hover:brightness-[.97] disabled:opacity-50"
+              )}
+            >
+              <RotateCw className="size-[17px]" strokeWidth={1.6} aria-hidden />
+            </button>
+          </li>
+        </ul>
+        {quando ? (
+          <p
+            className="legenda hidden pr-2.5 pl-1.5 sm:block"
+            aria-live="polite"
+          >
+            Atualizado
+            <br />
+            <span className="tnum">{quando}</span>
+          </p>
+        ) : null}
+      </nav>
+    </div>
+  )
+}

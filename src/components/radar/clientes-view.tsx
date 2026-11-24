@@ -129,7 +129,7 @@ function Conteudo() {
         <ul
           ref={listaRef}
           data-entra
-          className="divide-y overflow-hidden rounded-lg border bg-card shadow-card"
+          className="divide-y overflow-hidden rounded-lg bg-card"
         >
           {visiveis.map(({ cliente, situacao, resumo, critica, oportunidades: n, ultima }) => (
             <li
@@ -141,7 +141,7 @@ function Conteudo() {
                 <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
                   <Link
                     href={`/clientes/${cliente.id}`}
-                    className="font-bold hover:text-link"
+                    className="font-medium hover:underline"
                   >
                     {cliente.nome}
                   </Link>
@@ -154,7 +154,7 @@ function Conteudo() {
               <p
                 className={
                   critica
-                    ? "text-sm font-semibold text-state-crit"
+                    ? "text-sm font-medium text-state-crit"
                     : "text-sm text-foreground"
                 }
               >

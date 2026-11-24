@@ -4,6 +4,7 @@ import { useRef, type ReactNode } from "react"
 import Link from "next/link"
 
 import { EstadoGlyph } from "@/components/radar/estado"
+import { Badge } from "@/components/ui/badge"
 import { gsap, useGSAP } from "@/lib/motion/gsap"
 import { movimento } from "@/lib/motion/movimento"
 import { Numero } from "@/lib/motion/numero"
@@ -27,12 +28,11 @@ const SEGMENTOS: {
   estado: EstadoFrente
   rotulo: string
   cor: string
-  texto: string
 }[] = [
-  { estado: "em_dia", rotulo: "Em dia", cor: "bg-state-ok-bar", texto: "text-state-ok" },
-  { estado: "atencao", rotulo: "Atenção", cor: "bg-state-warn-bar", texto: "text-state-warn" },
-  { estado: "atrasada", rotulo: "Atrasada", cor: "bg-state-late-bar", texto: "text-state-late" },
-  { estado: "critica", rotulo: "Crítica", cor: "bg-state-crit-bar", texto: "text-state-crit" },
+  { estado: "em_dia", rotulo: "Em dia", cor: "bg-state-ok-bar" },
+  { estado: "atencao", rotulo: "Atenção", cor: "bg-state-warn-bar" },
+  { estado: "atrasada", rotulo: "Atrasada", cor: "bg-state-late-bar" },
+  { estado: "critica", rotulo: "Crítica", cor: "bg-state-crit-bar" },
 ]
 
 /** Últimas proporções mostradas: ao voltar para a tela, a barra parte delas. */
@@ -80,7 +80,7 @@ function Kpi({
 }) {
   const conteudo = (
     <>
-      <span className={cn("flex items-center gap-1.5 text-sm font-semibold", cor)}>
+      <span className="legenda flex items-center gap-1.5">
         {glifo}
         {rotulo}
       </span>
@@ -88,9 +88,12 @@ function Kpi({
         valor={numero}
         chave={`kpi:${dataKpi}`}
         dataNumero={dataKpi}
-        className="tnum mt-1.5 block text-[1.75rem] leading-tight font-extrabold text-foreground sm:text-3xl"
+        className={cn(
+          "numero mt-1 block text-[2.125rem] leading-9",
+          cor === "text-state-crit" ? cor : "text-foreground"
+        )}
       />
-      <span className="tnum mt-0.5 block text-sm font-normal text-muted-foreground">
+      <span className="tnum legenda mt-1 block">
         {apoio}
       </span>
       <span
@@ -102,7 +105,7 @@ function Kpi({
     </>
   )
   const classes = cn(
-    "relative block w-full px-5 py-4 text-left outline-none transition-colors hover:bg-gray-50 focus-visible:z-[1] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+    "relative block w-full px-5 py-4 text-left outline-none transition-colors hover:bg-panel-hi focus-visible:z-[1] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
     selecionado && "bg-accent"
   )
   return href ? (
@@ -228,17 +231,24 @@ export function PainelSaude({
       ref={raiz}
       data-entra
       aria-labelledby="titulo-saude"
-      className="rounded-lg border bg-card shadow-card"
+      className="rounded-lg bg-card"
     >
       <div className="px-4 pt-5 pb-5 sm:px-5">
         <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <h2 id="titulo-saude" className="text-lg font-bold">
+          <h2 id="titulo-saude" className="text-lg">
             Saúde da carteira
           </h2>
-          <p className="tnum text-sm text-muted-foreground">
-            {comAlerta} de {clientesAtivos}{" "}
-            {clientesAtivos === 1 ? "cliente" : "clientes"} com alerta · {pares}{" "}
-            pares cliente × frente
+          <p className="tnum flex flex-wrap gap-1.5">
+            <Badge variant="secondary">
+              <b>{clientesAtivos}</b>
+              {clientesAtivos === 1 ? "cliente" : "clientes"}
+            </Badge>
+            <Badge variant="secondary">
+              <b>{comAlerta}</b> com alerta
+            </Badge>
+            <Badge variant="secondary">
+              <b>{pares}</b> pares cliente × frente
+            </Badge>
           </p>
         </div>
 
@@ -261,12 +271,12 @@ export function PainelSaude({
             ))}
         </div>
 
-        <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+        <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs">
           {contagens.map((s) => (
             <li key={s.estado} className="tnum flex items-center gap-1.5">
-              <EstadoGlyph estado={s.estado} className={s.texto} />
+              <EstadoGlyph estado={s.estado} />
               <span className="text-muted-foreground">{s.rotulo}</span>
-              <span className="font-semibold">{s.n}</span>
+              <span className="font-medium">{s.n}</span>
               <span className="text-muted-foreground">{pct(s.n)}%</span>
             </li>
           ))}
@@ -309,7 +319,7 @@ export function PainelSaude({
         <Kpi
           dataKpi="aprovacao"
           rotulo="Aguardando aprovação"
-          glifo={<GlifoTravada />}
+          glifo={<GlifoTravada className="text-state-warn-bar" />}
           cor="text-state-warn"
           corLinha="bg-state-warn"
           numero={travadas.length}

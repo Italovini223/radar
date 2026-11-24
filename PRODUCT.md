@@ -43,8 +43,8 @@ Alerta por **regra fixa e auditável** (prazo por frente x dias desde a última 
 
 ## Brand Commitments
 
-- Marca Weethub (Growth Partners), com a identidade **medida no site weethub.com**: preto, off-white quente `#fffff7` e um único acento amarelo `#fcbd20`; Fraunces (display) + Urbanist (UI); botões em pílula com rótulo em caixa alta. O roxo `#635bdb` do mockup inicial foi descartado (denunciava "feito por IA"). Detalhes em `DESIGN.md` e `docs/identidade.md`.
-- Logo do sistema: a marca do Radar (anel + setor amarelo + ponteiro), já criada (`public/brand/radar-mark.svg`, `src/app/icon.svg`). O logotipo "weethub" real não é reproduzido; o texto é só escrito. Logo/identidade definitiva da agência virá do time de design; trocar só tokens quando chegar.
+- Marca Weethub (Growth Partners). A identidade segue o guia de componentes do Radar: fundo cinza-quente `#e9e8e4`, painéis `#f3f2ef`, tinta `#1c1c1a`, amarelo `#fcbd20` só na marca, coral `#cd3b32` só na ação que resolve o alerta; Geist; botões em pílula em caixa normal; navegação em dock. O roxo `#635bdb` do mockup inicial foi descartado (denunciava "feito por IA"). Detalhes em `DESIGN.md` e `docs/identidade.md`.
+- Logo do sistema: a marca do Radar (anel de 8 segmentos, o primeiro aceso em amarelo, e ponto central), do guia de componentes (`public/brand/radar-mark.svg`, `src/app/icon.svg`). O logotipo "weethub" real não é reproduzido; o texto é só escrito. Logo/identidade definitiva da agência virá do time de design; trocar só tokens quando chegar.
 - Idioma: português do Brasil.
 
 ## Evidence on Hand

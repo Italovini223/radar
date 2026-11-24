@@ -5,10 +5,15 @@ import { formatarDias } from "@/lib/domain/opportunities"
 import type { Client, Frente, StatusFrente } from "@/lib/domain/types"
 import { cn } from "@/lib/utils"
 
+/** A partir daqui a barrinha de uso do prazo fica amarela. */
+const LIMITE_AMARELO = 0.7
+
 /**
- * Célula da grade. "Em dia" é só "5 d" em cinza (sem glifo nem fundo): o olho
- * vai direto ao que pede ação. Os demais estados trazem glifo + texto, com a
- * cor só reforçando. Clique leva à ficha do cliente com a frente em destaque.
+ * Célula da grade. Sem fundo colorido: o número muda de cor e ganha marcador
+ * só quando há alerta (atenção, atrasada, crítica). Embaixo dos números que
+ * ainda não estouraram o prazo, uma barrinha de 44px mostra quanto do prazo
+ * já foi usado; acima de 70% ela fica amarela. Clique leva à ficha do
+ * cliente com a frente em destaque.
  */
 export function FrenteCell({
   status,
@@ -19,10 +24,16 @@ export function FrenteCell({
   cliente: Client
   frente: Frente
 }) {
-  const { classe, label } = ESTADOS[status.estado]
-  const quieto = status.estado === "em_dia" && !status.nunca
-  const valor = status.nunca ? "Nunca" : formatarDias(status.dias ?? 0)
+  const { texto, label } = ESTADOS[status.estado]
+  const alerta = status.nunca || status.estado !== "em_dia"
+  const estourou =
+    status.nunca || status.estado === "atrasada" || status.estado === "critica"
+  const valor = status.nunca ? "nunca" : formatarDias(status.dias ?? 0)
   const rotuloEstado = status.nunca ? "Nunca teve ação" : label
+  const uso =
+    status.nunca || frente.prazoDias <= 0
+      ? 0
+      : Math.min(1, (status.dias ?? 0) / frente.prazoDias)
 
   return (
     <Link
@@ -33,28 +44,31 @@ export function FrenteCell({
         status.nunca ? "" : `, ${valor} desde a última ação (prazo ${frente.prazoDias} dias)`
       }${status.travada ? ", com aprovação travada" : ""}. Abrir ficha do cliente.`}
       className={cn(
-        "relative flex flex-col justify-center overflow-hidden rounded-md border px-2.5 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring",
-        quieto
-          ? "min-h-10 border-transparent bg-transparent text-muted-foreground hover:bg-secondary"
-          : cn("min-h-14 gap-1 py-2", classe, "hover:brightness-95")
+        "relative flex min-h-11 flex-col justify-center overflow-hidden rounded-md px-2.5 py-1.5 text-sm outline-none transition-colors hover:bg-panel-hi focus-visible:outline-2 focus-visible:outline-ring",
+        alerta
+          ? cn(status.nunca ? ESTADOS.critica.texto : texto, "font-medium")
+          : "text-muted-foreground"
       )}
     >
-      {quieto ? (
-        <span className="tnum text-sm leading-none">{status.dias} d</span>
-      ) : (
-        <>
-          <span className="tnum flex items-center gap-1.5 text-[0.9rem] leading-none font-bold">
-            <EstadoGlyph
-              estado={status.estado}
-              nunca={status.nunca}
-              className="size-3"
-            />
-            {valor}
-          </span>
-          <span className="text-xs leading-none font-medium">
-            {status.nunca ? "Sem ação" : label}
-          </span>
-        </>
+      <span className="tnum inline-flex items-center gap-1.5 leading-none whitespace-nowrap">
+        {alerta ? (
+          <EstadoGlyph estado={status.estado} nunca={status.nunca} />
+        ) : null}
+        {valor}
+      </span>
+      {estourou ? null : (
+        <span
+          aria-hidden
+          className="mt-1 block h-0.5 w-11 overflow-hidden rounded-full bg-line"
+        >
+          <span
+            className={cn(
+              "block h-full rounded-full",
+              uso > LIMITE_AMARELO ? "bg-state-warn-bar" : "bg-ink-3"
+            )}
+            style={{ width: `${Math.round(uso * 100)}%` }}
+          />
+        </span>
       )}
       <span
         aria-hidden
@@ -63,7 +77,7 @@ export function FrenteCell({
       />
       {status.travada ? (
         <span
-          className="absolute top-0 right-0 size-0 border-t-[12px] border-l-[12px] border-t-state-warn border-l-transparent"
+          className="absolute top-0 right-0 size-0 border-t-[10px] border-l-[10px] border-t-state-warn-bar border-l-transparent"
           title="Aprovação travada"
         >
           <span className="sr-only">Aprovação travada</span>

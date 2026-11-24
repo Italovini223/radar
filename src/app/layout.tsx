@@ -1,13 +1,13 @@
 import type { Metadata, Viewport } from "next"
-import { Nunito_Sans } from "next/font/google"
+import { Geist } from "next/font/google"
 
 import { AppShell } from "@/components/layout/app-shell"
 
 import "./globals.css"
 
-// Uma família sans arredondada no UI inteiro, como no painel de referência.
-const nunito = Nunito_Sans({
-  variable: "--font-nunito",
+// Geist em todo o UI, como no guia de identidade (pesos 300 a 500).
+const geist = Geist({
+  variable: "--font-geist",
   subsets: ["latin"],
   display: "swap",
 })
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#f3f4f6",
+  themeColor: "#e9e8e4",
 }
 
 export default function RootLayout({
@@ -31,11 +31,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="pt-BR" className={nunito.variable}>
+    <html lang="pt-BR" className={geist.variable}>
       <body suppressHydrationWarning>
         <a
           href="#conteudo"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-primary-foreground"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-full focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground"
         >
           Pular para o conteúdo
         </a>

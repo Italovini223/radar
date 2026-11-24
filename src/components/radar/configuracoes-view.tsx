@@ -117,7 +117,7 @@ function LinhaPrazo({ frente }: { frente: Frente }) {
   return (
     <TableRow>
       <TableCell className="px-4 py-3">
-        <label htmlFor={`prazo-${frente.id}`} className="font-semibold">
+        <label htmlFor={`prazo-${frente.id}`} className="font-medium">
           {nomeCurtoFrente(frente)}
         </label>
         <span className="block text-xs text-muted-foreground">{frente.setor}</span>
@@ -220,7 +220,7 @@ function SecaoData() {
 
   return (
     <section data-entra aria-labelledby="titulo-data" className="mb-10">
-      <h2 id="titulo-data" className="mb-2 text-xl font-bold">
+      <h2 id="titulo-data" className="mb-2 text-xl font-medium">
         Data de referência e limites
       </h2>
       <p className="mb-4 max-w-2xl text-sm text-muted-foreground">
@@ -229,7 +229,7 @@ function SecaoData() {
         os alertas mudam. Use &ldquo;Hoje real&rdquo; para ver o Radar com a
         data de hoje.
       </p>
-      <div className="grid max-w-3xl gap-6 rounded-lg border bg-card p-5 shadow-card sm:grid-cols-2">
+      <div className="grid max-w-3xl gap-6 rounded-lg bg-card p-5 sm:grid-cols-2">
         <Field className="sm:col-span-2">
           <FieldLabel id="rotulo-modo-data">Data usada pelo Radar</FieldLabel>
           <ToggleGroup
@@ -323,7 +323,7 @@ function Conteudo() {
 
       <section data-entra aria-labelledby="titulo-prazos" className="mb-10">
         <div className="mb-3 flex flex-wrap items-center gap-2">
-          <h2 id="titulo-prazos" className="text-xl font-bold">
+          <h2 id="titulo-prazos" className="text-xl font-medium">
             Prazos por frente
           </h2>
           <span className="text-sm text-muted-foreground">
@@ -336,26 +336,26 @@ function Conteudo() {
           As faixas ao lado mostram quando cada estado começa. Ao mudar um
           valor, a Grade e o Radar recalculam na hora.
         </p>
-        <div className="overflow-hidden rounded-lg border bg-card shadow-card">
+        <div className="overflow-hidden rounded-lg bg-card">
           <Table className="min-w-[56rem]">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead scope="col" className="h-11 px-4 text-xs font-bold text-foreground">
+                <TableHead scope="col" className="h-11 px-4 text-xs font-medium text-foreground">
                   Frente
                 </TableHead>
-                <TableHead scope="col" className="text-xs font-bold text-foreground">
+                <TableHead scope="col" className="text-xs font-medium text-foreground">
                   Prazo
                 </TableHead>
-                <TableHead scope="col" className="text-xs font-bold text-foreground">
+                <TableHead scope="col" className="text-xs font-medium text-foreground">
                   Vira crítico após
                 </TableHead>
-                <TableHead scope="col" className="text-xs font-bold text-foreground">
+                <TableHead scope="col" className="text-xs font-medium text-foreground">
                   Atenção
                 </TableHead>
-                <TableHead scope="col" className="text-xs font-bold text-foreground">
+                <TableHead scope="col" className="text-xs font-medium text-foreground">
                   Atrasada
                 </TableHead>
-                <TableHead scope="col" className="pr-4 text-xs font-bold text-foreground">
+                <TableHead scope="col" className="pr-4 text-xs font-medium text-foreground">
                   Crítica
                 </TableHead>
               </TableRow>
@@ -375,7 +375,7 @@ function Conteudo() {
       </section>
 
       <section data-entra aria-labelledby="titulo-dados">
-        <h2 id="titulo-dados" className="mb-2 text-xl font-bold">
+        <h2 id="titulo-dados" className="mb-2 text-xl font-medium">
           Dados de demonstração
         </h2>
         <p className="mb-4 max-w-2xl text-sm text-muted-foreground">

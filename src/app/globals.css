@@ -5,25 +5,35 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Weethub Radar: tokens (fonte da verdade visual: DESIGN.md). Painel SaaS: fundo cinza, cartões brancos, azul de ação.
- * Camada 1 = primitivas; camada 2 = papéis semânticos do
- * shadcn; camada 3 = estados do Radar (em dia / atenção / atrasada / crítica).
+ * Weethub Radar: tokens (fonte da verdade visual: DESIGN.md).
+ * Painéis claros sobre fundo cinza-quente, Geist, pílulas, coral para a ação
+ * que resolve o alerta e amarelo só na marca.
+ * Camada 1 = primitivas do guia; camada 2 = papéis semânticos do shadcn;
+ * camada 3 = estados do Radar (em dia / atenção / atrasada / crítica).
  * Só modo claro (uso em escritório, tela diurna): sem variante escura.
  */
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
-  /* Nunito Sans em todo o UI (uma família só, como no painel de referência). */
-  --font-heading: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
-  /* Uma família só, como na referência: "display" é a mesma sans, em peso alto. */
-  --font-display: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-geist), "Helvetica Neue", Arial, sans-serif;
+  /* Uma família só: títulos são a mesma Geist, em peso 400. */
+  --font-heading: var(--font-geist), "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-geist), "Helvetica Neue", Arial, sans-serif;
 
-  --text-xs: 0.8125rem;
-  --text-xs--line-height: 1.25rem;
-  --text-sm: 0.9375rem;
-  --text-sm--line-height: 1.45rem;
+  /* Escala do guia: 11 (legenda) · 12 · 13 (corpo) · 15 · 17 (título de painel) · 20 · 28. */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.125rem;
+  --text-base: 0.9375rem;
+  --text-base--line-height: 1.25rem;
+  --text-lg: 1.0625rem;
+  --text-lg--line-height: 1.375rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.625rem;
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 2.125rem;
 
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
@@ -54,7 +64,23 @@
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
 
-  /* Estados do Radar: sempre usados com glifo + texto, nunca só cor. */
+  /* Superfícies e tintas do guia, para uso direto. */
+  --color-panel: var(--panel);
+  --color-panel-hi: var(--panel-hi);
+  --color-pill: var(--pill);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-on-ink: var(--on-ink);
+
+  /* Coral: a ação que resolve o alerta ("Ver proposta"). Uma vez por tela. */
+  --color-resolver: var(--resolver);
+  --color-resolver-hover: var(--resolver-hover);
+  --color-resolver-foreground: var(--resolver-foreground);
+
+  /* Estados do Radar: texto colorido + marcador (triângulo ou bolinha),
+     nunca só cor. `-bar` é a cor do marcador e das barras. */
   --color-state-ok: var(--state-ok);
   --color-state-ok-soft: var(--state-ok-soft);
   --color-state-ok-line: var(--state-ok-line);
@@ -72,90 +98,121 @@
   --color-state-crit-line: var(--state-crit-line);
   --color-state-crit-bar: var(--state-crit-bar);
 
-  /* Controles 6px, cartões 8px, painéis 12px. Pílula só em chips/avatares. */
-  --radius-sm: 4px;
-  --radius-md: 6px;
+  /* Raios do guia: 10px (controles, item selecionado), 18px (painéis),
+     28px (moldura). Botões, pílulas e dock são `rounded-full`. */
+  --radius-sm: 6px;
+  --radius-md: 10px;
   --radius-lg: var(--radius);
-  --radius-xl: 12px;
-  --radius-2xl: 12px;
-  --radius-3xl: 12px;
-  --radius-4xl: 12px;
+  --radius-xl: var(--radius);
+  --radius-2xl: 28px;
+  --radius-3xl: 28px;
+  --radius-4xl: 28px;
 
   --shadow-card: var(--shadow-card);
   --shadow-card-hover: var(--shadow-card-hover);
   --shadow-pop: var(--shadow-pop);
+  --shadow-dock: var(--shadow-dock);
 }
 
 :root {
-  --radius: 8px;
-
-  /* Neutros frios do painel de referência: fundo cinza-claro, cartões brancos. */
-  --background: #f3f4f6;
-  --foreground: #1f2937;
-  --card: #ffffff;
-  --card-foreground: #1f2937;
-  --popover: #ffffff;
-  --popover-foreground: #1f2937;
-  --secondary: #eef4fe;
-  --secondary-foreground: #1d5fd1;
-  --muted: #f3f4f6;
-  /* #5f6672: 5,9:1 sobre #fff e 5,3:1 sobre #f3f4f6 (AA). */
-  --muted-foreground: #5f6672;
-  --border: #e5e7eb;
-  /* Borda de campo: 3,1:1 sobre #fff (critério 1.4.11). */
-  --input: #8c939f;
-
-  /* Primário = azul de ação (botões, item ativo, links, foco). */
-  --primary: #1f6feb;
-  --primary-hover: #1a5fd0;
-  --primary-foreground: #ffffff;
-  /* Tinta de destaque azul para texto sobre branco (5,6:1). */
-  --link: #1d5fd1;
-  /* "accent" = hover/seleção azul bem claro. */
-  --accent: #eef4fe;
-  --accent-foreground: #1d5fd1;
-  --ring: #1f6feb;
-  --destructive: #d32f2f;
-
-  /* Amarelo Weethub: bloco da marca, ponto de "Nova" e seleção de texto.
-     Nunca como texto sobre fundo claro. */
+  /* ---- Camada 1: primitivas do guia de identidade ---- */
+  --bg: #e9e8e4;
+  --panel: #f3f2ef;
+  --panel-hi: #fbfaf8;
+  --pill: #e3e2dd;
+  --line: #dcdbd5;
+  --ink: #1c1c1a;
+  /* 5,2:1 sobre o painel, 4,8:1 sobre o fundo. */
+  --ink-2: #66655f;
+  /* 3,1:1 sobre o painel: só borda de campo, eixos e marcações, nunca texto. */
+  --ink-3: #8a8984;
+  --on-ink: #fbfaf8;
   --brand: #fcbd20;
-  --brand-foreground: #1f2937;
+  --glow: rgb(240 232 70 / 0.8);
+  --orange: #ffa64d;
+  --orange-soft: #ffe2c2;
+  --coral: #ff5a52;
+  /* O guia usa #d63c34 (4,4:1 com texto claro). Escurecido para passar AA. */
+  --coral-strong: #cd3b32;
+  --coral-soft: #ffe1de;
+  /* Textos de status: >= 4,5:1 sobre painel e panel-hi. */
+  --crit-text: #c4382f;
+  --late-text: #a35a00;
+  --warn-text: #8a6200;
+  --ok: #2a7d40;
+  --dot-idle: #c9c8c2;
 
-  --sidebar: #ffffff;
-  --sidebar-foreground: #4b5563;
-  --sidebar-primary: #1f6feb;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #eef4fe;
-  --sidebar-accent-foreground: #1d5fd1;
-  --sidebar-border: #e5e7eb;
-  --sidebar-ring: #1f6feb;
+  --radius: 18px;
 
-  /* Elevação: sombra curta e neutra, como os cartões da referência. */
-  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.05), 0 1px 3px rgb(16 24 40 / 0.06);
-  --shadow-card-hover: 0 2px 4px rgb(16 24 40 / 0.06), 0 4px 12px rgb(16 24 40 / 0.08);
-  --shadow-pop: 0 8px 24px rgb(16 24 40 / 0.12);
+  /* ---- Camada 2: papéis semânticos (shadcn) ---- */
+  --background: var(--bg);
+  --foreground: var(--ink);
+  --card: var(--panel);
+  --card-foreground: var(--ink);
+  --popover: var(--panel-hi);
+  --popover-foreground: var(--ink);
+  --secondary: var(--pill);
+  --secondary-foreground: var(--ink);
+  --muted: var(--pill);
+  --muted-foreground: var(--ink-2);
+  --border: var(--line);
+  /* Borda de campo: 3,1:1 sobre o painel (critério 1.4.11). */
+  --input: var(--ink-3);
 
-  /* Estados (texto / fundo suave / linha). Texto >= 4,5:1 no fundo suave. */
-  --state-ok: #18794e;
-  --state-ok-soft: #e7f6ee;
-  --state-ok-line: #b5e2c9;
-  --state-ok-bar: #2fb36b;
-  --state-warn: #92510a;
-  --state-warn-soft: #fff4d6;
-  --state-warn-line: #f6d77e;
-  --state-warn-bar: #f2a31b;
-  --state-late: #b34100;
-  --state-late-soft: #ffeddf;
-  --state-late-line: #fcc39b;
-  --state-late-bar: #f57c22;
-  --state-crit: #c62828;
-  --state-crit-soft: #fdecec;
-  --state-crit-line: #f5b5b5;
-  --state-crit-bar: #e53935;
+  /* Primário = tinta: ação de sistema, item ativo, foco. */
+  --primary: var(--ink);
+  --primary-hover: #34342f;
+  --primary-foreground: var(--on-ink);
+  --link: var(--ink);
+  /* Hover e seleção: o painel mais claro. */
+  --accent: var(--panel-hi);
+  --accent-foreground: var(--ink);
+  --ring: var(--ink);
+  --destructive: var(--crit-text);
+
+  --resolver: var(--coral-strong);
+  --resolver-hover: #b8332b;
+  --resolver-foreground: var(--on-ink);
+
+  /* Amarelo Weethub: só na marca e no marcador de "Atenção".
+     Nunca como texto nem como fundo de botão. */
+  --brand-foreground: var(--ink);
+
+  --sidebar: var(--panel);
+  --sidebar-foreground: var(--ink-2);
+  --sidebar-primary: var(--ink);
+  --sidebar-primary-foreground: var(--on-ink);
+  --sidebar-accent: var(--panel-hi);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--ink);
+
+  /* Elevação: painéis são planos; só o que flutua ganha sombra. */
+  --shadow-card: 0 0 #0000;
+  --shadow-card-hover: 0 0 #0000;
+  --shadow-pop: 0 12px 40px rgb(28 28 26 / 0.14);
+  --shadow-dock: 0 6px 24px rgb(28 28 26 / 0.08);
+
+  /* ---- Camada 3: estados (texto / fundo suave / linha / marcador) ---- */
+  --state-ok: var(--ok);
+  --state-ok-soft: #e3efe4;
+  --state-ok-line: #b9d6bd;
+  --state-ok-bar: var(--dot-idle);
+  --state-warn: var(--warn-text);
+  --state-warn-soft: #fcefc9;
+  --state-warn-line: #f2d27a;
+  --state-warn-bar: var(--brand);
+  --state-late: var(--late-text);
+  --state-late-soft: var(--orange-soft);
+  --state-late-line: #ffc48a;
+  --state-late-bar: var(--orange);
+  --state-crit: var(--crit-text);
+  --state-crit-soft: var(--coral-soft);
+  --state-crit-line: #ffb8b2;
+  --state-crit-bar: var(--coral);
 
   --selection: #fde49a;
-  --scrollbar: #c9cdd4;
+  --scrollbar: var(--dot-idle);
 
   color-scheme: light;
 }
@@ -167,8 +224,10 @@
   html {
     @apply font-sans;
     -webkit-text-size-adjust: 100%;
-    /* Topbar fixa não pode cobrir o elemento focado. */
+    /* Cabeçalho fixo não pode cobrir o elemento focado. */
     scroll-padding-top: 4.5rem;
+    /* Nem a dock, embaixo. */
+    scroll-padding-bottom: 6rem;
   }
   button,
   a,
@@ -184,19 +243,19 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-size: 0.9375rem;
-    line-height: 1.5;
+    font-size: 0.8125rem;
+    line-height: 1.125rem;
+    font-weight: 400;
   }
   h1,
   h2,
   h3 {
     font-family: var(--font-heading);
+    font-weight: 400;
     text-wrap: balance;
   }
   h1 {
-    font-family: var(--font-heading);
-    font-weight: 700;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
   }
   h1 em {
     font-style: normal;
@@ -216,7 +275,7 @@
     outline-offset: 2px;
   }
   a {
-    text-underline-offset: 3px;
+    text-underline-offset: 2px;
   }
   * {
     scrollbar-width: thin;
@@ -228,18 +287,34 @@
   .tnum {
     font-variant-numeric: tabular-nums;
   }
-  /* Rótulo auxiliar: Urbanist 600, 13px, caixa baixa. Caixa alta + tracking
-     fica só nos botões (e no texto "WEETHUB" do lockup da marca). */
-  .eyebrow {
-    font-size: 0.8125rem;
-    font-weight: 600;
+  /* Legenda: 11px, caixa normal, ink-2 ("Críticas", "Carteira"). */
+  .legenda {
+    font-size: 0.6875rem;
+    line-height: 0.875rem;
+    color: var(--ink-2);
   }
-  /* Cartão padrão do painel: branco, raio 8px, sombra curta, sem borda forte. */
+  /* Mantido por compatibilidade: rótulo auxiliar = legenda. */
+  .eyebrow {
+    font-size: 0.6875rem;
+    line-height: 0.875rem;
+    color: var(--ink-2);
+  }
+  /* Painel padrão: fundo `panel`, raio 18px, sem borda e sem sombra. */
   .superficie {
     background: var(--card);
-    border: 1px solid var(--border);
     border-radius: var(--radius);
-    box-shadow: var(--shadow-card);
+  }
+  /* Número grande: peso 300, tabular. A unidade vai num <small> cinza. */
+  .numero {
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .numero small {
+    font-size: 0.75rem;
+    letter-spacing: 0;
+    color: var(--ink-2);
+    margin-left: 3px;
   }
 }
 

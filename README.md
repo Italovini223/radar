@@ -17,6 +17,7 @@ pnpm dev                     # http://localhost:3000  (redireciona para /radar)
 pnpm test                    # vitest (pasta test/): regras, gabarito, API, store (sem rede, sem segredo)
 pnpm typecheck               # tsc --noEmit
 pnpm lint                    # eslint
+                             # o CI roda typecheck, lint, test e build a cada PR: docs/ci-e-protecao-da-main.md
 pnpm build                   # build de produção
 ```
 

@@ -6,9 +6,8 @@ import { EstadoBadge } from "@/components/radar/estado"
 import { Button } from "@/components/ui/button"
 import { Dica } from "@/components/ui/dica"
 import { impactoDaOportunidade } from "@/lib/ai/proposal"
-import { formatarDias } from "@/lib/domain/opportunities"
+import { formatarDias, textoBloqueio } from "@/lib/domain/opportunities"
 import {
-  bloqueioCurto,
   rotuloRelogio,
   semRetornoDoCliente,
 } from "@/lib/domain/rotulos"
@@ -175,8 +174,11 @@ export function OportunidadeCheia({
               prazo: {o.prazoDias} dias
             </span>
             {semRetornoDoCliente(o) && o.diasParaBloqueio !== null ? (
-              <span className="tnum text-sm font-medium text-state-crit">
-                {bloqueioCurto(o.diasParaBloqueio)}
+              <span
+                data-bloqueio
+                className="tnum max-w-56 text-sm font-medium text-pretty text-state-crit sm:text-right"
+              >
+                {textoBloqueio(o.diasParaBloqueio)}
               </span>
             ) : null}
             <div className="mt-3 flex flex-wrap gap-2 sm:justify-end">
@@ -256,6 +258,14 @@ export function OportunidadeLinha({
       </div>
       <div className="min-w-0">
         <p className="text-sm text-foreground">{o.motivo}</p>
+        {semRetornoDoCliente(o) && o.diasParaBloqueio !== null ? (
+          <p
+            data-bloqueio
+            className="tnum text-sm font-medium text-state-crit"
+          >
+            {textoBloqueio(o.diasParaBloqueio)}
+          </p>
+        ) : null}
         <Metadados o={o} cliente={cliente} atribuicao={atribuicao} />
       </div>
       <p className="tnum text-sm">
@@ -270,11 +280,6 @@ export function OportunidadeLinha({
         <span className="block text-muted-foreground">
           {aprovacao ? `limite: ${limiteAprovacao} dias` : `prazo: ${o.prazoDias} dias`}
         </span>
-        {semRetornoDoCliente(o) && o.diasParaBloqueio !== null ? (
-          <span className="block font-medium text-state-crit">
-            {bloqueioCurto(o.diasParaBloqueio)}
-          </span>
-        ) : null}
       </p>
       <div className="flex flex-wrap gap-2">
         <Button

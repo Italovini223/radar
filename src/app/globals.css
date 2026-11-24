@@ -277,6 +277,20 @@
   a {
     text-underline-offset: 2px;
   }
+  /* Tudo que é clicável mostra a mão (o Tailwind v4 tira isso dos botões). */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="tab"],
+  [role="combobox"],
+  [role="option"],
+  [role="menuitem"],
+  [role="checkbox"],
+  [role="radio"],
+  [role="switch"],
+  label[for],
+  summary {
+    cursor: pointer;
+  }
   * {
     scrollbar-width: thin;
     scrollbar-color: var(--scrollbar) transparent;
@@ -292,6 +306,53 @@
     font-size: 0.6875rem;
     line-height: 0.875rem;
     color: var(--ink-2);
+  }
+  /* Link dentro de texto (nome de cliente, frente): sublinhado discreto
+     sempre visível, para ser reconhecido como clicável sem precisar do
+     hover; escurece no hover. */
+  .link-texto {
+    text-decoration-line: underline;
+    text-decoration-color: var(--ink-3);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    transition: text-decoration-color 150ms;
+  }
+  .link-texto:hover {
+    text-decoration-color: var(--ink);
+  }
+  /* Nome do cliente como botão: pílula cinza em caixa alta, que abre a ficha.
+     Hover baixa a opacidade. Exceção à regra "sem caixa alta": aqui ela
+     marca o nome como alvo clicável. `-sm` para linhas densas (Grade). */
+  .botao-cliente {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    height: 2.25rem;
+    padding: 0 1.125rem;
+    border-radius: 999px;
+    background: var(--pill);
+    color: var(--ink);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: opacity 150ms;
+  }
+  .botao-cliente:hover {
+    opacity: 0.7;
+  }
+  .botao-cliente:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  .botao-cliente-sm {
+    height: 1.875rem;
+    padding: 0 0.875rem;
+    font-size: 0.75rem;
   }
   /* Mantido por compatibilidade: rótulo auxiliar = legenda. */
   .eyebrow {

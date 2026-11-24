@@ -4,6 +4,7 @@ import Link from "next/link"
 
 import { EstadoBadge } from "@/components/radar/estado"
 import { Button } from "@/components/ui/button"
+import { Dica } from "@/components/ui/dica"
 import { impactoDaOportunidade } from "@/lib/ai/proposal"
 import { formatarDias } from "@/lib/domain/opportunities"
 import {
@@ -100,12 +101,14 @@ export function OportunidadeCheia({
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
               {o.nova ? <PontoNova /> : null}
               <h3 id={`opp-${o.id}`} className="text-base leading-tight font-medium">
-                <Link
-                  href={`/clientes/${cliente.id}?frente=${frente.id}`}
-                  className="hover:underline"
-                >
-                  {cliente.nome}
-                </Link>
+                <Dica texto={`Abrir a ficha de ${cliente.nome}, com ${nomeCurtoFrente(frente)} em destaque`}>
+                  <Link
+                    href={`/clientes/${cliente.id}?frente=${frente.id}`}
+                    className="botao-cliente"
+                  >
+                    {cliente.nome}
+                  </Link>
+                </Dica>
               </h3>
               <EstadoBadge estado={o.estado} nunca={o.nunca} />
             </div>
@@ -134,6 +137,7 @@ export function OportunidadeCheia({
             <div className="mt-3 flex flex-wrap gap-2 sm:justify-end">
               <Button
                 variant={destaque ? "resolver" : "default"}
+                dica="Ver o rascunho de mensagem para o cliente e atribuir a um setor"
                 onClick={() => onVerProposta(o)}
                 aria-label={`Ver proposta para ${cliente.nome}, ${frente.nome}`}
               >
@@ -141,6 +145,7 @@ export function OportunidadeCheia({
               </Button>
               <Button
                 variant="outline"
+                dica="Registrar o que foi feito nesta frente: o prazo volta a contar do zero"
                 onClick={() => onRegistrarAcao(o)}
                 aria-label={`Registrar ação para ${cliente.nome}, ${frente.nome}`}
               >
@@ -177,12 +182,14 @@ export function OportunidadeLinha({
       <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
         {o.nova ? <PontoNova /> : null}
         <h3 id={`opp-${o.id}`} className="text-base font-medium">
-          <Link
-            href={`/clientes/${cliente.id}?frente=${frente.id}`}
-            className="hover:underline"
-          >
-            {cliente.nome}
-          </Link>
+          <Dica texto={`Abrir a ficha de ${cliente.nome}, com ${nomeCurtoFrente(frente)} em destaque`}>
+            <Link
+              href={`/clientes/${cliente.id}?frente=${frente.id}`}
+              className="botao-cliente botao-cliente-sm"
+            >
+              {cliente.nome}
+            </Link>
+          </Dica>
         </h3>
         {aprovacao ? (
           <span className="text-sm font-medium text-state-warn">
@@ -219,7 +226,8 @@ export function OportunidadeLinha({
           size="sm"
           variant="outline"
           className="w-fit"
-          onClick={() => onVerProposta(o)}
+          dica="Ver o rascunho de mensagem para o cliente e atribuir a um setor"
+                onClick={() => onVerProposta(o)}
           aria-label={`Ver proposta para ${cliente.nome}, ${frente.nome}`}
         >
           Ver proposta
@@ -228,7 +236,8 @@ export function OportunidadeLinha({
           size="sm"
           variant="outline"
           className="w-fit"
-          onClick={() => onRegistrarAcao(o)}
+          dica="Registrar o que foi feito nesta frente: o prazo volta a contar do zero"
+                onClick={() => onRegistrarAcao(o)}
           aria-label={`Registrar ação para ${cliente.nome}, ${frente.nome}`}
         >
           Registrar ação

@@ -139,6 +139,7 @@ function DialogContent({
               variant="ghost"
               className="absolute top-3 right-3"
               size="icon-sm"
+              dica="Fechar (Esc)"
             >
               <XIcon />
               <span className="sr-only">Fechar</span>

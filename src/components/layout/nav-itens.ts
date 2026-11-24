@@ -12,20 +12,23 @@ export interface NavItem {
   label: string
   /** Ícone da dock (o Radar usa a própria marca no lugar). */
   icone: LucideIcon
+  /** Dica (tooltip) que diz o que a tela mostra. */
+  dica: string
 }
 
 /** Telas principais, na ordem da dock. Configurações fica no cabeçalho. */
 export const NAV_PRINCIPAL: NavItem[] = [
-  { href: "/radar", label: "Radar", icone: Radar },
-  { href: "/grade", label: "Grade", icone: LayoutGrid },
-  { href: "/clientes", label: "Clientes", icone: User },
-  { href: "/checkup", label: "Check-up", icone: Check },
+  { href: "/radar", label: "Radar", icone: Radar, dica: "Radar: os alertas do dia, do mais urgente para o menos" },
+  { href: "/grade", label: "Grade", icone: LayoutGrid, dica: "Grade: dias desde a última ação em cada cliente × frente" },
+  { href: "/clientes", label: "Clientes", icone: User, dica: "Clientes: a carteira e a ficha de cada cliente" },
+  { href: "/checkup", label: "Check-up", icone: Check, dica: "Check-up: revisar e atualizar as datas de um cliente" },
 ]
 
 export const NAV_CONFIG: NavItem = {
   href: "/configuracoes",
   label: "Configurações",
   icone: Settings,
+  dica: "Configurações: data de referência, prazos e limites",
 }
 
 export function estaAtivo(pathname: string, href: string) {

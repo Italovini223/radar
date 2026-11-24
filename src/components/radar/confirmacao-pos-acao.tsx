@@ -105,7 +105,7 @@ export function ConfirmacaoPosAcao({
             <p className="mt-1 text-sm text-muted-foreground">{textos.detalhe}</p>
           ) : null}
         </div>
-        <Button size="sm" variant="ghost" onClick={() => fechar()}>
+        <Button size="sm" variant="ghost" dica="Esconder este aviso" onClick={() => fechar()}>
           Fechar
         </Button>
       </div>
@@ -122,6 +122,7 @@ export function ConfirmacaoPosAcao({
               {frenteProxima ? (
                 <Button
                   size="sm"
+                  dica="Ver o rascunho de mensagem para o próximo alerta deste cliente"
                   onClick={() => {
                     gatilho.current = document.activeElement as HTMLElement | null
                     setPropostaAberta(true)
@@ -132,7 +133,7 @@ export function ConfirmacaoPosAcao({
                 </Button>
               ) : null}
               {!clienteId ? (
-                <Button asChild size="sm" variant="outline">
+                <Button asChild size="sm" variant="outline" dica="Abrir a ficha com a próxima frente em destaque">
                   <Link href={`/clientes/${cliente.id}?frente=${proxima.frenteId}`}>
                     Abrir ficha
                   </Link>
@@ -144,7 +145,7 @@ export function ConfirmacaoPosAcao({
           <>
             <p className="text-base font-medium">{textos.vazio}</p>
             {!clienteId ? (
-              <Button asChild size="sm" variant="outline" className="mt-3">
+              <Button asChild size="sm" variant="outline" className="mt-3" dica="Abrir a ficha deste cliente">
                 <Link href={`/clientes/${cliente.id}`}>Abrir ficha</Link>
               </Button>
             ) : null}

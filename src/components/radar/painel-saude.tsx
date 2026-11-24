@@ -5,6 +5,7 @@ import Link from "next/link"
 
 import { EstadoGlyph } from "@/components/radar/estado"
 import { Badge } from "@/components/ui/badge"
+import { Dica } from "@/components/ui/dica"
 import { gsap, useGSAP } from "@/lib/motion/gsap"
 import { movimento } from "@/lib/motion/movimento"
 import { Numero } from "@/lib/motion/numero"
@@ -66,6 +67,7 @@ function Kpi({
   onClick,
   href,
   dataKpi,
+  dica,
 }: {
   rotulo: string
   glifo: ReactNode
@@ -77,6 +79,7 @@ function Kpi({
   onClick?: () => void
   href?: string
   dataKpi: string
+  dica: string
 }) {
   const conteudo = (
     <>
@@ -109,10 +112,13 @@ function Kpi({
     selecionado && "bg-accent"
   )
   return href ? (
-    <Link href={href} className={classes} data-kpi={dataKpi}>
-      {conteudo}
-    </Link>
+    <Dica texto={dica}>
+      <Link href={href} className={classes} data-kpi={dataKpi}>
+        {conteudo}
+      </Link>
+    </Dica>
   ) : (
+    <Dica texto={selecionado ? "Clique de novo para voltar a mostrar todas" : dica}>
     <button
       type="button"
       onClick={onClick}
@@ -122,6 +128,7 @@ function Kpi({
     >
       {conteudo}
     </button>
+    </Dica>
   )
 }
 
@@ -293,6 +300,7 @@ export function PainelSaude({
           numero={criticas}
           apoio={`de ${pares} pares`}
           selecionado={ativa === "criticas"}
+          dica="Filtrar a lista abaixo: só as críticas"
           onClick={() => alternar("criticas")}
         />
         <Kpi
@@ -304,6 +312,7 @@ export function PainelSaude({
           numero={atrasadas}
           apoio={`de ${pares} pares`}
           selecionado={ativa === "atrasadas"}
+          dica="Filtrar a lista abaixo: só as atrasadas"
           onClick={() => alternar("atrasadas")}
         />
         <Kpi
@@ -315,6 +324,7 @@ export function PainelSaude({
           numero={atencao}
           apoio="ainda sem alerta · ver na Grade"
           href="/grade"
+          dica="Abrir a Grade para ver as frentes perto do prazo"
         />
         <Kpi
           dataKpi="aprovacao"
@@ -329,6 +339,7 @@ export function PainelSaude({
               : `mais antiga: ${formatarDias(maisAntiga)}`
           }
           selecionado={ativa === "aprovacao"}
+          dica="Filtrar a lista abaixo: só as entregas aguardando aprovação"
           onClick={() => alternar("aprovacao")}
         />
       </div>

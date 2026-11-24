@@ -12,6 +12,7 @@ import {
   PageSkeleton,
 } from "@/components/radar/page-states"
 import { Button } from "@/components/ui/button"
+import { Dica } from "@/components/ui/dica"
 import {
   Field,
   FieldDescription,
@@ -194,9 +195,15 @@ function Formulario({
             onValueChange={(v) => setAds(v as ResultadoAds | "")}
             aria-labelledby={`${id}-ads`}
           >
-            <ToggleGroupItem value="subindo">Subindo</ToggleGroupItem>
-            <ToggleGroupItem value="estavel">Estável</ToggleGroupItem>
-            <ToggleGroupItem value="caindo">Caindo</ToggleGroupItem>
+            <Dica texto="Os resultados de Ads melhoraram desde o último check-up">
+              <ToggleGroupItem value="subindo">Subindo</ToggleGroupItem>
+            </Dica>
+            <Dica texto="Os resultados de Ads ficaram no mesmo patamar">
+              <ToggleGroupItem value="estavel">Estável</ToggleGroupItem>
+            </Dica>
+            <Dica texto="Os resultados de Ads pioraram desde o último check-up">
+              <ToggleGroupItem value="caindo">Caindo</ToggleGroupItem>
+            </Dica>
           </ToggleGroup>
           <FieldDescription>
             Fica na ficha do cliente. Não entra no cálculo dos alertas, que
@@ -206,7 +213,10 @@ function Formulario({
       </FieldGroup>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="submit">
+        <Button
+          type="submit"
+          dica="Gravar as datas alteradas: o Radar e a Grade recalculam na hora"
+        >
           Salvar check-up
         </Button>
         <span className="tnum text-sm text-muted-foreground" aria-live="polite">
@@ -223,18 +233,24 @@ function Formulario({
           className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-lg border border-state-ok-line bg-state-ok-soft px-4 py-3 text-sm text-state-ok"
         >
           <span className="font-medium">Check-up salvo.</span>
-          <Link href="/radar" className="font-medium underline">
-            Ver no Radar
-          </Link>
-          <Link href="/grade" className="font-medium underline">
-            Ver na Grade
-          </Link>
-          <Link
-            href={`/clientes/${cliente.id}`}
-            className="font-medium underline"
-          >
-            Abrir ficha
-          </Link>
+          <Dica texto="Ver os alertas recalculados no Radar">
+            <Link href="/radar" className="font-medium underline">
+              Ver no Radar
+            </Link>
+          </Dica>
+          <Dica texto="Ver as frentes deste cliente na Grade">
+            <Link href="/grade" className="font-medium underline">
+              Ver na Grade
+            </Link>
+          </Dica>
+          <Dica texto={`Abrir a ficha de ${cliente.nome}`}>
+            <Link
+              href={`/clientes/${cliente.id}`}
+              className="font-medium underline"
+            >
+              Abrir ficha
+            </Link>
+          </Dica>
         </div>
       ) : null}
     </form>
@@ -268,9 +284,11 @@ function Conteudo() {
         <Field>
           <FieldLabel htmlFor="checkup-cliente">Cliente</FieldLabel>
           <Select value={cliente.id} onValueChange={setEscolhido}>
-            <SelectTrigger id="checkup-cliente" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
+            <Dica texto="Trocar o cliente do check-up">
+              <SelectTrigger id="checkup-cliente" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+            </Dica>
             <SelectContent>
               <SelectGroup>
                 {ativos.map((c) => (

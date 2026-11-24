@@ -4,6 +4,7 @@ import { useMemo, useRef } from "react"
 import Link from "next/link"
 
 import { FrenteCell } from "@/components/grade/frente-cell"
+import { Dica } from "@/components/ui/dica"
 import {
   Table,
   TableBody,
@@ -169,12 +170,11 @@ export function GradeTable({
                 scope="row"
                 className="sticky left-0 z-[1] border-b bg-card px-3 py-1.5 text-left align-middle normal-case tracking-normal text-foreground"
               >
-                <Link
-                  href={`/clientes/${c.id}`}
-                  className="text-sm hover:underline"
-                >
-                  {c.nome}
-                </Link>
+                <Dica texto={`Abrir a ficha de ${c.nome}`} lado="right">
+                  <Link href={`/clientes/${c.id}`} className="botao-cliente botao-cliente-sm">
+                    {c.nome}
+                  </Link>
+                </Dica>
               </TableHead>
               {frentes.map((f) => {
                 const status = porChave.get(`${c.id}:${f.id}`)

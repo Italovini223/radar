@@ -1,6 +1,7 @@
 import Link from "next/link"
 
 import { ESTADOS, EstadoGlyph } from "@/components/radar/estado"
+import { Dica } from "@/components/ui/dica"
 import { formatarDias } from "@/lib/domain/opportunities"
 import type { Client, Frente, StatusFrente } from "@/lib/domain/types"
 import { cn } from "@/lib/utils"
@@ -35,7 +36,22 @@ export function FrenteCell({
       ? 0
       : Math.min(1, (status.dias ?? 0) / frente.prazoDias)
 
+  const dica = (
+    <>
+      <b className="font-medium">
+        {cliente.nome} · {frente.nome}
+      </b>
+      <br />
+      {rotuloEstado}
+      {status.nunca ? "" : `: ${valor} desde a última ação (prazo ${frente.prazoDias} d)`}
+      {status.travada ? " · aprovação travada" : ""}
+      <br />
+      Clique para abrir a ficha com esta frente em destaque.
+    </>
+  )
+
   return (
+    <Dica texto={dica}>
     <Link
       href={`/clientes/${cliente.id}?frente=${frente.id}`}
       data-celula={`${cliente.id}:${frente.id}`}
@@ -76,13 +92,11 @@ export function FrenteCell({
         className="pointer-events-none absolute inset-0 bg-foreground opacity-0"
       />
       {status.travada ? (
-        <span
-          className="absolute top-0 right-0 size-0 border-t-[10px] border-l-[10px] border-t-state-warn-bar border-l-transparent"
-          title="Aprovação travada"
-        >
+        <span className="absolute top-0 right-0 size-0 border-t-[10px] border-l-[10px] border-t-state-warn-bar border-l-transparent">
           <span className="sr-only">Aprovação travada</span>
         </span>
       ) : null}
     </Link>
+    </Dica>
   )
 }

@@ -9,6 +9,7 @@ import {
   PageHeading,
 } from "@/components/radar/page-states"
 import { Button } from "@/components/ui/button"
+import { Dica } from "@/components/ui/dica"
 import {
   Dialog,
   DialogContent,
@@ -249,8 +250,12 @@ function SecaoData() {
             }}
             aria-labelledby="rotulo-modo-data"
           >
-            <ToggleGroupItem value="referencia">Data de referência</ToggleGroupItem>
-            <ToggleGroupItem value="real">Hoje real</ToggleGroupItem>
+            <Dica texto="Calcular tudo como se hoje fosse a data de referência (a do gabarito da demonstração)">
+              <ToggleGroupItem value="referencia">Data de referência</ToggleGroupItem>
+            </Dica>
+            <Dica texto="Calcular com a data de hoje do computador">
+              <ToggleGroupItem value="real">Hoje real</ToggleGroupItem>
+            </Dica>
           </ToggleGroup>
         </Field>
         <Field data-invalid={!dataValida || undefined}>
@@ -384,7 +389,11 @@ function Conteudo() {
           registrado e recarrega os dez clientes do gabarito, com data de
           referência 13/11/2026.
         </p>
-        <Button variant="outline" onClick={() => setConfirma(true)}>
+        <Button
+          variant="outline"
+          dica="Apagar clientes, ações e check-ups e recarregar a demonstração (pede confirmação)"
+          onClick={() => setConfirma(true)}
+        >
           Resetar dados de demonstração
         </Button>
       </section>
@@ -402,11 +411,12 @@ function Conteudo() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirma(false)}>
+            <Button variant="outline" dica="Fechar sem apagar nada" onClick={() => setConfirma(false)}>
               Cancelar
             </Button>
             <Button
               variant="destructive"
+              dica="Apagar tudo agora, para todas as pessoas que usam o Radar"
               onClick={() => {
                 setConfirma(false)
                 void resetarDemo().then((ok) => {

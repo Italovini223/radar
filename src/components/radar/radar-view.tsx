@@ -25,6 +25,7 @@ import {
 import { AcaoDialog } from "@/components/radar/acao-dialog"
 import { ConfirmacaoPosAcao } from "@/components/radar/confirmacao-pos-acao"
 import { ProposalDialog } from "@/components/radar/proposal-dialog"
+import { GrupoDoCliente } from "@/components/radar/grupo-cliente"
 import { PainelSaude, type AbaRadar } from "@/components/radar/painel-saude"
 import { Button } from "@/components/ui/button"
 import { Dica } from "@/components/ui/dica"
@@ -45,8 +46,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Toggle } from "@/components/ui/toggle"
+import { agruparPorCliente, alertasPorCliente } from "@/lib/domain/carteira"
 import { rotuloDataReferencia } from "@/lib/domain/rotulos"
-import { SETORES, type Opportunity } from "@/lib/domain/types"
+import { SETORES, type Client, type Opportunity } from "@/lib/domain/types"
 import { useRadar } from "@/lib/hooks"
 import { useEntrada } from "@/lib/motion/use-entrada"
 import { useFlipLista } from "@/lib/motion/use-flip-lista"
@@ -118,6 +121,9 @@ function Conteudo() {
     ? setorParam
     : "todos"
   const ordem: Ordem = params.get("ordem") === "cliente" ? "cliente" : "gravidade"
+  // "Agrupar por cliente" e o foco em um cliente (vem do aviso "mais N alertas").
+  const agrupado = params.get("agrupar") === "cliente"
+  const clienteParam = params.get("cliente")
 
   // Lê a URL no momento da chamada: o envio da busca é atrasado e não pode
   // sobrescrever outro filtro alterado nesse intervalo.
@@ -137,6 +143,7 @@ function Conteudo() {
   const setSetor = (v: string) => atualizarUrl({ setor: v === "todos" ? null : v })
   const setOrdem = (v: Ordem) =>
     atualizarUrl({ ordem: v === "gravidade" ? null : v })
+  const setAgrupado = (v: boolean) => atualizarUrl({ agrupar: v ? "cliente" : null })
 
   // Busca: o campo é controlado por estado local (nenhuma tecla se perde) e a
   // URL é atualizada 250 ms depois da última tecla. Se a URL mudar por outro
@@ -182,9 +189,18 @@ function Conteudo() {
     [frentes]
   )
 
+  const clienteFoco =
+    clienteParam && clientePorId.has(clienteParam) ? clienteParam : null
+  const nomeFoco = clienteFoco ? clientePorId.get(clienteFoco)?.nome : undefined
+  const alertasDoCliente = useMemo(
+    () => alertasPorCliente(oportunidades),
+    [oportunidades]
+  )
+
   const baseFiltrada = useMemo(() => {
     const termo = normalizar(busca.trim())
     return oportunidades.filter((o) => {
+      if (clienteFoco && o.clientId !== clienteFoco) return false
       if (setor !== "todos" && o.setorResponsavel !== setor) return false
       if (!termo) return true
       const c = clientePorId.get(o.clientId)
@@ -193,7 +209,7 @@ function Conteudo() {
         `${c?.nome ?? ""} ${f?.nome ?? ""} ${o.motivo} ${o.setorResponsavel}`
       ).includes(termo)
     })
-  }, [oportunidades, busca, setor, clientePorId, frentePorId])
+  }, [oportunidades, busca, setor, clienteFoco, clientePorId, frentePorId])
 
   const contagens = Object.fromEntries(
     ABAS.map((a) => [a.valor, baseFiltrada.filter((o) => daAba(o, a.valor)).length])
@@ -214,19 +230,45 @@ function Conteudo() {
 
   const criticas = visiveis.filter((o) => o.severidade === "alta")
   const demais = visiveis.filter((o) => o.severidade !== "alta")
+  const grupos = useMemo(
+    () =>
+      agrupado ? agruparPorCliente(visiveis, clients, situacoes) : [],
+    [agrupado, visiveis, clients, situacoes]
+  )
+  // Ordem em que os alertas aparecem na tela: o Flip compara por id, então a
+  // mesma chave estável (id do alerta) vale nos dois modos.
+  const chaveFlip = (agrupado
+    ? grupos.flatMap((g) => g.alertas)
+    : visiveis
+  )
+    .map((o) => o.id)
+    .join("|")
 
   // Movimento: a lista desliza ao filtrar (Flip) e a tela entra em sequência.
   // O Flip vem antes da entrada para registrar as posições finais.
   const raiz = useRef<HTMLDivElement>(null)
   const lista = useRef<HTMLDivElement>(null)
-  useFlipLista(lista, visiveis.map((o) => o.id).join("|"), { fantasmas: true })
+  useFlipLista(lista, `${agrupado ? "g" : "l"}:${chaveFlip}`, { fantasmas: true })
   useEntrada(raiz)
 
-  const filtrando = busca !== "" || setor !== "todos" || aba !== "todas"
+  const filtrando =
+    busca !== "" || setor !== "todos" || aba !== "todas" || clienteFoco !== null
   const limpar = () => {
     setBusca("")
     enviados.current = []
-    atualizarUrl({ q: null, setor: null, aba: null })
+    atualizarUrl({ q: null, setor: null, aba: null, cliente: null })
+  }
+  // Aviso "mais N alertas": mostra todos os alertas daquele cliente, juntos.
+  const verCliente = (c: Client) => {
+    setBusca("")
+    enviados.current = []
+    atualizarUrl({
+      agrupar: "cliente",
+      cliente: c.id,
+      q: null,
+      setor: null,
+      aba: null,
+    })
   }
 
   const atribuicaoDe = (id: string) =>
@@ -358,8 +400,18 @@ function Conteudo() {
                 </SelectGroup>
               </SelectContent>
             </Select>
-            <Select value={ordem} onValueChange={(v) => setOrdem(v as Ordem)}>
-              <Dica texto="Trocar a ordem da lista: por gravidade ou por nome do cliente">
+            <Select
+              value={ordem}
+              onValueChange={(v) => setOrdem(v as Ordem)}
+              disabled={agrupado}
+            >
+              <Dica
+                texto={
+                  agrupado
+                    ? "Agrupado por cliente: o pior cliente vem primeiro"
+                    : "Trocar a ordem da lista: por gravidade ou por nome do cliente"
+                }
+              >
               <SelectTrigger
                 className="w-full sm:w-44"
                 aria-label="Ordenar por"
@@ -374,8 +426,39 @@ function Conteudo() {
                 </SelectGroup>
               </SelectContent>
             </Select>
+            <Dica texto="Juntar os alertas de cada cliente num bloco, do cliente em pior situação para o melhor">
+              <Toggle
+                variant="outline"
+                pressed={agrupado}
+                onPressedChange={setAgrupado}
+                className="h-10 w-full px-5 sm:w-auto"
+                data-agrupar
+              >
+                Agrupar por cliente
+              </Toggle>
+            </Dica>
           </div>
         </div>
+
+        {clienteFoco && nomeFoco ? (
+          <p
+            data-foco-cliente
+            className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground"
+          >
+            <span>
+              Só os alertas de{" "}
+              <b className="font-medium text-foreground">{nomeFoco}</b>
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              dica="Voltar a mostrar os alertas de todos os clientes"
+              onClick={() => atualizarUrl({ cliente: null })}
+            >
+              Ver todos os clientes
+            </Button>
+          </p>
+        ) : null}
 
         <div ref={lista} data-entra className="relative">
         {oportunidades.length === 0 ? (
@@ -400,6 +483,21 @@ function Conteudo() {
             onLimpar={filtrando ? limpar : undefined}
           />
         ) : (
+          agrupado ? (
+            <ul className="flex flex-col gap-4" data-lista-agrupada>
+              {grupos.map((g) => (
+                <GrupoDoCliente
+                  key={g.cliente.id}
+                  grupo={g}
+                  frentePorId={frentePorId}
+                  atribuicaoDe={atribuicaoDe}
+                  tituloAcaoDe={tituloAcaoDe}
+                  onVerProposta={abrirProposta}
+                  onRegistrarAcao={setAcaoAlvo}
+                />
+              ))}
+            </ul>
+          ) : (
           <div className="flex flex-col gap-6">
             {criticas.length > 0 ? (
               <ul className="flex flex-col gap-3">
@@ -418,6 +516,8 @@ function Conteudo() {
                       onVerProposta={abrirProposta}
                       onRegistrarAcao={setAcaoAlvo}
                       destaque={i === 0}
+                      maisAlertas={(alertasDoCliente.get(o.clientId) ?? 1) - 1}
+                      onVerCliente={verCliente}
                     />
                   )
                 })}
@@ -439,12 +539,15 @@ function Conteudo() {
                       tituloAcao={tituloAcaoDe(o)}
                       onVerProposta={abrirProposta}
                       onRegistrarAcao={setAcaoAlvo}
+                      maisAlertas={(alertasDoCliente.get(o.clientId) ?? 1) - 1}
+                      onVerCliente={verCliente}
                     />
                   )
                 })}
               </ul>
             ) : null}
           </div>
+          )
         )}
         </div>
 

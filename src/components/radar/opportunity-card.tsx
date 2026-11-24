@@ -31,6 +31,15 @@ interface Props {
   onRegistrarAcao: (o: Opportunity) => void
   /** Alerta mais urgente da tela: "Ver proposta" em coral (só um por tela). */
   destaque?: boolean
+  /** Outros alertas do mesmo cliente (aviso "mais N alertas"). */
+  maisAlertas?: number
+  /** Liga o agrupamento focado no cliente (acionado pelo aviso). */
+  onVerCliente?: (c: Client) => void
+  /**
+   * Dentro do bloco de um cliente (modo "Agrupar por cliente"): o título da
+   * linha passa a ser a frente, porque o cliente já é o título do bloco.
+   */
+  agrupado?: boolean
 }
 
 /** Ponto amarelo de 6px: oportunidade nova (venceu o prazo há até 14 dias). */
@@ -44,6 +53,37 @@ function PontoNova() {
       />
       <span className="sr-only">Nova. </span>
     </>
+  )
+}
+
+/**
+ * "Aurora Moda · mais 3 alertas": o cliente tem outros alertas na carteira.
+ * Clicável: abre o agrupamento focado naquele cliente.
+ */
+function MaisAlertas({
+  n,
+  cliente,
+  onVer,
+}: {
+  n: number
+  cliente: Client
+  onVer: (c: Client) => void
+}) {
+  return (
+    <Dica texto={`Ver os ${n + 1} alertas de ${cliente.nome} juntos`}>
+      <button
+        type="button"
+        onClick={() => onVer(cliente)}
+        data-mais-alertas={cliente.id}
+        className="inline-flex items-center gap-1.5 rounded-sm text-sm text-muted-foreground underline-offset-4 outline-none hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      >
+        <span aria-hidden>·</span>
+        <span className="tnum">
+          mais {n} {n === 1 ? "alerta" : "alertas"}
+        </span>
+        <span className="sr-only"> de {cliente.nome}: ver todos agrupados</span>
+      </button>
+    </Dica>
   )
 }
 
@@ -82,6 +122,8 @@ export function OportunidadeCheia({
   onVerProposta,
   onRegistrarAcao,
   destaque = false,
+  maisAlertas = 0,
+  onVerCliente,
 }: Props) {
   const impacto = impactoDaOportunidade({
     oportunidade: o,
@@ -111,6 +153,9 @@ export function OportunidadeCheia({
                 </Dica>
               </h3>
               <EstadoBadge estado={o.estado} nunca={o.nunca} />
+              {maisAlertas > 0 && onVerCliente ? (
+                <MaisAlertas n={maisAlertas} cliente={cliente} onVer={onVerCliente} />
+              ) : null}
             </div>
             <p className="mt-2 text-base font-medium">{o.motivo}</p>
             <p className="mt-1 text-sm text-muted-foreground">{impacto}</p>
@@ -170,6 +215,9 @@ export function OportunidadeLinha({
   atribuicao,
   onVerProposta,
   onRegistrarAcao,
+  maisAlertas = 0,
+  onVerCliente,
+  agrupado = false,
 }: Props) {
   const aprovacao = o.tipo === "aprovacao"
   const limiteAprovacao = useRadarStore((s) => s.configuracao.limiteAprovacaoDias)
@@ -182,14 +230,18 @@ export function OportunidadeLinha({
       <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
         {o.nova ? <PontoNova /> : null}
         <h3 id={`opp-${o.id}`} className="text-base font-medium">
-          <Dica texto={`Abrir a ficha de ${cliente.nome}, com ${nomeCurtoFrente(frente)} em destaque`}>
-            <Link
-              href={`/clientes/${cliente.id}?frente=${frente.id}`}
-              className="botao-cliente botao-cliente-sm"
-            >
-              {cliente.nome}
-            </Link>
-          </Dica>
+          {agrupado ? (
+            nomeCurtoFrente(frente)
+          ) : (
+            <Dica texto={`Abrir a ficha de ${cliente.nome}, com ${nomeCurtoFrente(frente)} em destaque`}>
+              <Link
+                href={`/clientes/${cliente.id}?frente=${frente.id}`}
+                className="botao-cliente botao-cliente-sm"
+              >
+                {cliente.nome}
+              </Link>
+            </Dica>
+          )}
         </h3>
         {aprovacao ? (
           <span className="text-sm font-medium text-state-warn">
@@ -198,6 +250,9 @@ export function OportunidadeLinha({
         ) : (
           <EstadoBadge estado={o.estado} nunca={o.nunca} />
         )}
+        {maisAlertas > 0 && onVerCliente && !agrupado ? (
+          <MaisAlertas n={maisAlertas} cliente={cliente} onVer={onVerCliente} />
+        ) : null}
       </div>
       <div className="min-w-0">
         <p className="text-sm text-foreground">{o.motivo}</p>

@@ -10,8 +10,6 @@ import {
 } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { format } from "date-fns"
-import { ptBR } from "date-fns/locale"
 import { toast } from "sonner"
 
 import {
@@ -24,6 +22,8 @@ import {
   PageSkeleton,
   SemResultados,
 } from "@/components/radar/page-states"
+import { AcaoDialog } from "@/components/radar/acao-dialog"
+import { ConfirmacaoPosAcao } from "@/components/radar/confirmacao-pos-acao"
 import { ProposalDialog } from "@/components/radar/proposal-dialog"
 import { PainelSaude, type AbaRadar } from "@/components/radar/painel-saude"
 import { Button } from "@/components/ui/button"
@@ -44,6 +44,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { rotuloDataReferencia } from "@/lib/domain/rotulos"
 import { SETORES, type Opportunity } from "@/lib/domain/types"
 import { useRadar } from "@/lib/hooks"
 import { useEntrada } from "@/lib/motion/use-entrada"
@@ -99,6 +100,8 @@ function Conteudo() {
     oportunidades,
     grade,
     hoje,
+    configuracao,
+    contratos,
   } = useRadar()
   const atualizarAgora = useRadarStore((s) => s.atualizarAgora)
 
@@ -165,6 +168,8 @@ function Conteudo() {
   const [aberta, setAberta] = useState<Opportunity | null>(null)
   const [dialogoAberto, setDialogoAberto] = useState(false)
   const gatilho = useRef<HTMLElement | null>(null)
+  // "Registrar ação" direto do cartão: cliente e frente já preenchidos.
+  const [acaoAlvo, setAcaoAlvo] = useState<Opportunity | null>(null)
 
   const clientePorId = useMemo(
     () => new Map(clients.map((c) => [c.id, c])),
@@ -242,7 +247,15 @@ function Conteudo() {
   }
 
   const n = oportunidades.length
-  const dataHoje = `${format(hoje, "d MMM", { locale: ptBR })}.`
+  const rotuloData = rotuloDataReferencia(configuracao, hoje)
+  const clienteDaAcao = acaoAlvo ? clientePorId.get(acaoAlvo.clientId) : undefined
+  const frentesDaAcao = acaoAlvo
+    ? frentes.filter((f) =>
+        contratos.some(
+          (c) => c.clientId === acaoAlvo.clientId && c.frenteId === f.id
+        )
+      )
+    : []
 
   return (
     <div ref={raiz}>
@@ -251,7 +264,7 @@ function Conteudo() {
         italic="clientes"
         description={
           <span className="tnum">
-            Atualizado hoje, {dataHoje} · {n}{" "}
+            {rotuloData} · {n}{" "}
             {n === 1 ? "oportunidade" : "oportunidades"}
           </span>
         }
@@ -259,7 +272,11 @@ function Conteudo() {
           <Button
             onClick={() => {
               atualizarAgora()
-              toast.success("Radar atualizado com as datas de hoje.")
+              toast.success(
+                configuracao.usarHojeReal
+                  ? "Radar atualizado com a data de hoje."
+                  : "Radar recalculado na data de referência."
+              )
             }}
           >
             Atualizar radar
@@ -274,6 +291,8 @@ function Conteudo() {
         ativa={aba}
         onFiltrar={setAba}
       />
+
+      <ConfirmacaoPosAcao className="mt-6" />
 
       <section aria-label="Oportunidades" className="mt-8">
         <div
@@ -387,6 +406,7 @@ function Conteudo() {
                       atribuicao={atribuicaoDe(o.id)}
                       tituloAcao={tituloAcaoDe(o)}
                       onVerProposta={abrirProposta}
+                      onRegistrarAcao={setAcaoAlvo}
                     />
                   )
                 })}
@@ -407,6 +427,7 @@ function Conteudo() {
                       atribuicao={atribuicaoDe(o.id)}
                       tituloAcao={tituloAcaoDe(o)}
                       onVerProposta={abrirProposta}
+                      onRegistrarAcao={setAcaoAlvo}
                     />
                   )
                 })}
@@ -427,6 +448,20 @@ function Conteudo() {
           </p>
         ) : null}
       </section>
+
+      {clienteDaAcao ? (
+        <AcaoDialog
+          aberto={acaoAlvo !== null}
+          onOpenChange={(v) => {
+            if (!v) setAcaoAlvo(null)
+          }}
+          cliente={clienteDaAcao}
+          frentes={frentesDaAcao}
+          frenteInicial={acaoAlvo?.frenteId}
+          hoje={hoje}
+          sugerirTitulo
+        />
+      ) : null}
 
       <ProposalDialog
         aberto={dialogoAberto}

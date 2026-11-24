@@ -37,6 +37,7 @@ import {
   type Setor,
 } from "@/lib/domain/types"
 import { useRadarStore } from "@/lib/store"
+import { nomeCurtoFrente } from "@/lib/domain/frentes"
 
 export function ProposalDialog({
   aberto,
@@ -130,7 +131,7 @@ function ProposalBody({
       .gerar({
         oportunidade,
         clienteNome: cliente.nome,
-        frenteNome: frente.nome,
+        frenteNome: nomeCurtoFrente(frente),
         setor: frente.setor,
         tituloAcao,
       })
@@ -173,7 +174,7 @@ function ProposalBody({
             : `Proposta para ${cliente.nome}`}
         </DialogTitle>
         <DialogDescription>
-          {frente.setor} · {frente.nome}
+          {frente.setor} · {nomeCurtoFrente(frente)}
           {oportunidade.diasParado !== null
             ? ` · ${oportunidade.tipo === "aprovacao" ? "aguardando" : "parado"} há ${formatarDias(oportunidade.diasParado)}`
             : " · sem nenhuma ação registrada"}

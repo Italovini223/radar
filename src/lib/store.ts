@@ -1,225 +1,377 @@
 "use client"
 
-import {
-  create,
-  type Mutate,
-  type StoreApi,
-  type UseBoundStore,
-} from "zustand"
-import { persist, type PersistStorage } from "zustand/middleware"
+import { create } from "zustand"
+import { toast } from "sonner"
 
-import { aplicarCheckup, novoId, type EntradaCheckup } from "./domain/checkup"
-import { toISODate } from "./domain/rules"
-import type {
-  Acao,
-  Atribuicao,
-  Checkup,
-  Client,
-  Frente,
-  Opportunity,
-  RadarSnapshot,
-  ResultadoAds,
-  Setor,
-  StatusAcao,
-} from "./domain/types"
+import { apiRepository } from "./data/api-repository"
 import {
-  localStorageRepository,
+  CODIGO_BANCO_NAO_CONFIGURADO,
+  ErroApi,
   type RadarRepository,
 } from "./data/repository"
-import { buildSeed } from "./data/seed"
+import { aplicarCheckup, novoId, type EntradaCheckup } from "./domain/checkup"
+import { agoraDaConfiguracao, toISODate } from "./domain/rules"
+import {
+  CONFIGURACAO_PADRAO,
+  type Acao,
+  type Atribuicao,
+  type Checkup,
+  type Client,
+  type Configuracao,
+  type Contrato,
+  type Frente,
+  type Opportunity,
+  type RadarSnapshot,
+  type ResultadoAds,
+  type Setor,
+  type StatusAcao,
+} from "./domain/types"
 
-type Persistido = RadarSnapshot
-
-interface RadarState extends RadarSnapshot {
-  /** Falso até a hidratação terminar (as telas mostram skeleton). */
+export interface RadarState extends RadarSnapshot {
+  contratos: Contrato[]
+  /** Falso até a primeira carga terminar (as telas mostram skeleton). */
   ready: boolean
   erro: string | null
-  /** "Hoje" do app (ms). Não persiste; "Atualizar radar" recalcula. */
+  /** true = o banco respondeu, mas está sem dados (primeira vez): oferece carregar a demonstração. */
+  vazio: boolean
+  /** "Hoje" do app (ms), derivado da configuração (data de referência ou data real). */
   agora: number
   atualizarAgora: () => void
   iniciar: () => Promise<void>
-  resetarDemo: () => void
+  /** Reimporta a fixture de demonstração no servidor. true = deu certo. */
+  resetarDemo: () => Promise<boolean>
   registrarAcao: (a: {
     clientId: string
     frenteId: string
     titulo: string
     data: string
     status: StatusAcao
-  }) => void
-  atualizarStatusAcao: (id: string, status: StatusAcao) => void
+  }) => Promise<boolean>
+  atualizarStatusAcao: (id: string, status: StatusAcao) => Promise<boolean>
   salvarCheckup: (input: {
     clientId: string
     entradas: EntradaCheckup[]
     resultadoAds?: ResultadoAds
   }) => string[]
-  setPrazo: (frenteId: string, prazoDias: number) => void
-  atribuir: (o: Opportunity, setor: Setor, texto: string) => void
+  setPrazo: (
+    frenteId: string,
+    prazoDias: number,
+    criticoAposDias?: number
+  ) => Promise<boolean>
+  atribuir: (o: Opportunity, setor: Setor, texto: string) => Promise<boolean>
+  atualizarConfiguracao: (parcial: Partial<Configuracao>) => Promise<boolean>
 }
 
-/** Adapta o repositório (interface trocável) ao storage do zustand/persist. */
-function storageDoRepositorio(
-  repo: RadarRepository,
-  podeSalvar: () => boolean
-): PersistStorage<Persistido> {
-  return {
-    getItem: async () => {
-      const dados = await repo.load()
-      return dados ? { state: dados, version: 1 } : null
-    },
-    setItem: async (_nome, valor) => {
-      // Nunca grava antes da hidratação: o estado inicial vazio apagaria os
-      // dados salvos no navegador.
-      if (!podeSalvar()) return
-      await repo.save(valor.state)
-    },
-    removeItem: async () => {
-      await repo.clear()
-    },
-  }
-}
+type Dados = Pick<
+  RadarState,
+  | "clients"
+  | "frentes"
+  | "acoes"
+  | "checkups"
+  | "atribuicoes"
+  | "contratos"
+  | "configuracao"
+>
 
-/** Último erro de leitura do repositório (preenchido por onRehydrateStorage). */
-let erroDeLeitura: string | null = null
-
-const vazio: RadarSnapshot = {
+const vazio: Dados = {
   clients: [],
   frentes: [],
   acoes: [],
   checkups: [],
   atribuicoes: [],
+  contratos: [],
+  configuracao: CONFIGURACAO_PADRAO,
 }
 
-export const useRadarStore: UseBoundStore<
-  Mutate<StoreApi<RadarState>, [["zustand/persist", Persistido]]>
-> = create<RadarState>()(
-  persist(
-    (set, get) => ({
+/** Mensagem em português para o estado de erro de carga (sem detalhes internos). */
+export function mensagemDeCarga(e: unknown): string {
+  if (e instanceof ErroApi) {
+    if (e.codigo === CODIGO_BANCO_NAO_CONFIGURADO) {
+      return "Banco de dados não configurado. O servidor está sem as credenciais do banco; avise quem administra o Radar."
+    }
+    if (e.codigo === "REDE") {
+      return "Não foi possível falar com o servidor. Verifique sua conexão e tente de novo."
+    }
+  }
+  return "Não foi possível carregar os dados do servidor. Tente de novo em instantes."
+}
+
+/** Mensagem curta de falha ao gravar uma alteração. */
+export function mensagemDeGravacao(e: unknown): string {
+  if (e instanceof ErroApi) {
+    if (e.codigo === CODIGO_BANCO_NAO_CONFIGURADO) {
+      return "Banco de dados não configurado."
+    }
+    if (e.codigo === "REDE") return "Sem conexão com o servidor."
+    if (e.status >= 400 && e.status < 500) return e.message
+  }
+  return "Erro no servidor."
+}
+
+/**
+ * Store OTIMISTA: aplica a mudança na hora, grava no servidor (em fila, na
+ * mesma ordem) e, se falhar, desfaz só aquela mudança e avisa com toast.
+ * A fonte de verdade é o servidor; não há persistência local.
+ */
+export function criarRadarStore(repo: RadarRepository) {
+  // As gravações vão ao servidor uma de cada vez, na ordem em que o usuário agiu.
+  let fila: Promise<unknown> = Promise.resolve()
+  const enfileirar = <T,>(fn: () => Promise<T>): Promise<T> => {
+    const p = fila.then(fn)
+    fila = p.catch(() => undefined)
+    return p
+  }
+  let carregando: Promise<void> | null = null
+
+  return create<RadarState>()((set, get) => {
+    const agoraDe = (c: Configuracao) =>
+      agoraDaConfiguracao(c, new Date()).getTime()
+
+    /**
+     * `otimista` aplica já; `reverter` desfaz só esta mudança (sem apagar
+     * mudanças posteriores); `chamar` grava no servidor.
+     */
+    async function mutar<T = void>(args: {
+      otimista: () => void
+      reverter: () => void
+      chamar: () => Promise<T>
+      aoSucesso?: (r: T) => void
+      falha: string
+    }): Promise<boolean> {
+      args.otimista()
+      try {
+        const r = await enfileirar(args.chamar)
+        args.aoSucesso?.(r)
+        return true
+      } catch (e) {
+        args.reverter()
+        toast.error(args.falha, {
+          description: `${mensagemDeGravacao(e)} A alteração foi desfeita.`,
+        })
+        return false
+      }
+    }
+
+    return {
       ...vazio,
       ready: false,
       erro: null,
+      vazio: false,
       agora: 0,
-      atualizarAgora: () => set({ agora: Date.now() }),
+
+      atualizarAgora: () => set((s) => ({ agora: agoraDe(s.configuracao) })),
 
       iniciar: async () => {
-        try {
-          erroDeLeitura = null
-          await useRadarStore.persist.rehydrate()
-          // Falha de leitura é capturada por onRehydrateStorage.
-          if (erroDeLeitura) {
-            set({ ready: true, agora: Date.now(), erro: erroDeLeitura })
-            return
+        if (carregando) return carregando
+        carregando = (async () => {
+          try {
+            const snap = await repo.carregar()
+            const vazioNoBanco =
+              snap.clients.length === 0 && snap.frentes.length === 0
+            set({
+              ...snap,
+              contratos: snap.contratos ?? [],
+              ready: true,
+              erro: null,
+              vazio: vazioNoBanco,
+              agora: agoraDe(snap.configuracao),
+            })
+          } catch (e) {
+            // Sem fallback silencioso para localStorage: mostra o erro.
+            set({
+              ready: true,
+              vazio: false,
+              agora: Date.now(),
+              erro: mensagemDeCarga(e),
+            })
+          } finally {
+            carregando = null
           }
-          if (get().frentes.length === 0) set(buildSeed(new Date()))
-          set({ ready: true, agora: Date.now(), erro: null })
-        } catch (e) {
+        })()
+        return carregando
+      },
+
+      resetarDemo: async () => {
+        try {
+          const snap = await enfileirar(() => repo.resetar())
           set({
+            ...snap,
+            contratos: snap.contratos ?? [],
             ready: true,
-            agora: Date.now(),
-            erro:
-              e instanceof Error
-                ? e.message
-                : "Não foi possível carregar os dados do navegador.",
+            erro: null,
+            vazio: false,
+            agora: agoraDe(snap.configuracao),
           })
+          return true
+        } catch (e) {
+          toast.error("Não foi possível resetar os dados.", {
+            description: mensagemDeGravacao(e),
+          })
+          return false
         }
       },
 
-      resetarDemo: () => set({ ...buildSeed(new Date()), erro: null }),
+      registrarAcao: (a) => {
+        const nova: Acao = {
+          id: novoId("acao"),
+          ...a,
+          aguardandoDesde:
+            a.status === "aguardando_aprovacao" ? a.data : undefined,
+          origem: "manual",
+        }
+        return mutar({
+          otimista: () => set((s) => ({ acoes: [...s.acoes, nova] })),
+          reverter: () =>
+            set((s) => ({ acoes: s.acoes.filter((x) => x.id !== nova.id) })),
+          chamar: () => repo.registrarAcao(nova),
+          falha: "Não foi possível registrar a ação.",
+        })
+      },
 
-      registrarAcao: (a) =>
-        set((s) => {
-          const nova: Acao = {
-            id: novoId("acao"),
-            ...a,
-            aguardandoDesde:
-              a.status === "aguardando_aprovacao" ? a.data : undefined,
-            origem: "manual",
-          }
-          return { acoes: [...s.acoes, nova] }
-        }),
-
-      atualizarStatusAcao: (id, status) =>
-        set((s) => ({
-          acoes: s.acoes.map((a) =>
-            a.id === id
-              ? {
-                  ...a,
-                  status,
-                  aguardandoDesde:
-                    status === "aguardando_aprovacao"
-                      ? (a.aguardandoDesde ?? a.data)
-                      : undefined,
-                }
-              : a
-          ),
-        })),
+      atualizarStatusAcao: async (id, status) => {
+        const antes = get().acoes.find((a) => a.id === id)
+        if (!antes) return false
+        return mutar({
+          otimista: () =>
+            set((s) => ({
+              acoes: s.acoes.map((a) =>
+                a.id === id
+                  ? {
+                      ...a,
+                      status,
+                      aguardandoDesde:
+                        status === "aguardando_aprovacao"
+                          ? (a.aguardandoDesde ?? a.data)
+                          : undefined,
+                    }
+                  : a
+              ),
+            })),
+          reverter: () =>
+            set((s) => ({
+              acoes: s.acoes.map((a) =>
+                a.id === id
+                  ? {
+                      ...a,
+                      status: antes.status,
+                      aguardandoDesde: antes.aguardandoDesde,
+                    }
+                  : a
+              ),
+            })),
+          chamar: () => repo.atualizarStatusAcao(id, status),
+          falha: "Não foi possível atualizar a ação.",
+        })
+      },
 
       salvarCheckup: ({ clientId, entradas, resultadoAds }) => {
-        const { acoes, frentes } = get()
+        const { acoes, frentes, agora } = get()
         const resultado = aplicarCheckup(acoes, frentes, clientId, entradas)
         const registro: Checkup = {
           id: novoId("checkup"),
           clientId,
-          data: toISODate(new Date()),
+          data: toISODate(new Date(agora)),
           resultadoAds,
         }
-        set((s) => ({
-          acoes: resultado.acoes,
-          checkups: [...s.checkups, registro],
-        }))
+        const antesDoCliente = acoes.filter((a) => a.clientId === clientId)
+        const outras = (lista: Acao[]) =>
+          lista.filter((a) => a.clientId !== clientId)
+        void mutar({
+          otimista: () =>
+            set((s) => ({
+              acoes: resultado.acoes,
+              checkups: [...s.checkups, registro],
+            })),
+          reverter: () =>
+            set((s) => ({
+              acoes: [...outras(s.acoes), ...antesDoCliente],
+              checkups: s.checkups.filter((c) => c.id !== registro.id),
+            })),
+          chamar: () =>
+            repo.salvarCheckup({
+              id: registro.id,
+              clientId,
+              data: registro.data,
+              entradas,
+              resultadoAds,
+            }),
+          // O servidor gera os ids das ações: reconcilia com a versão dele.
+          aoSucesso: (r) =>
+            set((s) => ({ acoes: [...outras(s.acoes), ...r.acoes] })),
+          falha: "Não foi possível salvar o check-up.",
+        })
         return resultado.alteradas
       },
 
-      setPrazo: (frenteId, prazoDias) =>
-        set((s) => ({
-          frentes: s.frentes.map((f) =>
-            f.id === frenteId ? { ...f, prazoDias } : f
-          ),
-        })),
-
-      atribuir: (o, setor, texto) =>
-        set((s) => {
-          const atribuicao: Atribuicao = {
-            oportunidadeId: o.id,
-            setor,
-            data: toISODate(new Date()),
-            texto,
-          }
-          return {
-            atribuicoes: [
-              ...s.atribuicoes.filter((x) => x.oportunidadeId !== o.id),
-              atribuicao,
-            ],
-          }
-        }),
-    }),
-    {
-      name: "weethub-radar",
-      version: 1,
-      skipHydration: true,
-      onRehydrateStorage: () => (_estado, erro) => {
-        if (erro) {
-          erroDeLeitura =
-            erro instanceof Error
-              ? erro.message
-              : "Não foi possível carregar os dados do navegador."
-        }
+      setPrazo: async (frenteId, prazoDias, criticoAposDias) => {
+        const antes = get().frentes.find((f) => f.id === frenteId)
+        if (!antes) return false
+        // Mantém o limite crítico se ele ainda faz sentido; senão, 2x o prazo.
+        const critico =
+          criticoAposDias ??
+          (antes.criticoAposDias > prazoDias
+            ? antes.criticoAposDias
+            : prazoDias * 2)
+        const atualizar = (prazo: number, crit: number) =>
+          set((s) => ({
+            frentes: s.frentes.map((f) =>
+              f.id === frenteId
+                ? { ...f, prazoDias: prazo, criticoAposDias: crit }
+                : f
+            ),
+          }))
+        return mutar({
+          otimista: () => atualizar(prazoDias, critico),
+          reverter: () => atualizar(antes.prazoDias, antes.criticoAposDias),
+          chamar: () =>
+            repo.atualizarFrente(frenteId, {
+              prazoDias,
+              criticoAposDias: critico,
+            }),
+          falha: "Não foi possível salvar o prazo.",
+        })
       },
-      storage: storageDoRepositorio(
-        localStorageRepository,
-        () => {
-          const { ready, erro } = useRadarStore.getState()
-          return ready && !erro
+
+      atribuir: async (o, setor, texto) => {
+        const antes = get().atribuicoes.find((x) => x.oportunidadeId === o.id)
+        const atribuicao: Atribuicao = {
+          oportunidadeId: o.id,
+          setor,
+          data: toISODate(new Date(get().agora)),
+          texto,
         }
-      ),
-      partialize: (s): Persistido => ({
-        clients: s.clients,
-        frentes: s.frentes,
-        acoes: s.acoes,
-        checkups: s.checkups,
-        atribuicoes: s.atribuicoes,
-      }),
+        const sem = (lista: Atribuicao[]) =>
+          lista.filter((x) => x.oportunidadeId !== o.id)
+        return mutar({
+          otimista: () =>
+            set((s) => ({ atribuicoes: [...sem(s.atribuicoes), atribuicao] })),
+          reverter: () =>
+            set((s) => ({
+              atribuicoes: antes
+                ? [...sem(s.atribuicoes), antes]
+                : sem(s.atribuicoes),
+            })),
+          chamar: () => repo.atribuir(atribuicao),
+          falha: "Não foi possível registrar a atribuição.",
+        })
+      },
+
+      atualizarConfiguracao: async (parcial) => {
+        const antes = get().configuracao
+        const aplicar = (c: Configuracao) =>
+          set({ configuracao: c, agora: agoraDe(c) })
+        return mutar({
+          otimista: () => aplicar({ ...antes, ...parcial }),
+          reverter: () => aplicar(antes),
+          chamar: () => repo.atualizarConfiguracao(parcial),
+          aoSucesso: (c) => aplicar(c),
+          falha: "Não foi possível salvar a configuração.",
+        })
+      },
     }
-  )
-)
+  })
+}
+
+export const useRadarStore = criarRadarStore(apiRepository)
 
 export type { Client, Frente }

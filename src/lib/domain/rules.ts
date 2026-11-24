@@ -1,28 +1,48 @@
-import { differenceInCalendarDays, format, parseISO } from "date-fns"
+import {
+  differenceInCalendarDays,
+  format,
+  isValid,
+  parseISO,
+} from "date-fns"
 
-import type {
-  Acao,
-  Client,
-  EstadoFrente,
-  Frente,
-  StatusFrente,
+import {
+  CONFIGURACAO_PADRAO,
+  FRENTE_DESENVOLVIMENTO_ID,
+  type Acao,
+  type Client,
+  type Configuracao,
+  type Contrato,
+  type EstadoFrente,
+  type Frente,
+  type SituacaoCliente,
+  type StatusFrente,
+  type TipoCliente,
 } from "./types"
 
 /**
- * Regras de alerta determinísticas (sem IA). Funções PURAS: "hoje" (`now`)
- * é sempre parâmetro, para teste e demo reprodutíveis.
+ * Regras de alerta determinísticas (sem IA), alinhadas à planilha do gabarito.
+ * Funções PURAS: "hoje" (`now`) é sempre parâmetro, para teste e demo
+ * reprodutíveis.
  *
- * Para cada par cliente x frente, dias = hoje - última ação CONCLUÍDA:
+ * Para cada par cliente x frente CONTRATADO, dias = hoje - última ação
+ * CONCLUÍDA:
  *   em_dia   : dias < 75% do prazo
- *   atencao  : 75% <= dias <= 100% do prazo
- *   atrasada : 100% < dias <= 150% do prazo
- *   critica  : dias > 150% do prazo, ou nunca teve ação
+ *   atencao  : 75% do prazo <= dias <= prazo   (aviso "perto do prazo",
+ *              NÃO gera oportunidade nem alerta)
+ *   atrasada : prazo < dias < criticoAposDias
+ *   critica  : dias >= criticoAposDias, ou nunca teve ação
+ *
+ * Aprovação travada: ação aguardando aprovação há MAIS de
+ * `limiteAprovacaoDias` dias (padrão 5).
+ *
+ * Loja em criação (cliente tipo `loja_em_criacao` x frente `desenvolvimento`):
+ * o relógio é "dias sem retorno do cliente" = dias desde a ação aguardando
+ * mais antiga; vale 30/60 e o bloqueio contratual em `bloqueioContratualDias`
+ * (90). A regra de aprovação travada NÃO se aplica a esse par.
  */
 export const LIMIAR_ATENCAO = 0.75
-export const LIMIAR_ATRASADA = 1
-export const LIMIAR_CRITICA = 1.5
-/** Ação aguardando aprovação há MAIS de N dias vira alerta "travada". */
-export const DIAS_APROVACAO_TRAVADA = 7
+/** Padrão de aprovação travada; o valor efetivo vem de `Configuracao`. */
+export const DIAS_APROVACAO_TRAVADA = CONFIGURACAO_PADRAO.limiteAprovacaoDias
 /** Oportunidade "nova": venceu o prazo há no máximo N dias. */
 export const JANELA_NOVA_DIAS = 14
 
@@ -37,16 +57,67 @@ export function diasDesde(dataISO: string, now: Date): number {
   return differenceInCalendarDays(now, parseISO(dataISO))
 }
 
+/**
+ * "Hoje" do app: a data de referência da demonstração, ou a data real quando
+ * `usarHojeReal` está ligado (ou a data de referência é inválida).
+ */
+export function agoraDaConfiguracao(
+  config: Pick<Configuracao, "dataReferencia" | "usarHojeReal">,
+  hojeReal: Date
+): Date {
+  if (config.usarHojeReal) return hojeReal
+  const ref = parseISO(config.dataReferencia)
+  return isValid(ref) ? ref : hojeReal
+}
+
+/** Parâmetros opcionais que as funções da carteira aceitam. */
+export interface ContextoRegras {
+  /** Ausente = todas as frentes contratadas por todos os clientes. */
+  contratos?: readonly Contrato[]
+  limiteAprovacaoDias?: number
+  bloqueioContratualDias?: number
+}
+
+export function contextoDoSnapshot(s: {
+  contratos?: readonly Contrato[]
+  configuracao?: Partial<Configuracao>
+}): ContextoRegras {
+  return {
+    contratos: s.contratos,
+    limiteAprovacaoDias: s.configuracao?.limiteAprovacaoDias,
+    bloqueioContratualDias: s.configuracao?.bloqueioContratualDias,
+  }
+}
+
+/** Predicado "o cliente contratou a frente?" (sem contratos: sempre sim). */
+export function criarContratado(
+  contratos: readonly Contrato[] | undefined
+): (clientId: string, frenteId: string) => boolean {
+  if (!contratos) return () => true
+  const chaves = new Set(contratos.map((c) => `${c.clientId}\u0000${c.frenteId}`))
+  return (clientId, frenteId) => chaves.has(`${clientId}\u0000${frenteId}`)
+}
+
+/** Par que usa o relógio de retorno do cliente (loja em criação). */
+export function ehLojaEmCriacao(
+  tipo: TipoCliente | undefined,
+  frenteId: string
+): boolean {
+  return tipo === "loja_em_criacao" && frenteId === FRENTE_DESENVOLVIMENTO_ID
+}
+
 export function classificarDias(
   dias: number | null,
-  prazoDias: number
+  prazoDias: number,
+  criticoAposDias: number = prazoDias * 2
 ): { estado: EstadoFrente; nunca: boolean } {
   if (dias === null) return { estado: "critica", nunca: true }
-  const ratio = dias / prazoDias
-  if (ratio < LIMIAR_ATENCAO) return { estado: "em_dia", nunca: false }
-  if (ratio <= LIMIAR_ATRASADA) return { estado: "atencao", nunca: false }
-  if (ratio <= LIMIAR_CRITICA) return { estado: "atrasada", nunca: false }
-  return { estado: "critica", nunca: false }
+  if (dias >= criticoAposDias) return { estado: "critica", nunca: false }
+  if (dias > prazoDias) return { estado: "atrasada", nunca: false }
+  if (dias >= prazoDias * LIMIAR_ATENCAO) {
+    return { estado: "atencao", nunca: false }
+  }
+  return { estado: "em_dia", nunca: false }
 }
 
 export function ultimaAcaoConcluida(
@@ -63,28 +134,90 @@ export function ultimaAcaoConcluida(
   return melhor
 }
 
-/** Ações aguardando aprovação há mais de `DIAS_APROVACAO_TRAVADA` dias. */
-export function acoesTravadas(acoes: readonly Acao[], now: Date): Acao[] {
+/** Início da espera de uma ação aguardando aprovação. */
+export function desdeAguardando(a: Acao): string {
+  return a.aguardandoDesde ?? a.data
+}
+
+/** Ações aguardando aprovação há mais de `limite` dias. */
+export function acoesTravadas(
+  acoes: readonly Acao[],
+  now: Date,
+  limite: number = DIAS_APROVACAO_TRAVADA
+): Acao[] {
   return acoes.filter(
     (a) =>
       a.status === "aguardando_aprovacao" &&
-      diasDesde(a.aguardandoDesde ?? a.data, now) > DIAS_APROVACAO_TRAVADA
+      diasDesde(desdeAguardando(a), now) > limite
   )
+}
+
+/** Ação aguardando há mais tempo (a mais antiga), se houver. */
+export function aguardandoMaisAntiga(
+  acoes: readonly Acao[],
+  clientId: string,
+  frenteId: string
+): Acao | undefined {
+  let melhor: Acao | undefined
+  for (const a of acoes) {
+    if (a.clientId !== clientId || a.frenteId !== frenteId) continue
+    if (a.status !== "aguardando_aprovacao") continue
+    if (!melhor || desdeAguardando(a) < desdeAguardando(melhor)) melhor = a
+  }
+  return melhor
+}
+
+export interface OpcoesAvaliacao {
+  /** Necessário para a regra de loja em criação. */
+  tipoCliente?: TipoCliente
+  limiteAprovacaoDias?: number
+  bloqueioContratualDias?: number
 }
 
 export function avaliarFrente(
   acoes: readonly Acao[],
   clientId: string,
   frente: Frente,
-  now: Date
+  now: Date,
+  opcoes: OpcoesAvaliacao = {}
 ): StatusFrente {
-  const ultima = ultimaAcaoConcluida(acoes, clientId, frente.id)
+  const limite = opcoes.limiteAprovacaoDias ?? CONFIGURACAO_PADRAO.limiteAprovacaoDias
+  const bloqueio =
+    opcoes.bloqueioContratualDias ?? CONFIGURACAO_PADRAO.bloqueioContratualDias
+  const doPar = acoes.filter(
+    (a) => a.clientId === clientId && a.frenteId === frente.id
+  )
+  const ultima = ultimaAcaoConcluida(doPar, clientId, frente.id)
+  const loja = ehLojaEmCriacao(opcoes.tipoCliente, frente.id)
+  const aguardando = loja
+    ? aguardandoMaisAntiga(doPar, clientId, frente.id)
+    : undefined
+
+  if (aguardando) {
+    const desde = desdeAguardando(aguardando)
+    const dias = diasDesde(desde, now)
+    const { estado } = classificarDias(dias, frente.prazoDias, frente.criticoAposDias)
+    return {
+      clientId,
+      frenteId: frente.id,
+      estado,
+      nunca: false,
+      dias,
+      prazoDias: frente.prazoDias,
+      ultimaAcao: ultima?.data,
+      travada: false,
+      relogio: "retorno_cliente",
+      diasParaBloqueio: bloqueio - dias,
+      aguardandoDesde: desde,
+    }
+  }
+
   const dias = ultima ? diasDesde(ultima.data, now) : null
-  const { estado, nunca } = classificarDias(dias, frente.prazoDias)
-  const travada = acoesTravadas(
-    acoes.filter((a) => a.clientId === clientId && a.frenteId === frente.id),
-    now
-  ).length > 0
+  const { estado, nunca } = classificarDias(
+    dias,
+    frente.prazoDias,
+    frente.criticoAposDias
+  )
   return {
     clientId,
     frenteId: frente.id,
@@ -93,23 +226,124 @@ export function avaliarFrente(
     dias,
     prazoDias: frente.prazoDias,
     ultimaAcao: ultima?.data,
-    travada,
+    travada: !loja && acoesTravadas(doPar, now, limite).length > 0,
+    relogio: "ultima_acao",
+    diasParaBloqueio: null,
   }
 }
 
-/** Grade completa cliente x frente (apenas clientes ativos). */
+/** Opções de avaliação de um cliente a partir do contexto da carteira. */
+export function opcoesDoCliente(
+  cliente: Pick<Client, "tipo">,
+  ctx: ContextoRegras
+): OpcoesAvaliacao {
+  return {
+    tipoCliente: cliente.tipo,
+    limiteAprovacaoDias: ctx.limiteAprovacaoDias,
+    bloqueioContratualDias: ctx.bloqueioContratualDias,
+  }
+}
+
+/**
+ * Grade cliente x frente: só clientes ativos e só frentes contratadas
+ * (sem `ctx.contratos`, todas).
+ */
 export function montarGrade(
   clients: readonly Client[],
   frentes: readonly Frente[],
   acoes: readonly Acao[],
-  now: Date
+  now: Date,
+  ctx: ContextoRegras = {}
 ): StatusFrente[] {
+  const contratado = criarContratado(ctx.contratos)
   const out: StatusFrente[] = []
   for (const c of clients) {
     if (!c.ativo) continue
-    for (const f of frentes) out.push(avaliarFrente(acoes, c.id, f, now))
+    const opcoes = opcoesDoCliente(c, ctx)
+    for (const f of frentes) {
+      if (!contratado(c.id, f.id)) continue
+      out.push(avaliarFrente(acoes, c.id, f, now, opcoes))
+    }
   }
   return out
+}
+
+/**
+ * Ações travadas em aprovação da carteira: só clientes ativos, só pares
+ * contratados, e fora da frente de desenvolvimento de loja em criação.
+ */
+export function travadasDaCarteira(
+  clients: readonly Client[],
+  acoes: readonly Acao[],
+  now: Date,
+  ctx: ContextoRegras = {}
+): Acao[] {
+  const contratado = criarContratado(ctx.contratos)
+  const porId = new Map(clients.map((c) => [c.id, c]))
+  const limite = ctx.limiteAprovacaoDias ?? CONFIGURACAO_PADRAO.limiteAprovacaoDias
+  return acoesTravadas(acoes, now, limite).filter((a) => {
+    const c = porId.get(a.clientId)
+    if (!c || !c.ativo) return false
+    if (!contratado(a.clientId, a.frenteId)) return false
+    return !ehLojaEmCriacao(c.tipo, a.frenteId)
+  })
+}
+
+/** Crítico = alguma frente crítica; atenção = atrasada ou travada; senão ok. */
+export function situacaoDaGrade(grade: readonly StatusFrente[]): SituacaoCliente {
+  if (grade.some((g) => g.estado === "critica")) return "critico"
+  if (grade.some((g) => g.estado === "atrasada" || g.travada)) return "atencao"
+  return "ok"
+}
+
+export function situacaoDoCliente(
+  clientId: string,
+  clients: readonly Client[],
+  frentes: readonly Frente[],
+  acoes: readonly Acao[],
+  now: Date,
+  ctx: ContextoRegras = {}
+): SituacaoCliente {
+  const alvo = clients.filter((c) => c.id === clientId)
+  return situacaoDaGrade(montarGrade(alvo, frentes, acoes, now, ctx))
+}
+
+/** Situação de todos os clientes ativos, calculada de uma vez. */
+export function situacoesDaCarteira(
+  clients: readonly Client[],
+  frentes: readonly Frente[],
+  acoes: readonly Acao[],
+  now: Date,
+  ctx: ContextoRegras = {}
+): Map<string, SituacaoCliente> {
+  const grade = montarGrade(clients, frentes, acoes, now, ctx)
+  const porCliente = new Map<string, StatusFrente[]>()
+  for (const g of grade) {
+    const lista = porCliente.get(g.clientId) ?? []
+    lista.push(g)
+    porCliente.set(g.clientId, lista)
+  }
+  const out = new Map<string, SituacaoCliente>()
+  for (const c of clients) {
+    if (!c.ativo) continue
+    out.set(c.id, situacaoDaGrade(porCliente.get(c.id) ?? []))
+  }
+  return out
+}
+
+/** Avisos "perto do prazo" do cliente: não são alertas. */
+export function avisosDoCliente(
+  clientId: string,
+  clients: readonly Client[],
+  frentes: readonly Frente[],
+  acoes: readonly Acao[],
+  now: Date,
+  ctx: ContextoRegras = {}
+): StatusFrente[] {
+  const alvo = clients.filter((c) => c.id === clientId)
+  return montarGrade(alvo, frentes, acoes, now, ctx).filter(
+    (g) => g.estado === "atencao"
+  )
 }
 
 export const ESTADO_ORDEM: Record<EstadoFrente, number> = {

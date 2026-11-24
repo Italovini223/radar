@@ -7,6 +7,7 @@ import { ChevronRight, FlaskConical } from "lucide-react"
 import { RadarMark } from "@/components/brand/radar-mark"
 import { secaoAtual } from "@/components/layout/nav-itens"
 import { MobileNav } from "@/components/layout/mobile-nav"
+import { dataCurta } from "@/lib/domain/rotulos"
 import { useRadar } from "@/lib/hooks"
 
 /**
@@ -16,7 +17,7 @@ import { useRadar } from "@/lib/hooks"
  */
 export function Topbar() {
   const pathname = usePathname()
-  const { clients } = useRadar()
+  const { clients, configuracao } = useRadar()
   const [secao, id] = pathname.split("/").filter(Boolean)
   const aninhado = secao === "clientes" && !!id
   const nome = aninhado ? (clients.find((c) => c.id === id)?.nome ?? "Ficha") : ""
@@ -63,11 +64,17 @@ export function Topbar() {
 
       <Link
         href="/configuracoes"
-        title="Clientes e ações são fictícios e ficam só neste navegador."
+        title="Clientes e ações são fictícios e ficam salvos no banco do Radar."
         className="ml-auto hidden items-center gap-1.5 rounded-md bg-state-warn-soft px-2.5 py-1.5 text-xs font-bold text-state-warn outline-none hover:brightness-95 focus-visible:ring-2 focus-visible:ring-ring sm:inline-flex"
       >
         <FlaskConical className="size-3.5" aria-hidden />
         Dados de demonstração
+        {configuracao.usarHojeReal ? null : (
+          <span className="tnum font-semibold">
+            {" "}
+            · ref. {dataCurta(configuracao.dataReferencia)}
+          </span>
+        )}
       </Link>
     </header>
   )

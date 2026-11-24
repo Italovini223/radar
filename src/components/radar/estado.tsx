@@ -1,6 +1,11 @@
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import type { EstadoFrente, StatusFrente } from "@/lib/domain/types"
+import { ROTULO_SITUACAO } from "@/lib/domain/rotulos"
+import type {
+  EstadoFrente,
+  SituacaoCliente,
+  StatusFrente,
+} from "@/lib/domain/types"
 
 /**
  * Vocabulário visual dos estados. Regra: cor NUNCA vem sozinha: sempre com um
@@ -22,17 +27,17 @@ export const ESTADOS: Record<
   },
   atencao: {
     label: "Atenção",
-    descricao: "Entre 75% e 100% do prazo",
+    descricao: "Entre 75% e 100% do prazo (aviso, não gera alerta)",
     classe: "bg-state-warn-soft text-state-warn border-state-warn-line",
   },
   atrasada: {
     label: "Atrasada",
-    descricao: "Passou do prazo (até 150%)",
+    descricao: "Passou do prazo, antes de virar crítica",
     classe: "bg-state-late-soft text-state-late border-state-late-line",
   },
   critica: {
     label: "Crítica",
-    descricao: "Mais de 150% do prazo ou nunca teve ação",
+    descricao: "Atingiu o limite \"vira crítico após\" da frente ou nunca teve ação",
     classe: "bg-state-crit-soft text-state-crit border-state-crit-line",
   },
 }
@@ -146,6 +151,34 @@ export function EstadoBadge({
     >
       <EstadoGlyph estado={estado} nunca={nunca} />
       {nunca ? "Nunca teve ação" : label}
+    </Badge>
+  )
+}
+
+const CLASSE_SITUACAO: Record<SituacaoCliente, { classe: string; glifo: EstadoFrente }> = {
+  critico: { classe: ESTADOS.critica.classe, glifo: "critica" },
+  atencao: { classe: ESTADOS.atrasada.classe, glifo: "atrasada" },
+  ok: { classe: ESTADOS.em_dia.classe, glifo: "em_dia" },
+}
+
+/**
+ * Situação do cliente (Crítico / Atenção / Ok), sempre com glifo + texto.
+ * Crítico = alguma frente crítica; Atenção = alguma atrasada ou aprovação
+ * travada; Ok = nenhuma (avisos de "perto do prazo" são permitidos).
+ */
+export function SituacaoBadge({
+  situacao,
+  className,
+}: {
+  situacao: SituacaoCliente
+  className?: string
+}) {
+  const { classe, glifo } = CLASSE_SITUACAO[situacao]
+  return (
+    <Badge variant="outline" className={cn(classe, "font-semibold", className)}>
+      <EstadoGlyph estado={glifo} />
+      <span className="sr-only">Situação: </span>
+      {ROTULO_SITUACAO[situacao]}
     </Badge>
   )
 }

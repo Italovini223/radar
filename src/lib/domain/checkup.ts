@@ -1,10 +1,20 @@
 import { ultimaAcaoConcluida } from "./rules"
-import type { Acao, Frente } from "./types"
+import type { Acao, Checkup, Frente } from "./types"
+import { nomeCurtoFrente } from "./frentes"
 
 export interface EntradaCheckup {
   frenteId: string
   /** Data aproximada da última ação, ISO `yyyy-MM-dd`. Vazio = não alterar. */
   data: string
+}
+
+/** Resultado de salvar um check-up no servidor (o cliente reconcilia com isto). */
+export interface ResultadoCheckup {
+  /** Frentes cuja última ação mudou. */
+  alteradas: string[]
+  /** Ações do cliente depois do check-up. */
+  acoes: Acao[]
+  checkup: Checkup
 }
 
 let contador = 0
@@ -55,7 +65,7 @@ export function aplicarCheckup(
       id: novoId("acao"),
       clientId,
       frenteId: e.frenteId,
-      titulo: `Check-up: última ação em ${frente.nome}`,
+      titulo: `Check-up: última ação em ${nomeCurtoFrente(frente)}`,
       data: e.data,
       status: "concluida",
       origem: "checkup",

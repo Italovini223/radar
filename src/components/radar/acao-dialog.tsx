@@ -1,7 +1,6 @@
 "use client"
 
 import { useId, useState } from "react"
-import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -28,9 +27,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { registrarAcaoComResumo } from "@/lib/confirmacao"
+import { tituloSugerido } from "@/lib/domain/rotulos"
 import { toISODate } from "@/lib/domain/rules"
 import type { Client, Frente, StatusAcao } from "@/lib/domain/types"
 import { useRadarStore } from "@/lib/store"
+import { nomeCurtoFrente } from "@/lib/domain/frentes"
 
 export const ROTULO_STATUS: Record<StatusAcao, string> = {
   concluida: "Concluída",
@@ -45,6 +47,7 @@ export function AcaoDialog({
   frentes,
   frenteInicial,
   hoje,
+  sugerirTitulo = false,
 }: {
   aberto: boolean
   onOpenChange: (v: boolean) => void
@@ -52,6 +55,8 @@ export function AcaoDialog({
   frentes: Frente[]
   frenteInicial?: string
   hoje: Date
+  /** Preenche o título com uma sugestão editável gerada a partir da frente. */
+  sugerirTitulo?: boolean
 }) {
   return (
     <Dialog open={aberto} onOpenChange={onOpenChange}>
@@ -63,6 +68,7 @@ export function AcaoDialog({
           frentes={frentes}
           frenteInicial={frenteInicial}
           hoje={hoje}
+          sugerirTitulo={sugerirTitulo}
         />
       </DialogContent>
     </Dialog>
@@ -75,18 +81,26 @@ function AcaoForm({
   frentes,
   frenteInicial,
   hoje,
+  sugerirTitulo,
 }: {
   onOpenChange: (v: boolean) => void
   cliente: Client
   frentes: Frente[]
   frenteInicial?: string
   hoje: Date
+  sugerirTitulo: boolean
 }) {
-  const registrarAcao = useRadarStore((s) => s.registrarAcao)
+  const limiteAprovacao = useRadarStore((s) => s.configuracao.limiteAprovacaoDias)
   const id = useId()
   const hojeISO = toISODate(hoje)
   const [frenteId, setFrenteId] = useState(frenteInicial ?? frentes[0]?.id ?? "")
-  const [titulo, setTitulo] = useState("")
+  const sugestaoDe = (fid: string) => {
+    const f = frentes.find((x) => x.id === fid)
+    return sugerirTitulo && f ? tituloSugerido(f) : ""
+  }
+  const [titulo, setTitulo] = useState(() => sugestaoDe(frenteInicial ?? frentes[0]?.id ?? ""))
+  // Enquanto o título for a sugestão, trocar a frente atualiza a sugestão.
+  const [tituloEditado, setTituloEditado] = useState(false)
   const [data, setData] = useState(hojeISO)
   const [status, setStatus] = useState<StatusAcao>("concluida")
   const [tentou, setTentou] = useState(false)
@@ -106,15 +120,14 @@ function AcaoForm({
       return
     }
     if (!frenteId) return
-    registrarAcao({
+    // A confirmação inline (alerta resolvido + próxima oportunidade) aparece
+    // na tela; erros do servidor chegam como toast e desfazem a ação.
+    void registrarAcaoComResumo({
       clientId: cliente.id,
       frenteId,
       titulo: titulo.trim(),
       data,
       status,
-    })
-    toast.success("Ação registrada.", {
-      description: "As regras já recalcularam a grade e o Radar.",
     })
     onOpenChange(false)
   }
@@ -130,7 +143,13 @@ function AcaoForm({
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor={`${id}-frente`}>Frente</FieldLabel>
-              <Select value={frenteId} onValueChange={setFrenteId}>
+              <Select
+                value={frenteId}
+                onValueChange={(v) => {
+                  setFrenteId(v)
+                  if (!tituloEditado) setTitulo(sugestaoDe(v))
+                }}
+              >
                 <SelectTrigger id={`${id}-frente`} className="w-full">
                   <SelectValue placeholder="Escolha a frente" />
                 </SelectTrigger>
@@ -138,7 +157,7 @@ function AcaoForm({
                   <SelectGroup>
                     {frentes.map((f) => (
                       <SelectItem key={f.id} value={f.id}>
-                        {f.nome}
+                        {nomeCurtoFrente(f)}
                       </SelectItem>
                     ))}
                   </SelectGroup>
@@ -150,7 +169,10 @@ function AcaoForm({
               <Input
                 id={`${id}-titulo`}
                 value={titulo}
-                onChange={(e) => setTitulo(e.target.value)}
+                onChange={(e) => {
+                  setTitulo(e.target.value)
+                  setTituloEditado(true)
+                }}
                 name="titulo"
                 placeholder="Ex.: Revisão das campanhas de busca…"
                 aria-invalid={tituloInvalido || undefined}
@@ -199,7 +221,7 @@ function AcaoForm({
                 </Select>
                 {status === "aguardando_aprovacao" ? (
                   <FieldDescription>
-                    Acima de 7 dias vira alerta no Radar.
+                    Acima de {limiteAprovacao} dias vira alerta no Radar.
                   </FieldDescription>
                 ) : null}
               </Field>

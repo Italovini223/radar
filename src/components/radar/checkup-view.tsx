@@ -41,7 +41,9 @@ import { useRadar } from "@/lib/hooks"
 import { gsap, useGSAP } from "@/lib/motion/gsap"
 import { movimento } from "@/lib/motion/movimento"
 import { useEntrada } from "@/lib/motion/use-entrada"
-import { useRadarStore } from "@/lib/store"
+import { ConfirmacaoPosAcao } from "@/components/radar/confirmacao-pos-acao"
+import { salvarCheckupComResumo } from "@/lib/confirmacao"
+import { nomeCurtoFrente } from "@/lib/domain/frentes"
 
 function Formulario({
   cliente,
@@ -54,7 +56,6 @@ function Formulario({
   grade: StatusFrente[]
   hoje: Date
 }) {
-  const salvar = useRadarStore((s) => s.salvarCheckup)
   const id = useId()
   const hojeISO = toISODate(hoje)
   const atuais = useMemo(
@@ -102,7 +103,7 @@ function Formulario({
       if (primeira) document.getElementById(`${id}-${primeira.id}`)?.focus()
       return
     }
-    const mudou = salvar({
+    const mudou = salvarCheckupComResumo({
       clientId: cliente.id,
       entradas: frentes.map((f) => ({ frenteId: f.id, data: datas[f.id] ?? "" })),
       resultadoAds: ads || undefined,
@@ -130,7 +131,7 @@ function Formulario({
               const valor = datas[f.id] ?? ""
               const invalida = valor > hojeISO
               const preview = valor
-                ? classificarDias(diasDesde(valor, hoje), f.prazoDias)
+                ? classificarDias(diasDesde(valor, hoje), f.prazoDias, f.criticoAposDias)
                 : null
               return (
                 <li
@@ -139,7 +140,7 @@ function Formulario({
                 >
                   <div>
                     <label htmlFor={`${id}-${f.id}`} className="font-semibold">
-                      {f.nome}
+                      {nomeCurtoFrente(f)}
                     </label>
                     <p className="tnum text-xs text-muted-foreground">
                       {f.setor} · prazo {f.prazoDias} dias
@@ -282,11 +283,14 @@ function Conteudo() {
           </Select>
         </Field>
       </div>
+      <ConfirmacaoPosAcao clienteId={cliente.id} className="mb-6 max-w-4xl" />
       <div data-entra className="max-w-4xl">
         <Formulario
           key={cliente.id}
           cliente={cliente}
-          frentes={frentes}
+          frentes={frentes.filter((f) =>
+            grade.some((g) => g.clientId === cliente.id && g.frenteId === f.id)
+          )}
           grade={grade}
           hoje={hoje}
         />

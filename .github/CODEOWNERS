@@ -1,0 +1,3 @@
+# Dono de todo o repositório. Com `require_code_owner_review` ligado no Ruleset
+# da main, só a aprovação de quem está aqui conta para liberar o merge de um PR.
+* @Italovini223

@@ -8,6 +8,7 @@ import {
   agoraDaConfiguracao,
   avisosDoCliente,
   contextoDoSnapshot,
+  montarGrade,
   situacaoDoCliente,
 } from "@/lib/domain/rules"
 import {
@@ -17,8 +18,8 @@ import {
 } from "@/lib/data/planilha-dataset"
 
 /**
- * TESTE DO GABARITO SOBRE O DATASET REAL DA PLANILHA (10 clientes, 8 frentes,
- * 172 tarefas), com "hoje" = 2026-11-13 (data de referência da planilha).
+ * TESTE DO GABARITO SOBRE O DATASET REAL DA PLANILHA (10 clientes, 6 frentes,
+ * 166 tarefas), com "hoje" = 2026-11-13 (data de referência da planilha).
  */
 const snapshot = montarPlanilha()
 const ctx = contextoDoSnapshot(snapshot)
@@ -30,9 +31,17 @@ const alertas = (id: string) =>
 const ids = (id: string) => alertas(id).map((o) => o.id).sort()
 
 describe("dataset da planilha: integridade", () => {
-  it("tem 10 clientes, 8 frentes e 172 tarefas com ids únicos", () => {
+  it("tem 10 clientes, 6 frentes e 166 tarefas com ids únicos", () => {
     expect(clients).toHaveLength(10)
-    expect(frentes).toHaveLength(8)
+    expect(frentes).toHaveLength(6)
+    expect(frentes.map((f) => f.id)).toEqual([
+      "google-ads",
+      "meta-ads",
+      "crm",
+      "comunicacao-site",
+      "desenvolvimento",
+      "cro",
+    ])
     expect(acoes).toHaveLength(TOTAL_TAREFAS_PLANILHA)
     expect(new Set(acoes.map((a) => a.id)).size).toBe(TOTAL_TAREFAS_PLANILHA)
   })
@@ -58,15 +67,29 @@ describe("dataset da planilha: integridade", () => {
     }
   })
 
-  it("frentes contratadas: lojas em criação só têm Desenvolvimento; CRO não é de todos", () => {
+  it("frentes contratadas: lojas em criação só têm Desenvolvimento; CRO é de todo cliente de operação", () => {
     const por = (id: string) =>
       (snapshot.contratos ?? []).filter((c) => c.clientId === id).map((c) => c.frenteId)
     expect(por("raiz-organicos")).toEqual(["desenvolvimento"])
     expect(por("lumi-acessorios")).toEqual(["desenvolvimento"])
-    expect(por("patas-pet-store")).not.toContain("cro")
-    expect(por("vitta-suplementos")).not.toContain("cro")
-    expect(por("bella-pele")).not.toContain("cro")
-    expect(por("aurora-moda")).toContain("cro")
+    for (const c of clients.filter((x) => x.tipo === "operacao")) {
+      expect(por(c.id), c.id).toContain("cro")
+      expect(por(c.id), c.id).not.toContain("desenvolvimento")
+    }
+    // contratos = pares com tarefa + o CRO de quem não tem tarefa de CRO
+    const comTarefa = new Set(acoes.map((a) => `${a.clientId}|${a.frenteId}`))
+    const cro = clients.filter((c) => c.tipo === "operacao").map((c) => `${c.id}|cro`)
+    expect((snapshot.contratos ?? []).length).toBe(
+      new Set([...comTarefa, ...cro]).size
+    )
+  })
+
+  it("Setor 'Comunicação' existe e é o da frente Comunicação do site", () => {
+    expect(frentes.find((f) => f.id === "comunicacao-site")).toMatchObject({
+      setor: "Comunicação",
+      prazoDias: 14,
+      criticoAposDias: 28,
+    })
   })
 })
 
@@ -109,14 +132,24 @@ describe("dataset da planilha: alertas esperados", () => {
     expect(o.estado).toBe("atrasada")
   })
 
-  it("Vitta: só Social / Conteúdo (24 dias, prazo 14)", () => {
-    expect(ids("vitta-suplementos")).toEqual(["parada:vitta-suplementos:conteudo"])
+  it("Vitta: só Comunicação do site (24 dias, prazo 14), mesmo com tarefa em andamento", () => {
+    expect(ids("vitta-suplementos")).toEqual([
+      "parada:vitta-suplementos:comunicacao-site",
+    ])
     expect(alertas("vitta-suplementos")[0].diasParado).toBe(24)
+    expect(alertas("vitta-suplementos")[0].estado).toBe("atrasada")
   })
 
-  it("Bella: só a aprovação travada de Materiais (6 dias)", () => {
-    expect(ids("bella-pele")).toEqual(["aprovacao:bella-pele:materiais"])
+  it("Bella: UM alerta, a aprovação travada de Comunicação do site (6 dias, 3 peças)", () => {
+    expect(ids("bella-pele")).toEqual(["aprovacao:bella-pele:comunicacao-site"])
     expect(alertas("bella-pele")[0].diasParado).toBe(6)
+    const pecas = acoes.filter(
+      (a) =>
+        a.clientId === "bella-pele" &&
+        a.frenteId === "comunicacao-site" &&
+        a.status === "aguardando_aprovacao"
+    )
+    expect(pecas).toHaveLength(3)
   })
 
   it("clientes de controle não têm NENHUM alerta", () => {
@@ -125,9 +158,10 @@ describe("dataset da planilha: alertas esperados", () => {
     }
   })
 
-  it("Mundo Kids só tem avisos de perto do prazo (Redação e CRO)", () => {
+  it("Mundo Kids só tem aviso de perto do prazo (CRO, ~5,5 meses)", () => {
     const avisos = avisosDoCliente("mundo-kids", clients, frentes, acoes, HOJE, ctx)
-    expect(avisos.map((a) => a.frenteId).sort()).toEqual(["cro", "redacao"])
+    expect(avisos.map((a) => a.frenteId)).toEqual(["cro"])
+    expect(avisos[0].dias).toBe(169)
   })
 
   it("Raiz: loja em criação, 66 dias sem retorno, faltam 24 dias para o bloqueio", () => {
@@ -136,5 +170,46 @@ describe("dataset da planilha: alertas esperados", () => {
     expect(o.estado).toBe("critica")
     expect(o.diasParado).toBe(66)
     expect(o.diasParaBloqueio).toBe(24)
+  })
+})
+
+describe("dataset da planilha: CRO sem histórico (informativo)", () => {
+  const grade = montarGrade(clients, frentes, acoes, HOJE, ctx)
+  const croDe = (id: string) =>
+    grade.find((g) => g.clientId === id && g.frenteId === "cro")
+
+  it.each(["patas-pet-store", "vitta-suplementos", "bella-pele"])(
+    "%s: CRO sem nenhuma ação concluída = sem histórico, não 'nunca'",
+    (id) => {
+      expect(acoes.some((a) => a.clientId === id && a.frenteId === "cro")).toBe(false)
+      expect(croDe(id)).toMatchObject({
+        semHistorico: true,
+        nunca: false,
+        estado: "em_dia",
+        dias: null,
+        travada: false,
+      })
+      expect(alertas(id).some((o) => o.frenteId === "cro")).toBe(false)
+    }
+  )
+
+  it("quem tem registro de CRO não é 'sem histórico'", () => {
+    for (const id of ["aurora-moda", "ninho-casa-decor", "techmania", "doce-lar", "mundo-kids"]) {
+      expect(croDe(id)?.semHistorico, id).toBe(false)
+    }
+    expect(grade.filter((g) => g.semHistorico).map((g) => g.clientId).sort()).toEqual([
+      "bella-pele",
+      "patas-pet-store",
+      "vitta-suplementos",
+    ])
+  })
+
+  it("Aurora e Ninho: CRO com histórico antigo continua crítico (19 e 13 meses)", () => {
+    expect(croDe("aurora-moda")).toMatchObject({ estado: "critica", dias: 582 })
+    expect(croDe("ninho-casa-decor")).toMatchObject({ estado: "critica", dias: 389 })
+  })
+
+  it("o total de alertas do dataset é 10 (Aurora 4, Ninho 2, Patas, Vitta, Bella, Raiz 1)", () => {
+    expect(clients.flatMap((c) => alertas(c.id))).toHaveLength(10)
   })
 })

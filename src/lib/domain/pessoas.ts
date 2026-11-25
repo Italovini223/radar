@@ -217,6 +217,8 @@ export interface UsoPrazo {
   frenteId: string
   estado: EstadoFrente
   nunca: boolean
+  /** Frente informativa sem nenhuma ação (CRO): uso 0, sem alerta. */
+  semHistorico: boolean
   dias: number | null
   prazoDias: number
   /** dias / prazo, limitado a 2 (2× o prazo). "Nunca" conta como 2. */
@@ -228,10 +230,13 @@ export function usoDoPrazo(linhas: StatusFrente[]): UsoPrazo[] {
     frenteId: l.frenteId,
     estado: l.estado,
     nunca: l.nunca,
+    semHistorico: l.semHistorico,
     dias: l.dias,
     prazoDias: l.prazoDias,
     uso:
-      l.nunca || l.dias === null
+      l.semHistorico
+        ? 0
+        : l.nunca || l.dias === null
         ? 2
         : Math.min(2, l.prazoDias > 0 ? l.dias / l.prazoDias : 0),
   }))

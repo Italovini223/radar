@@ -85,6 +85,14 @@ const MODELOS: Record<string, Modelo> = {
     pergunta:
       "Vocês preferem começar pela home ou pelas páginas de categoria?",
   },
+  "comunicacao-site": {
+    impacto:
+      "Vitrine, banners e textos desatualizados deixam o site fora do ritmo das campanhas.",
+    corpo:
+      "Propomos atualizar a comunicação do site (banners, vitrines e textos das páginas principais), alinhada às campanhas e às datas sazonais dos próximos dias.",
+    pergunta:
+      "Há alguma campanha ou data próxima que a gente deva priorizar no site?",
+  },
   conteudo: {
     impacto:
       "A pausa reduz presença orgânica e relacionamento com o público.",

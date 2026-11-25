@@ -35,6 +35,16 @@ import {
  * Aprovação travada: ação aguardando aprovação há MAIS de
  * `limiteAprovacaoDias` dias (padrão 5).
  *
+ * Sem histórico (regra da planilha, "CRO: revisão a cada 6 meses"): frente
+ * listada em `FRENTES_SEM_HISTORICO_INFORMATIVO` (hoje o CRO) sem NENHUMA ação
+ * concluída NÃO é "nunca teve ação"/crítica: fica informativa ("sem
+ * histórico"), em_dia, sem alerta nem oportunidade, fora de "Problemas".
+ *
+ * Situação do cliente (planilha, "Regras usadas"): ALERTA = par atrasado ou
+ * crítico + par com aprovação travada (os mesmos itens das oportunidades).
+ * Crítico = alguma frente crítica OU 2+ alertas; Atenção = 1 alerta; Ok = 0
+ * (avisos de "perto do prazo" e "sem histórico" não contam).
+ *
  * Loja em criação (cliente tipo `loja_em_criacao` x frente `desenvolvimento`):
  * o relógio é "dias sem retorno do cliente" = dias desde a ação aguardando
  * mais antiga; vale 30/60 e o bloqueio contratual em `bloqueioContratualDias`
@@ -45,6 +55,17 @@ export const LIMIAR_ATENCAO = 0.75
 export const DIAS_APROVACAO_TRAVADA = CONFIGURACAO_PADRAO.limiteAprovacaoDias
 /** Oportunidade "nova": venceu o prazo há no máximo N dias. */
 export const JANELA_NOVA_DIAS = 14
+
+/**
+ * Frentes "informativas" quando o cliente não tem nenhuma ação concluída:
+ * mostram "sem histórico" em vez de "nunca teve ação" (crítica). Hoje só o CRO
+ * (revisão a cada 6 meses, sem obrigação de histórico prévio).
+ * DÍVIDA: virar coluna da tabela de frentes no banco; por ora é constante de
+ * domínio, para não mexer no schema.
+ */
+export const FRENTES_SEM_HISTORICO_INFORMATIVO: ReadonlySet<string> = new Set([
+  "cro",
+])
 
 export const ISO_DATE = "yyyy-MM-dd"
 
@@ -209,20 +230,22 @@ export function avaliarFrente(
       relogio: "retorno_cliente",
       diasParaBloqueio: bloqueio - dias,
       aguardandoDesde: desde,
+      semHistorico: false,
     }
   }
 
   const dias = ultima ? diasDesde(ultima.data, now) : null
-  const { estado, nunca } = classificarDias(
-    dias,
-    frente.prazoDias,
-    frente.criticoAposDias
-  )
+  const semHistorico =
+    !ultima && FRENTES_SEM_HISTORICO_INFORMATIVO.has(frente.id)
+  const { estado, nunca } = semHistorico
+    ? { estado: "em_dia" as const, nunca: false }
+    : classificarDias(dias, frente.prazoDias, frente.criticoAposDias)
   return {
     clientId,
     frenteId: frente.id,
     estado,
     nunca,
+    semHistorico,
     dias,
     prazoDias: frente.prazoDias,
     ultimaAcao: ultima?.data,
@@ -289,11 +312,27 @@ export function travadasDaCarteira(
   })
 }
 
-/** Crítico = alguma frente crítica; atenção = atrasada ou travada; senão ok. */
+/**
+ * Alertas do cliente = pares atrasados ou críticos + pares com aprovação
+ * travada (cada par conta uma vez em cada tipo, como as oportunidades).
+ */
+export function contarAlertas(grade: readonly StatusFrente[]): number {
+  let n = 0
+  for (const g of grade) {
+    if (g.estado === "atrasada" || g.estado === "critica") n++
+    if (g.travada) n++
+  }
+  return n
+}
+
+/**
+ * Crítico = alguma frente crítica OU 2+ alertas; atenção = 1 alerta; senão ok.
+ */
 export function situacaoDaGrade(grade: readonly StatusFrente[]): SituacaoCliente {
   if (grade.some((g) => g.estado === "critica")) return "critico"
-  if (grade.some((g) => g.estado === "atrasada" || g.travada)) return "atencao"
-  return "ok"
+  const alertas = contarAlertas(grade)
+  if (alertas >= 2) return "critico"
+  return alertas === 1 ? "atencao" : "ok"
 }
 
 export function situacaoDoCliente(

@@ -38,7 +38,7 @@ describe("getBanco", () => {
     const a = getBanco()
     expect(a).toBe(getBanco())
     expect(await a.selecionar("clientes")).toHaveLength(10)
-    expect(await a.selecionar("frentes")).toHaveLength(8)
+    expect(await a.selecionar("frentes")).toHaveLength(6)
     expect(await a.selecionar("acoes")).toHaveLength(TOTAL_TAREFAS_PLANILHA)
     expect(await a.selecionar("cliente_frentes")).toHaveLength(montarPlanilha().contratos!.length)
   })

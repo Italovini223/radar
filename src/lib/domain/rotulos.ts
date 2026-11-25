@@ -101,6 +101,8 @@ export function tituloSugerido(frente: Pick<Frente, "id" | "nome">): string {
       return `Otimização de ${frente.nome} feita hoje`
     case "crm":
       return `Revisão de ${frente.nome} feita hoje`
+    case "comunicacao-site":
+      return "Atualização da comunicação do site feita hoje"
     case "conteudo":
       return `Entrega de ${frente.nome} feita hoje`
     case "materiais":

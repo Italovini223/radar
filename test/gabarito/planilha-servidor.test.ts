@@ -33,23 +33,23 @@ import * as rAcoes from "@/app/api/radar/acoes/route"
 import * as rResetar from "@/app/api/radar/resetar/route"
 
 describe("dataset padrão (planilha): resetar / importar", () => {
-  it("buildSeed() é a planilha real: 10 clientes, 8 frentes, 172 ações", () => {
+  it("buildSeed() é a planilha real: 10 clientes, 6 frentes, 166 ações", () => {
     const s = buildSeed()
     expect(s.clients).toHaveLength(10)
-    expect(s.frentes).toHaveLength(8)
+    expect(s.frentes).toHaveLength(6)
     expect(s.acoes).toHaveLength(TOTAL_TAREFAS_PLANILHA)
-    expect(TOTAL_TAREFAS_PLANILHA).toBe(172)
+    expect(TOTAL_TAREFAS_PLANILHA).toBe(166)
   })
 
-  it("resetar (dataset padrão) grava 10 clientes, 8 frentes e 172 ações com a configuração de referência", async () => {
+  it("resetar (dataset padrão) grava 10 clientes, 6 frentes e 166 ações com a configuração de referência", async () => {
     const banco = new BancoMemoria()
     const snap = await resetar(banco)
     expect(snap.clients).toHaveLength(10)
-    expect(snap.frentes).toHaveLength(8)
-    expect(snap.acoes).toHaveLength(172)
+    expect(snap.frentes).toHaveLength(6)
+    expect(snap.acoes).toHaveLength(166)
     expect(snap.contratos).toHaveLength(montarPlanilha().contratos!.length)
     expect(snap.configuracao.dataReferencia).toBe("2026-11-13")
-    expect(banco.tabelas.acoes).toHaveLength(172)
+    expect(banco.tabelas.acoes).toHaveLength(166)
     // Origem das ações é preservada (ou 'planilha' por padrão).
     expect(banco.tabelas.acoes.every((l) => ["seed", "planilha"].includes(String(l.origem)))).toBe(true)
   })
@@ -96,7 +96,7 @@ describe("dataset padrão (planilha): resetar / importar", () => {
 })
 
 describe("POST /api/radar/resetar com o dataset real", () => {
-  it("volta a 172 ações depois de mudanças", async () => {
+  it("volta a 166 ações depois de mudanças", async () => {
     estado.banco = new BancoMemoria()
     const r1 = await rResetar.POST()
     expect(r1.status).toBe(200)
@@ -114,8 +114,8 @@ describe("POST /api/radar/resetar com o dataset real", () => {
     )
     expect(cria.status).toBe(201)
     const meio = (await (await rRaiz.GET()).json()) as { dados: { acoes: unknown[] } }
-    expect(meio.dados.acoes).toHaveLength(173)
+    expect(meio.dados.acoes).toHaveLength(167)
     const r2 = await rResetar.POST()
-    expect(((await r2.json()) as { dados: { acoes: unknown[] } }).dados.acoes).toHaveLength(172)
+    expect(((await r2.json()) as { dados: { acoes: unknown[] } }).dados.acoes).toHaveLength(166)
   })
 })

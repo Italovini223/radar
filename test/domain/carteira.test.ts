@@ -235,6 +235,7 @@ describe("alertasPorFrente", () => {
     frenteId,
     estado,
     nunca: false,
+    semHistorico: false,
     dias: 10,
     prazoDias: 30,
     travada: false,

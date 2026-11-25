@@ -1,6 +1,10 @@
 import Link from "next/link"
 
-import { ESTADOS, EstadoGlyph } from "@/components/radar/estado"
+import {
+  ESTADOS,
+  EstadoGlyph,
+  ROTULO_SEM_HISTORICO,
+} from "@/components/radar/estado"
 import { Dica } from "@/components/ui/dica"
 import { formatarDias } from "@/lib/domain/opportunities"
 import type { Client, Frente, StatusFrente } from "@/lib/domain/types"
@@ -26,6 +30,9 @@ export function FrenteCell({
   frente: Frente
 }) {
   const { texto, label } = ESTADOS[status.estado]
+  if (status.semHistorico) {
+    return <FrenteSemHistorico status={status} cliente={cliente} frente={frente} />
+  }
   const alerta = status.nunca || status.estado !== "em_dia"
   const estourou =
     status.nunca || status.estado === "atrasada" || status.estado === "critica"
@@ -116,5 +123,62 @@ export function FrenteNaoContratada() {
     >
       <span aria-hidden>—</span>
     </span>
+  )
+}
+
+/**
+ * Frente informativa sem nenhuma ação concluída (CRO): "sem histórico" em
+ * cinza, sem marcador de alerta nem barra de prazo. Continua clicável (abre a
+ * ficha) e não conta em "Problemas".
+ */
+function FrenteSemHistorico({
+  status,
+  cliente,
+  frente,
+}: {
+  status: StatusFrente
+  cliente: Client
+  frente: Frente
+}) {
+  return (
+    <Dica
+      texto={
+        <>
+          <b className="font-medium">
+            {cliente.nome} · {frente.nome}
+          </b>
+          <br />
+          Sem histórico: nenhuma ação registrada. É só informativo (não gera
+          alerta); o prazo de referência é de {frente.prazoDias} dias.
+          <br />
+          Clique para abrir a ficha com esta frente em destaque.
+        </>
+      }
+    >
+      <Link
+        href={`/clientes/${cliente.id}?frente=${frente.id}`}
+        data-celula={`${cliente.id}:${frente.id}`}
+        data-estado="sem-historico"
+        data-sem-historico
+        aria-label={`${cliente.nome}, ${frente.nome}: ${ROTULO_SEM_HISTORICO}, nenhuma ação registrada (informativo, sem alerta)${
+          status.travada ? ", com aprovação travada" : ""
+        }. Abrir ficha do cliente.`}
+        className="relative flex min-h-11 flex-col justify-center overflow-hidden rounded-md px-2.5 py-1.5 text-sm text-muted-foreground outline-none transition-colors hover:bg-panel-hi focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-ring"
+      >
+        <span className="inline-flex items-center gap-1.5 leading-none whitespace-nowrap">
+          {ROTULO_SEM_HISTORICO.toLowerCase()}
+        </span>
+        <span
+          aria-hidden
+          data-flash
+          className="pointer-events-none absolute inset-0 bg-foreground opacity-0"
+        />
+        {status.travada ? (
+          <span className="absolute top-0 right-0 size-0 border-t-[10px] border-l-[10px] border-t-state-warn-bar border-l-transparent">
+            <span className="sr-only">Aprovação travada</span>
+          </span>
+        ) : null}
+      </Link>
+    </Dica>
   )
 }

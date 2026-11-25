@@ -70,6 +70,16 @@ function Formulario({
       ),
     [frentes, grade, cliente.id]
   )
+  // CRO sem nenhuma ação: informativo, não "nunca teve ação".
+  const semHistorico = useMemo(
+    () =>
+      new Set(
+        grade
+          .filter((g) => g.clientId === cliente.id && g.semHistorico)
+          .map((g) => g.frenteId)
+      ),
+    [grade, cliente.id]
+  )
   const [datas, setDatas] = useState<Record<string, string>>(atuais)
   const [ads, setAds] = useState<ResultadoAds | "">("")
   const [salvo, setSalvo] = useState<number | null>(null)
@@ -145,7 +155,11 @@ function Formulario({
                     </label>
                     <p className="tnum text-xs text-muted-foreground">
                       {f.setor} · prazo {f.prazoDias} dias
-                      {atuais[f.id] ? "" : " · nenhuma ação registrada"}
+                      {atuais[f.id]
+                        ? ""
+                        : semHistorico.has(f.id)
+                          ? " · sem histórico (informativo)"
+                          : " · nenhuma ação registrada"}
                     </p>
                   </div>
                   <Input

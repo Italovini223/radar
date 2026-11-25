@@ -49,6 +49,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Toggle } from "@/components/ui/toggle"
 import { agruparPorCliente, alertasPorCliente } from "@/lib/domain/carteira"
+import { setoresDasFrentes } from "@/lib/domain/frentes"
 import { rotuloDataReferencia } from "@/lib/domain/rotulos"
 import { SETORES, type Client, type Opportunity } from "@/lib/domain/types"
 import { useRadar } from "@/lib/hooks"
@@ -396,7 +397,7 @@ function Conteudo() {
               <SelectContent>
                 <SelectGroup>
                   <SelectItem value="todos">Todos os setores</SelectItem>
-                  {SETORES.map((s) => (
+                  {setoresDasFrentes(frentes).map((s) => (
                     <SelectItem key={s} value={s}>
                       {s}
                     </SelectItem>

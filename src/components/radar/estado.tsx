@@ -59,7 +59,13 @@ export const ESTADOS: Record<
   },
 }
 
-export function rotuloEstado(s: Pick<StatusFrente, "estado" | "nunca">): string {
+/** Rótulo do estado de uma frente que ainda não tem nenhuma ação concluída. */
+export const ROTULO_SEM_HISTORICO = "Sem histórico"
+
+export function rotuloEstado(
+  s: Pick<StatusFrente, "estado" | "nunca"> & { semHistorico?: boolean }
+): string {
+  if (s.semHistorico) return ROTULO_SEM_HISTORICO
   return s.nunca ? "Nunca" : ESTADOS[s.estado].label
 }
 
@@ -105,13 +111,34 @@ export function EstadoGlyph({
 export function EstadoBadge({
   estado,
   nunca = false,
+  semHistorico = false,
   className,
 }: {
   estado: EstadoFrente
   nunca?: boolean
+  /** Frente informativa sem nenhuma ação (CRO): cinza, sem marcador de alerta. */
+  semHistorico?: boolean
   className?: string
 }) {
   const { texto, label } = ESTADOS[estado]
+  if (semHistorico) {
+    return (
+      <span
+        className={cn(
+          "inline-flex items-center gap-1.5 text-xs font-medium whitespace-nowrap",
+          ESTADOS.em_dia.texto,
+          className
+        )}
+      >
+        <i
+          aria-hidden
+          data-marcador="bolinha"
+          className="inline-block size-[7px] shrink-0 rounded-full bg-dot-idle not-italic"
+        />
+        {ROTULO_SEM_HISTORICO}
+      </span>
+    )
+  }
   return (
     <span
       className={cn(
@@ -134,8 +161,8 @@ export const ESTADO_DA_SITUACAO: Record<SituacaoCliente, EstadoFrente> = {
 
 /**
  * Situação do cliente (Crítico / Atenção / Ok), no mesmo formato do status:
- * marcador + texto. Crítico = alguma frente crítica; Atenção = alguma
- * atrasada ou aprovação travada; Ok = nenhuma (avisos de "perto do prazo"
+ * marcador + texto. Crítico = alguma frente crítica ou 2+ alertas; Atenção =
+ * 1 alerta (atrasada ou aprovação travada); Ok = nenhum (avisos de "perto do prazo"
  * são permitidos).
  */
 export function SituacaoBadge({

@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { SETORES } from "@/lib/domain/types"
+import { setoresDasFrentes } from "@/lib/domain/frentes"
 import { useRadar } from "@/lib/hooks"
 import { useEntrada } from "@/lib/motion/use-entrada"
 
@@ -55,7 +55,7 @@ function Conteudo() {
             <SelectContent>
               <SelectGroup>
                 <SelectItem value="todos">Todos os setores</SelectItem>
-                {SETORES.map((s) => (
+                {setoresDasFrentes(frentes).map((s) => (
                   <SelectItem key={s} value={s}>
                     {s}
                   </SelectItem>

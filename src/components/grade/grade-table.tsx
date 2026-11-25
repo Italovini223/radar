@@ -116,7 +116,7 @@ export function GradeTable({
   useFlipLista(raiz, linhas.map((l) => l.cliente.id).join("|"))
 
   // Célula que mudou de estado faz um flash curto (só opacidade, 0,6 s).
-  const chaveEstados = grade.map((s) => `${s.clientId}:${s.frenteId}:${s.estado}${s.nunca ? "n" : ""}`).join("|")
+  const chaveEstados = grade.map((s) => `${s.clientId}:${s.frenteId}:${s.estado}${s.nunca ? "n" : ""}${s.semHistorico ? "s" : ""}`).join("|")
   useGSAP(
     () => {
       const mudou: HTMLElement[] = []

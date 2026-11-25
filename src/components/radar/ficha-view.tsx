@@ -264,7 +264,7 @@ function Conteudo({ id }: { id: string }) {
                       <p className="text-sm text-muted-foreground">{f.setor}</p>
                     </div>
                     <div className="flex flex-col items-end gap-1">
-                      <EstadoBadge estado={l.estado} nunca={l.nunca} />
+                      <EstadoBadge estado={l.estado} nunca={l.nunca} semHistorico={l.semHistorico} />
                       {l.travada ? (
                         <span className="text-sm font-medium text-state-warn">
                           Aprovação travada
@@ -282,13 +282,13 @@ function Conteudo({ id }: { id: string }) {
                   <dl className="tnum mt-3 grid grid-cols-3 gap-x-3 text-sm">
                     <div>
                       <dt className="text-muted-foreground">Última ação</dt>
-                      <dd>{l.ultimaAcao ? data(l.ultimaAcao) : "Nunca"}</dd>
+                      <dd>{l.ultimaAcao ? data(l.ultimaAcao) : l.semHistorico ? "Sem histórico" : "Nunca"}</dd>
                     </div>
                     <div>
                       <dt className="text-muted-foreground">
                         {l.relogio === "retorno_cliente" ? "Sem retorno há" : "Parado há"}
                       </dt>
-                      <dd>{l.dias === null ? "Nunca" : formatarDias(l.dias)}</dd>
+                      <dd>{l.dias === null ? (l.semHistorico ? "Sem histórico" : "Nunca") : formatarDias(l.dias)}</dd>
                     </div>
                     <div>
                       <dt className="text-muted-foreground">Prazo</dt>
@@ -349,7 +349,7 @@ function Conteudo({ id }: { id: string }) {
                         {l.ultimaAcao ? data(l.ultimaAcao) : "Nunca"}
                       </TableCell>
                       <TableCell className="tnum">
-                        {l.dias === null ? "Nunca" : formatarDias(l.dias)}
+                        {l.dias === null ? (l.semHistorico ? "Sem histórico" : "Nunca") : formatarDias(l.dias)}
                         {l.relogio === "retorno_cliente" ? (
                           <span className="block text-xs text-muted-foreground">
                             sem retorno do cliente
@@ -361,7 +361,7 @@ function Conteudo({ id }: { id: string }) {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                          <EstadoBadge estado={l.estado} nunca={l.nunca} />
+                          <EstadoBadge estado={l.estado} nunca={l.nunca} semHistorico={l.semHistorico} />
                           {l.travada ? (
                             <span className="text-sm font-medium text-state-warn">
                               Aprovação travada

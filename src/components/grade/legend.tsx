@@ -39,6 +39,10 @@ export function Legend({ limiteAprovacaoDias }: { limiteAprovacaoDias: number })
           <b className="font-medium text-foreground">Nunca</b> = nenhuma ação
           registrada
         </li>
+        <li>
+          <b className="font-medium text-foreground">sem histórico</b> = CRO sem
+          nenhuma ação (só informativo, não é alerta)
+        </li>
         <li className="inline-flex items-center gap-1.5">
           <b aria-hidden className="font-medium text-foreground">
             —

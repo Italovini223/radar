@@ -355,7 +355,7 @@ function Conteudo() {
                   Vira crítico após
                 </TableHead>
                 <TableHead scope="col" className="text-xs font-medium text-foreground">
-                  Atenção
+                  Perto do prazo
                 </TableHead>
                 <TableHead scope="col" className="text-xs font-medium text-foreground">
                   Atrasada
@@ -373,7 +373,7 @@ function Conteudo() {
           </Table>
         </div>
         <p className="mt-3 text-xs text-muted-foreground">
-          Atenção (perto do prazo) é só aviso e não gera alerta. Crítica também
+          &ldquo;Perto do prazo&rdquo; é só aviso e não gera alerta. Crítica também
           vale para frente que nunca teve ação. Entrega aguardando aprovação há
           mais de {configuracao.limiteAprovacaoDias} dias gera um alerta próprio.
         </p>

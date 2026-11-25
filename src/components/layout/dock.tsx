@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { RadarMark } from "@/components/brand/radar-mark"
 import { Dica } from "@/components/ui/dica"
 import { NAV_PRINCIPAL, estaAtivo } from "@/components/layout/nav-itens"
+import { resumoCarteira } from "@/lib/domain/carteira"
 import { dataCurta } from "@/lib/domain/rotulos"
 import { useRadar } from "@/lib/hooks"
 import { useRadarStore } from "@/lib/store"
@@ -20,18 +21,18 @@ const BOTAO =
 /**
  * Navegação em barra flutuante embaixo da tela (não é sidebar). Botões
  * redondos de 40px em `pill`; o ativo fica em tinta com ícone claro. O
- * contador coral no Radar mostra quantas críticas existem. O último botão
- * atualiza o radar, com o horário (ou a data de referência) ao lado.
+ * contador coral em Clientes mostra quantos clientes têm alerta (sem alerta,
+ * sem contador). O último botão recalcula os alertas, com o horário (ou a data
+ * de referência) ao lado.
  * Ordem: Radar, Grade, Clientes, Check-up, Atualizar.
  */
 export function Dock() {
   const pathname = usePathname()
-  const { ready, grade, hoje, configuracao } = useRadar()
-  const atualizarAgora = useRadarStore((s) => s.atualizarAgora)
+  const { ready, situacoes, hoje, configuracao } = useRadar()
+  const recalcularAgora = useRadarStore((s) => s.recalcularAgora)
 
-  const criticas = ready
-    ? grade.filter((s) => s.estado === "critica").length
-    : 0
+  // Clientes com alerta = Crítico + Atenção (mesma conta do painel do Radar).
+  const comAlerta = ready ? resumoCarteira(situacoes.values()).precisamAcao : 0
   const quando = !ready
     ? null
     : configuracao.usarHojeReal
@@ -49,13 +50,14 @@ export function Dock() {
             const ativo = estaAtivo(pathname, item.href)
             const Icone = item.icone
             const ehRadar = item.href === "/radar"
-            const contagem = ehRadar && criticas > 0 ? criticas : undefined
+            const contagem =
+              item.href === "/clientes" && comAlerta > 0 ? comAlerta : undefined
             return (
               <li key={item.href}>
                 <Dica
                   texto={
                     contagem !== undefined
-                      ? `${item.dica} · ${contagem} ${contagem === 1 ? "crítica" : "críticas"}`
+                      ? `${item.dica} · ${contagem} com alerta`
                       : item.dica
                   }
                 >
@@ -64,7 +66,7 @@ export function Dock() {
                   aria-current={ativo ? "page" : undefined}
                   aria-label={
                     contagem !== undefined
-                      ? `${item.label} (${contagem} ${contagem === 1 ? "crítica" : "críticas"})`
+                      ? `${item.label} (${contagem} ${contagem === 1 ? "cliente" : "clientes"} com alerta)`
                       : item.label
                   }
                   className={cn(
@@ -93,17 +95,17 @@ export function Dock() {
             )
           })}
           <li>
-            <Dica texto="Atualizar o radar: recalcula alertas e prazos com os dados atuais">
+            <Dica texto="Recalcular alertas: atualiza alertas e prazos com os dados atuais">
             <button
               type="button"
-              aria-label="Atualizar radar"
+              aria-label="Recalcular alertas"
               disabled={!ready}
               onClick={() => {
-                atualizarAgora()
+                recalcularAgora()
                 toast.success(
                   configuracao.usarHojeReal
-                    ? "Radar atualizado com a data de hoje."
-                    : "Radar recalculado na data de referência."
+                    ? "Alertas recalculados com a data de hoje."
+                    : "Alertas recalculados na data de referência."
                 )
               }}
               className={cn(

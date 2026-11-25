@@ -36,7 +36,7 @@ export interface RadarState extends RadarSnapshot {
   vazio: boolean
   /** "Hoje" do app (ms), derivado da configuração (data de referência ou data real). */
   agora: number
-  atualizarAgora: () => void
+  recalcularAgora: () => void
   iniciar: () => Promise<void>
   /** Reimporta a fixture de demonstração no servidor. true = deu certo. */
   resetarDemo: () => Promise<boolean>
@@ -159,7 +159,7 @@ export function criarRadarStore(repo: RadarRepository) {
       vazio: false,
       agora: 0,
 
-      atualizarAgora: () => set((s) => ({ agora: agoraDe(s.configuracao) })),
+      recalcularAgora: () => set((s) => ({ agora: agoraDe(s.configuracao) })),
 
       iniciar: async () => {
         if (carregando) return carregando

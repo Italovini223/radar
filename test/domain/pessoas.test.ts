@@ -32,6 +32,7 @@ const linha = (
   frenteId,
   estado,
   nunca,
+  semHistorico: false,
   dias,
   prazoDias: 30,
   travada: false,

@@ -53,10 +53,10 @@ spacing: { s-1: "4px", s-2: "8px", s-3: "12px", s-4: "16px", s-5: "20px", s-6: "
 O Radar é uma mesa de triagem: o time abre, vê o que pede ação e despacha. O visual é calmo e plano: painéis um tom acima do fundo, quase nenhuma borda, tipografia leve e cor só onde há alerta.
 
 **Key Characteristics:**
-- **Tinta** (`--ink`) é a ação de sistema: "Atualizar radar", item ativo da dock, aba ativa, foco.
+- **Tinta** (`--ink`) é a ação de sistema: "Recalcular alertas", item ativo da dock, aba ativa, foco.
 - **Coral** (`--coral-strong`, variante `resolver` do botão) é a ação que resolve o alerta: "Ver proposta". **Uma vez por tela**, no alerta mais urgente.
 - **Cinza** (`--pill`) é todo o resto: botões secundários, pílulas, botões da dock.
-- **Amarelo Weethub** (`--brand`) é marca: o segmento aceso do logo, o marcador de "Atenção" e o ponto de "Nova". Nunca texto, nunca fundo de botão.
+- **Amarelo Weethub** (`--brand`) é marca: o segmento aceso do logo, o marcador de "Perto do prazo" e o ponto de "Nova". Nunca texto, nunca fundo de botão.
 - Status sempre como **texto colorido + marcador** (triângulo ou bolinha), sem chip, sem fundo, sem borda.
 - Uma família só (Geist) em pesos 300, 400 e 500. Números sempre tabulares.
 
@@ -74,12 +74,14 @@ O Radar é uma mesa de triagem: o time abre, vê o que pede ação e despacha. O
 O texto passa 4,5:1 sobre o painel e o painel claro. Use status sobre painéis, não direto no fundo da página.
 - **Crítica** `#c4382f` / coral `#ff5a52` / `#ffe1de` (também o destrutivo)
 - **Atrasada** `#a35a00` / laranja `#ffa64d` / `#ffe2c2`
-- **Atenção** `#8a6200` / amarelo `#fcbd20` / `#fcefc9`
+- **Perto do prazo** (identificador interno `atencao`) `#8a6200` / amarelo `#fcbd20` / `#fcefc9`
 - **Em dia** tinta 2 `#66655f` / cinza `#c9c8c2`
 - **Sucesso** (confirmações, "Atribuída a…") `#2a7d40` / `#e3efe4`
 
-**A Regra do Marcador.** Triângulo = já estourou o prazo (crítica em coral, atrasada em laranja, "nunca teve ação" em coral). Bolinha = ainda não estourou (atenção em amarelo, em dia em cinza). É o mesmo marcador do radar, então a lista e o radar falam a mesma língua.
+**A Regra do Marcador.** Triângulo = já estourou o prazo (crítica em coral, atrasada em laranja, "nunca teve ação" em coral). Bolinha = ainda não estourou (perto do prazo em amarelo, em dia em cinza). É o mesmo marcador do radar, então a lista e o radar falam a mesma língua.
 **A Regra do Estado Completo.** Cor de estado sempre vem com marcador e rótulo.
+
+**Vocabulário: rótulo visível x identificador interno.** Há dois níveis, e a tela os mantém separados. **Frente** (par cliente × frente): *Em dia · Perto do prazo · Atrasada · Crítica* (+ "Nunca"). **Cliente**: *Crítico · Atenção · Ok*. O identificador interno `EstadoFrente = "atencao"` não foi renomeado; só o rótulo visível ("Perto do prazo", em `ROTULO_ESTADO_FRENTE`, `src/lib/domain/rotulos.ts`). "Atenção" é só a situação do cliente. Na ficha, a nota de saúde usa Boa · Regular · Crítica para não conflitar.
 
 ## Typography
 
@@ -97,7 +99,7 @@ O texto passa 4,5:1 sobre o painel e o painel claro. Use status sobre painéis, 
 ## Layout
 
 - **Cabeçalho** (64px, sobre o fundo, sem barra branca): marca, nome da seção em 17px (ou o caminho Clientes › Cliente), à direita a pílula "Dados de demonstração" e o botão redondo de Configurações.
-- **Dock** (navegação): barra flutuante centralizada a 16–20px do rodapé, fundo painel, `shadow-dock`, raio total. Botões redondos de 40px em pílula; o ativo em tinta com ícone claro (o Radar usa a própria marca, versão escura quando ativo). Contador coral (texto em tinta) com o número de críticas sobre o Radar. O último botão atualiza o radar, com "Atualizado / hoje, 09:12" (ou a data de referência) ao lado a partir de 640px. **Ordem: Radar, Grade, Clientes, Check-up, Atualizar.** Não há sidebar nem menu lateral no celular: a dock cabe em 375px.
+- **Dock** (navegação): barra flutuante centralizada a 16–20px do rodapé, fundo painel, `shadow-dock`, raio total. Botões redondos de 40px em pílula; o ativo em tinta com ícone claro (o Radar usa a própria marca, versão escura quando ativo). Contador coral (texto em tinta) com o número de clientes com alerta sobre Clientes (sem alerta, sem contador; o Radar não tem contador). O último botão recalcula os alertas, com "Atualizado / hoje, 09:12" (ou a data de referência) ao lado a partir de 640px. **Ordem: Radar, Grade, Clientes, Check-up, Recalcular.** Não há sidebar nem menu lateral no celular: a dock cabe em 375px.
 - **Conteúdo**: largura máxima 1320px, margens 16/32/40px, 112px livres embaixo para a dock.
 
 ## Elevation & Shapes
@@ -112,7 +114,7 @@ O texto passa 4,5:1 sobre o painel e o painel claro. Use status sobre painéis, 
 ### Botões
 Pílula de 40px (`sm` 32px), padding 22px, 13px/500, caixa normal.
 - **`resolver`** (coral): "Ver proposta" no alerta mais urgente da tela. Um por tela.
-- **`default`** (tinta): ação de sistema ("Atualizar radar", "Salvar", "Atribuir ao setor").
+- **`default`** (tinta): ação de sistema ("Recalcular alertas", "Salvar", "Atribuir ao setor").
 - **`outline` / `secondary`** (cinza): todo o resto ("Registrar ação", "Ficha", "Cancelar").
 - **`ghost`**: texto tinta 2, hover pílula. **`destructive`**: pílula com texto de crítica.
 - **`link`**: texto sublinhado ("Ver tudo").
@@ -127,10 +129,13 @@ Texto 12px/500 na cor do estado + marcador (triângulo de 9px ou bolinha de 7px)
 Legenda com marcador em cima, número 34px/300 e uma linha curta embaixo. Só o número de críticas ganha cor. Selecionado = fundo painel claro + sublinhado de 2px na cor do estado.
 
 ### Barra de saúde
-Segmentos arredondados de 10px nas cores de marcador (coral, laranja, amarelo, cinza), com 4px de intervalo; legenda com marcador, contagem e %.
+Conta **clientes**, não pares cliente × frente: título "6 de 10 clientes precisam de ação" (Crítico + Atenção) e três segmentos arredondados de 10px (Crítico em coral, Atenção em laranja, Ok em cinza), com 4px de intervalo; legenda com marcador, contagem e %. Os indicadores abaixo contam frentes e dizem "em N clientes".
+
+### Alertas por frente
+Barras horizontais de 10px, uma por frente, com crítica (coral) e atrasada (laranja) empilhadas e o total à direita, da frente com mais alertas para a com menos; frentes sem alerta numa linha ao fim. É a mesma conta da linha "Problemas" da Grade (`alertasPorFrente`: atrasadas + críticas, sem aprovação travada). Ao lado da Saúde da carteira a partir de 1280px.
 
 ### Grade
-Tabela cliente × frente com os dias desde a última ação. **Sem células coloridas**: o número muda de cor e ganha marcador só quando há alerta. Embaixo dos números que ainda não estouraram o prazo, uma barrinha de 44×2px mostra quanto do prazo já foi usado; acima de 70% ela fica amarela. Aprovação travada = canto amarelo. Cabeçalho em 12px tinta 2, prazo em legenda.
+Tabela cliente × frente com os dias desde a última ação. **Sem células coloridas**: o número muda de cor e ganha marcador só quando há alerta. Embaixo dos números que ainda não estouraram o prazo, uma barrinha de 44×2px mostra quanto do prazo já foi usado; acima de 70% ela fica amarela. Aprovação travada = canto amarelo. Frente que o cliente não contratou = "—" cinza, sem link, fora das contagens. CRO sem nenhuma ação concluída = "sem histórico" em cinza (sem marcador nem barra, clicável, informativo: não é "nunca" e não conta em Problemas). A coluna Cliente é fixa ao rolar para o lado, com sombra sutil na borda quando há rolagem (no celular o nome é truncado). A legenda explica a leitura da célula (estados, "Em dia mostra só os dias", "Nunca", "—", canto marcado); o rodapé só explica "Problemas". Cabeçalho em 12px tinta 2, prazo em legenda.
 
 ### Cartão de oportunidade
 **Crítica**: painel com nome (15px/500), status, motivo, consequência e metadados; à direita a legenda "Parado há", o número 28px/300 em texto de crítica, o prazo e as ações. **Atrasada / travada**: linha compacta dentro de um painel-lista, ações cinza. "Nova" = ponto amarelo de 6px (+ texto para leitor de tela).

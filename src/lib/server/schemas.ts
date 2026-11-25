@@ -12,6 +12,7 @@ const SETORES_VALIDOS = [
   "Mídia paga",
   "CRM & Automação",
   "CRO & UX",
+  "Comunicação",
   "Conteúdo",
   "Materiais",
   "Redação",

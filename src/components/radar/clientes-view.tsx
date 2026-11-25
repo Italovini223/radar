@@ -42,6 +42,8 @@ function resumoDasFrentes(doCliente: StatusFrente[]): string {
     partes.push(`${travadas} ${travadas === 1 ? "aprovação travada" : "aprovações travadas"}`)
   }
   if (atencao) partes.push(`${atencao} perto do prazo`)
+  const semHistorico = doCliente.filter((g) => g.semHistorico).length
+  if (semHistorico) partes.push(`${semHistorico} sem histórico`)
   return partes.length ? partes.join(" · ") : "Tudo em dia"
 }
 

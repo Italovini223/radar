@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { SETORES } from "@/lib/domain/types"
+import { setoresDasFrentes } from "@/lib/domain/frentes"
 import { useRadar } from "@/lib/hooks"
 import { useEntrada } from "@/lib/motion/use-entrada"
 
@@ -55,7 +55,7 @@ function Conteudo() {
             <SelectContent>
               <SelectGroup>
                 <SelectItem value="todos">Todos os setores</SelectItem>
-                {SETORES.map((s) => (
+                {setoresDasFrentes(frentes).map((s) => (
                   <SelectItem key={s} value={s}>
                     {s}
                   </SelectItem>
@@ -66,7 +66,7 @@ function Conteudo() {
         }
       />
       <div data-entra className="mb-4">
-        <Legend />
+        <Legend limiteAprovacaoDias={configuracao.limiteAprovacaoDias} />
       </div>
       {ativos.length === 0 || colunas.length === 0 ? (
         <SemResultados
@@ -77,10 +77,8 @@ function Conteudo() {
         <div data-entra>
           <GradeTable clients={ativos} frentes={colunas} grade={grade} />
           <p className="mt-3 max-w-3xl text-sm text-muted-foreground">
-            Problemas são frentes atrasadas ou críticas. &ldquo;Nunca&rdquo;
-            marca uma frente sem nenhuma ação registrada. O canto marcado indica
-            aprovação travada há mais de {configuracao.limiteAprovacaoDias} dias. Clique numa célula para abrir
-            a ficha do cliente.
+            Problemas são frentes atrasadas ou críticas (aprovação travada não
+            entra na conta). Clique numa célula para abrir a ficha do cliente.
           </p>
         </div>
       )}

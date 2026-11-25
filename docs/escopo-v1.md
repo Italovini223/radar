@@ -7,7 +7,7 @@ Entrega 3 da Sprint 1 (Campeonato Weethub de Soluções). Referência: plano té
 O Radar responde uma pergunta: **em qual cliente, em qual frente, não fazemos nada há tempo demais?** Cada ação é `cliente + frente + data + status`.
 
 1. **Radar** (`/radar`): lista as oportunidades derivadas das regras, com 4 métricas calculadas (clientes monitorados, oportunidades abertas, frentes em atenção, aguardando aprovação), abas Todas / Prioritárias / Novas, busca, filtro por setor e ordenação. Os filtros ficam na URL.
-2. **Grade** (`/grade`): linhas = clientes, colunas = frentes; cada célula mostra os dias desde a última ação e o estado (em dia, atenção, atrasada, crítica, nunca). Legenda e filtro por setor. Clique abre a ficha.
+2. **Grade** (`/grade`): linhas = clientes, colunas = frentes; cada célula mostra os dias desde a última ação e o estado (em dia, perto do prazo, atrasada, crítica, nunca). Legenda e filtro por setor. Clique abre a ficha.
 3. **Clientes** (`/clientes`) e **Ficha** (`/clientes/[id]`): resumo por frente, linha do tempo das ações, botão "Registrar ação", aprovar entrega e concluir ação em andamento.
 4. **Check-up** (`/checkup`): formulário de cerca de 5 minutos por cliente. Informa a data aproximada da última ação por frente e uma anotação manual do resultado de Ads (estável, caindo, subindo). Salva e o Radar recalcula na hora. É o caminho de entrada de dados da v1.
 5. **Configurações** (`/configuracoes`): editar o prazo (dias) de cada frente, com as faixas de estado recalculadas; resetar os dados de demonstração.
@@ -20,7 +20,7 @@ Para cada par cliente x frente, `dias = hoje - última ação concluída`:
 | Estado | Condição |
 |---|---|
 | Em dia | dias < 75% do prazo |
-| Atenção | 75% a 100% do prazo |
+| Perto do prazo | 75% a 100% do prazo |
 | Atrasada | de 100% (exclusive) a 150% do prazo |
 | Crítica | mais de 150% do prazo, ou nunca teve ação |
 

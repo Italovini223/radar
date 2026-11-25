@@ -40,7 +40,7 @@ A paleta completa (com papéis e contrastes) está no `DESIGN.md`. Resumo:
 | Pílula | `#e3e2dd` | botões cinza, pílulas |
 | Tinta | `#1c1c1a` | texto, ação de sistema, item ativo |
 | Tinta 2 | `#66655f` | texto secundário, legendas |
-| Amarelo Weethub | `#fcbd20` | segmento aceso da marca, marcador de "Atenção", ponto de "Nova" |
+| Amarelo Weethub | `#fcbd20` | segmento aceso da marca, marcador de "Perto do prazo", ponto de "Nova" |
 | Coral | `#ff5a52` / `#cd3b32` | marcador de crítica / botão que resolve o alerta |
 | Laranja | `#ffa64d` | marcador de atrasada |
 

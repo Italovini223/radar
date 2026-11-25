@@ -112,7 +112,7 @@ const FAIXAS = [
 function Saude({ linhas }: { linhas: StatusFrente[] }) {
   const pct = saudeDoCliente(linhas)
   const ok = linhas.filter((l) => l.estado === "em_dia" || l.estado === "atencao").length
-  const rotulo = pct >= 80 ? "Boa" : pct >= 50 ? "Atenção" : "Crítica"
+  const rotulo = pct >= 80 ? "Boa" : pct >= 50 ? "Regular" : "Crítica"
   const texto =
     pct >= 80 ? "text-state-ok" : pct >= 50 ? ESTADOS.atrasada.texto : ESTADOS.critica.texto
   const cx = 100
@@ -363,13 +363,13 @@ function UsoPrazo({ linhas, frentePorId }: { linhas: StatusFrente[]; frentePorId
               {dados.map((d, k) => {
                 const f = frentePorId.get(d.frenteId)
                 const cor = d.nunca ? COR_ESTADO.critica : COR_ESTADO[d.estado]
-                const valor = d.nunca || d.dias === null ? "nunca teve ação" : `${formatarDias(d.dias)} de ${d.prazoDias} dias`
+                const valor = d.semHistorico ? "sem histórico (informativo)" : d.nunca || d.dias === null ? "nunca teve ação" : `${formatarDias(d.dias)} de ${d.prazoDias} dias`
                 return (
                   <li
                     key={d.frenteId}
                     className="flex h-full flex-1 items-end"
                     onMouseEnter={() => setI(k)}
-                    aria-label={`${f ? nomeCurtoFrente(f) : d.frenteId}: ${valor} (${ESTADOS[d.nunca ? "critica" : d.estado].label})`}
+                    aria-label={`${f ? nomeCurtoFrente(f) : d.frenteId}: ${valor} (${d.semHistorico ? "Sem histórico" : ESTADOS[d.nunca ? "critica" : d.estado].label})`}
                   >
                     <span
                       data-barra
@@ -393,11 +393,13 @@ function UsoPrazo({ linhas, frentePorId }: { linhas: StatusFrente[]; frentePorId
                     <>
                       {f ? nomeCurtoFrente(f) : d.frenteId}:{" "}
                       <b className="font-medium">
-                        {d.nunca || d.dias === null
+                        {d.semHistorico
+                          ? "sem histórico"
+                          : d.nunca || d.dias === null
                           ? "nunca teve ação"
                           : `${formatarDias(d.dias)} de ${d.prazoDias}`}
                       </b>{" "}
-                      · {ESTADOS[d.nunca ? "critica" : d.estado].label}
+                      · {d.semHistorico ? "Sem histórico" : ESTADOS[d.nunca ? "critica" : d.estado].label}
                     </>
                   )
                 })()}

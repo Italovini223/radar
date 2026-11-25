@@ -7,6 +7,7 @@ export type Setor =
   | "Mídia paga"
   | "CRM & Automação"
   | "CRO & UX"
+  | "Comunicação"
   | "Conteúdo"
   | "Materiais"
   | "Redação"
@@ -16,6 +17,7 @@ export const SETORES: readonly Setor[] = [
   "Mídia paga",
   "CRM & Automação",
   "CRO & UX",
+  "Comunicação",
   "Conteúdo",
   "Materiais",
   "Redação",
@@ -119,6 +121,12 @@ export interface StatusFrente {
   estado: EstadoFrente
   /** true quando nunca houve ação concluída (sempre estado = critica). */
   nunca: boolean
+  /**
+   * Frente informativa sem nenhuma ação concluída (hoje: CRO, ver
+   * `FRENTES_SEM_HISTORICO_INFORMATIVO`): "sem histórico". Não é "nunca":
+   * estado = em_dia, `nunca` = false, sem alerta e fora de "Problemas".
+   */
+  semHistorico: boolean
   /** Dias desde a última ação concluída; null se nunca. */
   dias: number | null
   prazoDias: number

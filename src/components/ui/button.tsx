@@ -10,7 +10,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        /** Tinta: ação de sistema ("Atualizar radar", "Salvar"). */
+        /** Tinta: ação de sistema ("Recalcular alertas", "Salvar"). */
         default: "bg-primary text-primary-foreground hover:bg-primary-hover",
         /** Coral: a ação que resolve o alerta ("Ver proposta"). Uma por tela. */
         resolver:

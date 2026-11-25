@@ -59,7 +59,7 @@ function peso(o: Opportunity, limiteAprovacao: number): number {
 
 /**
  * Oportunidade = todo par contratado atrasada/critica + as ações travadas em
- * aprovação. "Atenção" (perto do prazo) NÃO gera oportunidade.
+ * aprovação. "Perto do prazo" (`atencao`) NÃO gera oportunidade.
  * Prioridade alta = critica. Derivada, nunca guardada.
  */
 export function derivarOportunidades(

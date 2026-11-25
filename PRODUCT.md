@@ -36,7 +36,7 @@ Alerta por **regra fixa e auditável** (prazo por frente x dias desde a última 
 ## Capabilities and Constraints
 
 - Prazos por frente iniciais (a validar com os setores): Google/Meta Ads 30 dias, CRM 15, Conteúdo/Social 30, Materiais 30, Redação 30, CRO 180, Layout 365. Editáveis em Configurações.
-- Estados: em dia (< 75% do prazo), atenção (75% a 100%), atrasada (> 100%), crítica (> 150% ou nunca teve ação). Ação aguardando aprovação há mais de 7 dias gera alerta próprio.
+- Estados: em dia (< 75% do prazo), perto do prazo (75% a 100%), atrasada (> 100%), crítica (> 150% ou nunca teve ação). Ação aguardando aprovação há mais de 7 dias gera alerta próprio.
 - Sem login, sem banco, sem deploy na Sprint 1. Persistência em localStorage atrás de uma interface de repositório, para trocar por Supabase na Sprint 2.
 - **LGPD / regulamento**: somente dados fictícios ou anonimizados; sem faturamento, receita, senhas, acessos ou dado pessoal. Nenhuma chave de API no código.
 - Fora da v1: login e perfis, Supabase, integrações, IA real, importação de CSV, telas Atividades e Setores, qualquer dado financeiro.

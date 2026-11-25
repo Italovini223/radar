@@ -21,11 +21,11 @@ Check do banco: `aguardando_aprovacao` exige `aguardando_desde`. O mapeamento li
 ## Entidades do domínio
 
 - **Client**: `id`, `nome`, `nicho`, `tipo`, `responsavel`, `ativo` (inativos saem da grade e do Radar).
-- **Frente**: `id` (`google-ads`, `meta-ads`, `crm`, `conteudo`, `materiais`, `redacao`, `desenvolvimento`, `cro`), `nome`, `setor`, `prazoDias`, `criticoAposDias`.
+- **Frente**: `id` (dataset atual: `google-ads`, `meta-ads`, `crm`, `comunicacao-site`, `desenvolvimento`, `cro`; a fixture de testes ainda usa `conteudo`, `materiais` e `redacao`), `nome`, `setor`, `prazoDias`, `criticoAposDias`.
 - **Contrato**: `{ clientId, frenteId }`. Ausente no snapshot = todas as frentes contratadas.
 - **Acao**: `titulo`, `data`, `status`, `aguardandoDesde?`, `origem?`, `responsavel?`, `criadaEm?`, `concluidaEm?`. Só `concluida` zera o contador da frente.
 - **Configuracao**: `limiteAprovacaoDias`, `bloqueioContratualDias`, `dataReferencia`, `usarHojeReal`. `agoraDaConfiguracao(config, hojeReal)` calcula o "hoje" do app.
-- **Derivados** (não persistidos): `StatusFrente` (`montarGrade`: `estado`, `dias`, `nunca`, `travada`, `relogio`, `diasParaBloqueio`), `Opportunity` (`derivarOportunidades`: id `parada:<cliente>:<frente>` ou `aprovacao:<cliente>:<frente>`, `severidade`, `motivo`, `diasParado`, `diasParaBloqueio`), `SituacaoCliente` (`situacaoDoCliente`), `proximaOportunidade`, `resumoPosAcao`.
+- **Derivados** (não persistidos): `StatusFrente` (`montarGrade`: `estado`, `dias`, `nunca`, `semHistorico`, `travada`, `relogio`, `diasParaBloqueio`), `Opportunity` (`derivarOportunidades`: id `parada:<cliente>:<frente>` ou `aprovacao:<cliente>:<frente>`, `severidade`, `motivo`, `diasParado`, `diasParaBloqueio`), `SituacaoCliente` (`situacaoDoCliente`), `proximaOportunidade`, `resumoPosAcao`.
 
 ## Regras
 
@@ -33,16 +33,18 @@ Em `src/lib/domain/rules.ts` (funções puras; "hoje" é sempre parâmetro):
 
 | Regra | Valor |
 |---|---|
-| Atenção | dias >= 75% do prazo e <= prazo: aviso, **não** alerta |
+| Perto do prazo (id. interno `atencao`) | dias >= 75% do prazo e <= prazo: aviso, **não** alerta |
 | Atrasada | dias > prazo |
 | Crítica | dias >= `criticoAposDias`, ou nunca teve ação |
+| Sem histórico (`semHistorico`) | frente de `FRENTES_SEM_HISTORICO_INFORMATIVO` (hoje só `cro`) sem nenhuma ação concluída: informativo, em dia, **não** é "nunca", sem alerta nem oportunidade, fora de "Problemas". Dívida: virar coluna da tabela `frentes` |
+| Alerta | par atrasado ou crítico + par com aprovação travada (cada um é uma oportunidade) |
 | Aprovação travada | aguardando há **mais** de `limiteAprovacaoDias` dias |
 | Loja em criação (cliente `loja_em_criacao` x frente `desenvolvimento`) | relógio = dias desde a ação aguardando **mais antiga**; atrasada > 30, crítica >= 60; `diasParaBloqueio = bloqueioContratualDias - dias` (<= 0 = bloqueado); a regra de aprovação travada não se aplica |
-| Situação do cliente | Crítico: alguma frente crítica. Atenção: alguma atrasada ou aprovação travada. Ok: nenhuma |
+| Situação do cliente | Crítico: alguma frente crítica **ou 2+ alertas**. Atenção: 1 alerta. Ok: 0 alertas (perto do prazo e sem histórico não contam) |
 | Próxima oportunidade | crítica > atrasada > aprovação travada; empate pelo maior número de dias parado |
 | "Nova" | venceu o prazo há até 14 dias |
 
-Prazos da planilha (prazo / vira crítico após): Google Ads 30/60, Meta Ads 15/30, CRM/Automações 60/120, Social/Conteúdo 14/28, Produção de materiais 30/60, Redação 30/60, Desenvolvimento · loja em criação 30/60, CRO/Melhorias do site 180/360.
+Prazos da planilha (prazo / vira crítico após): Google Ads 30/60, Meta Ads 15/30, CRM/Automações 60/120, Comunicação do site 14/28, Desenvolvimento · loja em criação 30/60, CRO/Melhorias do site 180/360.
 
 ## API (`src/app/api/radar/...`)
 
@@ -58,7 +60,7 @@ Resposta de sucesso `{ ok: true, dados }`; erro `{ ok: false, erro: { codigo, me
 | `POST /api/radar/atribuicoes` | atribui (ou reatribui) uma oportunidade a um setor |
 | `PUT /api/radar/configuracao` | limites e data de referência |
 | `POST /api/radar/importar` | substitui o conteúdo por um dataset (`clients`, `frentes`, `contratos?`, `acoes`, `checkups`, `atribuicoes`, `configuracao?`) |
-| `POST /api/radar/resetar` | reimporta o dataset de demonstração (a planilha: 10 clientes, 8 frentes, 172 ações) |
+| `POST /api/radar/resetar` | reimporta o dataset de demonstração (a planilha: 10 clientes, 6 frentes, 166 ações) |
 
 Códigos: 400 `ENTRADA_INVALIDA` / `JSON_INVALIDO`, 404 `NAO_ENCONTRADO`, 409 `CONFLITO`, 413 `CORPO_GRANDE_DEMAIS`, 422 `REGRA_INVALIDA`, 503 `BANCO_NAO_CONFIGURADO`, 500 `ERRO_INTERNO` (genérico; o detalhe só vai para o log do servidor).
 

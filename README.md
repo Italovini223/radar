@@ -35,7 +35,7 @@ pnpm build                   # build de produção
 Para trabalhar sem a chave do Supabase:
 
 ```bash
-RADAR_DB=memoria pnpm dev         # banco em memória já semeado com a planilha real (10 clientes, 172 tarefas)
+RADAR_DB=memoria pnpm dev         # banco em memória já semeado com a planilha real (10 clientes, 166 tarefas)
 RADAR_DB=memoria-vazia pnpm dev   # começa vazio (para ver o estado "Carregar dados de demonstração")
 ```
 
@@ -77,7 +77,7 @@ src/
   lib/ai/proposal.ts         gerador SIMULADO de rascunho (interface para trocar por Claude)
   lib/data/repository.ts     interface RadarRepository (operações granulares)
   lib/data/api-repository.ts implementação por fetch aos route handlers
-  lib/data/planilha-dataset.ts  dataset REAL da demonstração (planilha: 10 clientes, 8 frentes, 172 tarefas) + GABARITO_PLANILHA
+  lib/data/planilha-dataset.ts  dataset REAL da demonstração (planilha: 10 clientes, 6 frentes, 166 tarefas) + GABARITO_PLANILHA
   lib/data/gabarito-fixture.ts  fixture sintética pequena, só para testes unitários
   lib/store.ts               zustand otimista (aplica, grava, reverte em falha)
   lib/motion/                animações GSAP (tokens, reduced-motion, entrada, contagem, listas)
@@ -94,15 +94,16 @@ PRODUCT.md  DESIGN.md        contexto de produto e tokens visuais
 
 ## Dados de demonstração e regras do gabarito
 
-A demonstração é a **planilha real** do time, 100% fictícia (`src/lib/data/planilha-dataset.ts`: 10 clientes, 8 frentes e 172 tarefas, transcritas da planilha; as frentes contratadas vêm das tarefas), com "hoje" = **13/11/2026** (data de referência da configuração). A planilha só traz responsável por tarefa: o responsável por cliente fica vazio e não é exibido. O motor segue as regras da planilha:
+A demonstração é a **planilha real** do time, 100% fictícia (`src/lib/data/planilha-dataset.ts`: 10 clientes, 6 frentes e 166 tarefas, importadas do .xlsx; as frentes contratadas vêm das tarefas, mais o CRO de todo cliente de operação), com "hoje" = **13/11/2026** (data de referência da configuração). A planilha só traz responsável por tarefa: o responsável por cliente fica vazio e não é exibido. O motor segue as regras da planilha:
 
 - **Atrasada**: dias sem ação > prazo da frente. **Crítica**: dias >= "vira crítico após" (coluna própria). **Perto do prazo** (>= 75% do prazo; identificador interno `atencao`): só aviso, não gera alerta. "Atenção" é só a situação do cliente.
 - **Aprovação travada**: ação aguardando aprovação há **mais de 5 dias** (configurável).
 - **Frente contratada**: o par cliente x frente só existe se contratado.
 - **Loja em criação** (frente Desenvolvimento): o relógio é "dias sem retorno do cliente" (30 / 60), com bloqueio contratual em 90 dias (mostra quantos faltam).
-- **Situação do cliente**: Crítico (alguma frente crítica), Atenção (alguma atrasada ou aprovação travada), Ok (nenhuma; avisos permitidos).
+- **Alerta** = par atrasado ou crítico + par com aprovação travada (os mesmos itens das oportunidades). **Situação do cliente**: Crítico (alguma frente crítica **ou 2+ alertas**), Atenção (1 alerta), Ok (0 alertas; avisos de "perto do prazo" e "sem histórico" não contam).
+- **CRO sem histórico**: o CRO é revisado a cada 6 meses e é contratado por todo cliente de operação; quem não tem nenhuma ação de CRO aparece como **"sem histórico"** (informativo, em dia, sem alerta, fora de "Problemas"), não como "nunca teve ação". Constante `FRENTES_SEM_HISTORICO_INFORMATIVO` em `rules.ts` (dívida: virar coluna no banco).
 
-Situações esperadas em 13/11/2026: Aurora Moda, Ninho Casa & Decor e Raiz Orgânicos = Crítico; Patas Pet Store, Vitta Suplementos e Bella Pele Cosméticos = Atenção; TechMania, Doce Lar Utilidades, Mundo Kids Brinquedos e Lumi Acessórios = Ok. Com a planilha real, o Radar lista **10 oportunidades** (Aurora Moda 4, Ninho 2, Patas 1, Vitta 1, Bella 1, Raiz 1). Os testes automáticos estão em `src/lib/data/planilha.test.ts` (dataset real), `src/lib/server/planilha-servidor.test.ts` (o que o servidor grava) e `src/lib/gabarito.test.ts` (fixture sintética); o roteiro manual em `docs/testes/TESTE-001-gabarito.md`.
+Situações esperadas em 13/11/2026: Aurora Moda, Ninho Casa & Decor e Raiz Orgânicos = Crítico; Patas Pet Store, Vitta Suplementos e Bella Pele Cosméticos = Atenção; TechMania, Doce Lar Utilidades, Mundo Kids Brinquedos e Lumi Acessórios = Ok. Com a planilha real, o Radar lista **10 oportunidades** (Aurora Moda 4, Ninho 2, Patas 1, Vitta 1, Bella 1, Raiz 1; o CRO de Patas, Vitta e Bella é "sem histórico", sem alerta). Os testes automáticos estão em `test/gabarito/planilha.test.ts` (dataset real), `test/gabarito/planilha-servidor.test.ts` (o que o servidor grava) e `test/gabarito/gabarito.test.ts` (fixture sintética de 8 frentes); o roteiro manual em `docs/testes/TESTE-001-gabarito.md`.
 
 **Tarefa principal:** registrar uma ação para um cliente (ficha, cartão do Radar ou check-up) e ver o Radar atualizar os alertas e sugerir a próxima oportunidade. Ex.: Aurora Moda > Google Ads > "Otimização de Google Ads feita hoje": o alerta some e a próxima sugerida é CRO / Melhorias do site (crítica, ~19 meses).
 
